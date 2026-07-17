@@ -59,7 +59,7 @@ Flux qui **mûrit après P3/P4/P7** (il les consomme). Détail : `docs/BANNIERE_
 | Organe | Quoi | Statut | Source / ancrage |
 |---|---|---|---|
 | 1 — Pouponnière évolutive | le modèle cultive/élague/adopte ses modules de scaffold (harness auto-généré, génétique, adaptatif par-modèle) | **fondé, constructible après P3/P7** — maison provisoire `evolve/` | survey `docs/2607.13104v1.pdf` (Population-Based scaffolding SI) + `docs/2607.06906v1.pdf` (Harness Effect) + pouponnière `LyrArc` + NSGA-II `Lyra_Core` |
-| 2 — Le Songe | phases de « sommeil paradoxal » : recomposition des vecteurs de contexte passés | **jalon de recherche — EN ATTENTE des références de Simon** ; aucun code (charte §1/§4) | s'appuie sur nemeton (P3), FLOATLAP (`research/`), journal d'oubli, phases κ/ρ |
+| 2 — Le Songe | phases de « sommeil » : consolidation (Knowledge Seeding/replay) + Dreaming (curriculum synthétique auto-généré) | **FONDÉ** (papier *LMs Need Sleep*). **Palier 1** (rêve scaffold/mémoire) constructible sans entraînement, après P3 ; **Palier 2** (consolidation paramétrique LoRA) nécessite une voie de fine-tuning local | `docs/Language_Models_Need_Sleep_...pdf` ; s'appuie sur nemeton (P3), journal d'oubli, FLOATLAP, phases κ/ρ (NREM↔REM) |
 
 ## Quick wins restants (fort levier, cf. plan §7)
 

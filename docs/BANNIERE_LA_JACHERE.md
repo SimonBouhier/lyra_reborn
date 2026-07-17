@@ -77,35 +77,66 @@ bruyant** si les générations ne changent pas la fitness (pas de « vert mais v
 
 ---
 
-## Organe 2 — Le Songe (phase paradoxale)
+## Organe 2 — Le Songe (phases de sommeil)
 
-**Intention.** Déclencher des **phases de « sommeil paradoxal »** où les **vecteurs
-du contexte passé se recomposent** au fil d'un processus *encore à définir* —
-consolidation *et* imagination, hors-ligne.
+**Intention.** Déclencher des **phases de « sommeil »** hors-ligne où Lyra (1)
+**consolide** ses mémoires récentes fragiles en connaissance durable, et (2)
+**« rêve »** — recompose les vecteurs du contexte passé en un curriculum
+synthétique pour se raffiner elle-même, sans supervision.
 
-**Statut honnête (important).** Les deux PDFs fournis **ne couvrent pas** le
-sommeil / rêve / *replay* / consolidation (vérifié : 0 occurrence). Cet organe
-**attend les références que tu retrouveras**. D'ici là il reste un **jalon de
-recherche** : *aucun code, aucun mécanisme inventé, aucun chiffre* (charte §1, §4).
-On l'étiquette « Vision/Cible » jusqu'à ce qu'il soit défini et construit.
+**Ancrage bibliographique** (la référence que tu as ajoutée) :
 
-**Ce à quoi il se raccroche déjà dans Lyra** (pour qu'il ne parte pas de rien) :
-- Le **nemeton** (`memory/graph`, P3) *est* le magasin des vecteurs de contexte à recomposer.
-- **FLOATLAP** (`research/`, issu de `tranzit`) = errance basse énergie dans l'espace mental = une **traversée déjà onirique**, déjà prototypée.
-- Le **journal d'oubli** (réévaluation différée du signal faible) ≈ ce que fait la consolidation.
-- Les **transitions de phase κ/ρ** (P2) offrent un langage naturel pour des « stades de sommeil ».
+- **`Language_Models_Need_Sleep_Learning_to_Self-Modify.pdf` — *Language Models
+  Need Sleep: Learning to Self-Modify and Consolidate Memories*** (Behrouz,
+  Hashemi, **Mirrokni**, Google). Un paradigme **« Sleep »** inspiré du sommeil
+  humain, en **deux stades** :
+  1. **Consolidation mémoire** (≈ NREM / ondes lentes) : **Knowledge Seeding** —
+     une distillation *ascendante* par **replay** où les mémoires court-terme
+     fragiles (in-context) d'un « petit-soi » sont distillées vers les paramètres
+     long-terme (voire un réseau plus grand), en préservant la connaissance.
+     Mécanisme : *Generalized Distillation* (distillation on-policy + imitation par
+     RL).
+  2. **Dreaming** (≈ REM) : une phase d'**auto-amélioration** où le modèle
+     **génère par RL un curriculum de données synthétiques (« rêves »)** pour
+     répéter la connaissance nouvelle et raffiner l'existant, **sans humain**.
+     Apparenté aux *self-edits* de **SEAL** (« rêves » dans leur terminologie).
+     Moteur théorique : contrer l'**oubli catastrophique** ⇒ auto-amélioration
+     itérative.
 
-**Familles de mécanismes à évaluer *quand tes références arriveront*** (pistes
-honnêtes, pas des engagements) : *memory replay* / consolidation ; interpolation
-ou diffusion en espace latent sur les embeddings stockés ; recombinaison
-générative de fragments de trajectoire ; *sleep-time compute* (consolider pendant
-l'inactivité) ; curricula auto-générés à partir des contextes recomposés (ce qui
-**reboucle sur l'organe 1** et sur POWERPLAY).
+**Le pont vers l'Organe 1 n'est plus une métaphore.** Le Dreaming *est* un
+générateur de curriculum auto-généré. « Le rêve sème des candidats que la
+Pouponnière sélectionne » et « le Dreaming du papier » sont **le même mécanisme**
+vu sous deux angles : le Songe le *produit*, la Pouponnière le *sélectionne et le
+pérennise*. (Et le Knowledge Seeding « petit-soi → plus grand » résonne avec la
+croissance de la pouponnière.)
 
-**Definition of Done (le jour venu)** : une phase de repos produit des artefacts
-recomposés qui sont (a) **pas de simples copies** des tours passés (nouveauté
-mesurable), et (b) **utiles en aval** (nourrissent une tâche ou un module qui
-améliore une métrique).
+**Filiation Lyra.** Le **nemeton** (`memory/graph`, P3) = le magasin des vecteurs à
+rejouer/recomposer ; le **journal d'oubli** = la sélection de ce qui mérite d'être
+consolidé vs composté ; **FLOATLAP** (`research/`) = une traversée basse-énergie de
+l'espace mental = une forme de génération de rêve déjà prototypée ; les
+**transitions de phase κ/ρ** (P2) = le cycle **NREM ↔ REM**.
+
+**⚠️ Scoping honnête (Ollama = poids gelés).** Le papier consolide en **espace
+paramétrique** (distillation / RL fine-tuning). Lyra tourne sur des modèles
+**gelés** (Ollama), sans infra d'entraînement. On construit donc en **deux
+paliers** :
+- **Palier 1 — Le Songe au niveau scaffold/mémoire (constructible SANS
+  entraînement).** La phase de rêve génère des « rêves » = **contextes recomposés**
+  à partir du nemeton (recombinaison/replay de fragments de trajectoire) qui
+  servent à (a) consolider/réorganiser le graphe sémantique + le journal d'oubli,
+  et (b) **semer des modules/tâches candidats pour la Pouponnière**. Zéro mise à
+  jour de poids. C'est le « rêve de contexte ».
+- **Palier 2 — Consolidation paramétrique (nécessite une voie d'entraînement).**
+  Knowledge Seeding réel (distillation vers un adaptateur **LoRA** ou un modèle plus
+  grand). À ouvrir seulement si/quand une brique de fine-tuning local est ajoutée.
+  Marqué **« Cible »** d'ici là.
+
+**Definition of Done (Palier 1, testable)** : une phase de sommeil produit des rêves
+qui sont (a) **nouveaux** (nouveauté mesurable vs les tours passés — pas des
+copies), (b) **consolidants** (le graphe/journal après sommeil est plus compact ou
+mieux organisé, mesurable), et (c) **utiles en aval** (au moins un rêve nourrit une
+tâche ou un module qui améliore une métrique tenue). **Échec bruyant** si les rêves
+sont des copies ou restent sans effet (charte §1).
 
 ---
 
