@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+venv/
+env/
+build/
+dist/
+
+# Données de runs (ne pas versionner les sorties)
+data/runs/
+data/*.db
+data/*.sqlite*
+*.log
+
+# Secrets — JAMAIS de clés en clair (cf. charte §6 ; 3 clés exposées dans les archives auditées)
+.env
+*.key
+secrets.*
+
+# OS / IDE
+.DS_Store
+desktop.ini
+.vscode/
+.idea/
