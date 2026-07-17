@@ -52,6 +52,15 @@ réel (charte §1, §4).
 | P7 | `eval/` | juge **pairwise** + harnais + NSGA-II + logging forensique | `LLM_asa_judge`, `lyra_clean/evaluation`, `Lyra_Core/bench/ga_search.py` |
 | — | `research/` | orbites FLOATLAP, métriques fractales, calibrations | `session_2/tranzit` — exploratoire |
 
+## Bannière « La Jachère » — vie hors-tâche (nouveau flux, cf. plan §8·bis)
+
+Flux qui **mûrit après P3/P4/P7** (il les consomme). Détail : `docs/BANNIERE_LA_JACHERE.md`.
+
+| Organe | Quoi | Statut | Source / ancrage |
+|---|---|---|---|
+| 1 — Pouponnière évolutive | le modèle cultive/élague/adopte ses modules de scaffold (harness auto-généré, génétique, adaptatif par-modèle) | **fondé, constructible après P3/P7** — maison provisoire `evolve/` | survey `docs/2607.13104v1.pdf` (Population-Based scaffolding SI) + `docs/2607.06906v1.pdf` (Harness Effect) + pouponnière `LyrArc` + NSGA-II `Lyra_Core` |
+| 2 — Le Songe | phases de « sommeil paradoxal » : recomposition des vecteurs de contexte passés | **jalon de recherche — EN ATTENTE des références de Simon** ; aucun code (charte §1/§4) | s'appuie sur nemeton (P3), FLOATLAP (`research/`), journal d'oubli, phases κ/ρ |
+
 ## Quick wins restants (fort levier, cf. plan §7)
 
 - ⭐ **P4 « fix once »** : `get_embedding`→`get_embeddings` puis relancer un run ESMM

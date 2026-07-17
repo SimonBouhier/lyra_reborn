@@ -247,6 +247,24 @@ Quoi prendre, où, vers quelle couche. (« ré-impl. » = ré-implémenter d'apr
 
 ---
 
+## 8·bis. Bannière — « La Jachère » : la vie hors-tâche *(ajout 2026-07-18)*
+
+Deux aspects personnels manquaient au plan ; ils se réunissent sous **une même bannière** : *ce que Lyra fait quand elle ne répond pas* — des processus **hors-ligne, auto-dirigés, génératifs ET sélectifs** qui transforment le système lui-même (ses modules ET sa mémoire). Nom de travail : **La Jachère** (le champ qu'on laisse reposer pour qu'il régénère) — à rebaptiser librement. Détail + ancrage bibliographique : `lyra_reborn/docs/BANNIERE_LA_JACHERE.md`.
+
+**Organe 1 — La Pouponnière évolutive** (aspect déjà présent dans l'audité). Le modèle *cultive, laisse mourir et adopte* ses propres modules de scaffold (prompts, outils, sous-agents, politiques de contrôle) : un **générateur de harness automatique, façon algo génétique, adaptatif selon le modèle et la tâche**.
+- Ancrage : c'est exactement la case **« Scaffolding-Improvement / Population-Based »** du survey *Self-Improvements in Modern Agentic Systems* (`docs/2607.13104v1.pdf`) — précédents nommés : Promptbreeder, ADAS, Darwin Gödel Machine, AlphaEvolve/ShinkaEvolve, GPTSwarm ; plafond théorique = Gödel Machine (Schmidhuber 2003) ; auto-curriculum = POWERPLAY. Le *Harness Effect* (`docs/2607.06906v1.pdf`) prouve que le harness est **LE** levier (−33 à −61 % de coût, +82 % qualité/\$, −38 % tokens à parité) et que le gain est **spécifique au modèle** → justifie l'adaptation par-modèle.
+- Réutilise l'existant : pouponnière/compost de `LyrArc` (substrat de sélection), NSGA-II de `Lyra_Core/bench` (optimiseur), ESMM P4 (candidats de modules), eval P7 (fitness). Maison provisoire dans le dépôt : `evolve/`.
+- DoD (charte §1) : une population de harness améliore un objectif mesurable (qualité/token sur un jeu tenu) au fil des générations, de façon reproductible ; un module *adopté* vs *composté*, avec la fitness qui a tranché. **Échoue bruyamment** si les générations ne bougent pas.
+
+**Organe 2 — Le Songe** (aspect moins représenté, à définir avec tes références). Déclencher des **phases de « sommeil paradoxal »** où les vecteurs du contexte passé se **recomposent** (consolidation + imagination).
+- Statut honnête : **les deux PDFs fournis ne couvrent PAS** sleep/dream/replay/consolidation (vérifié, 0 occurrence) → cet organe **attend tes références**. Aucun code, aucun mécanisme inventé (charte §1/§4).
+- S'appuie déjà sur du concret Lyra : le **nemeton** (magasin des vecteurs à recomposer, P3), **FLOATLAP** (errance basse énergie = traversée onirique, `research/`), le **journal d'oubli** (réévaluation différée ≈ consolidation), les **transitions de phase κ/ρ** (langage des « stades de sommeil »).
+- **Pont entre les deux organes** : le Songe *génère* des contextes recomposés → qui *sèment* de nouveaux modules/tâches candidats → que la Pouponnière *sélectionne*. Le rêve nourrit la culture : voilà pourquoi **une seule bannière**.
+
+**Place dans le plan** : nouveau flux qui **mûrit après P3/P4/P7** (il les consomme). Organe 1 est constructible bientôt (fondé) ; Organe 2 reste un jalon de recherche. C'est le **point d'orgue hors-ligne de l'élan « intériorité »** : Lyra se transformant quand elle ne répond pas.
+
+---
+
 ## 9. Voie séparée — KAIROS / trading *(hors périmètre de l'édification cognitive)*
 
 À votre demande, le volet marché est traité **à part**. Il ne doit pas contaminer le noyau cognitif (les deux partagent la métaphore fractale, pas le code). Base de départ quand vous y reviendrez : `session_2/BOT/AUDIT_2026-07-16.md`.
