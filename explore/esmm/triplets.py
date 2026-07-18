@@ -30,8 +30,13 @@ def normalize_entity(s: str) -> str:
 def match_key(s: str) -> str:
     """Clé d'égalité lexicale STRICTE pour le consensus : normalisation + fusion
     des tirets/espaces (« auto-similarité » ≡ « autosimilarité » — cas observé en
-    live à cosinus 0.744, sous le seuil sémantique : rattrapé ici)."""
-    return normalize_entity(s).replace("-", "").replace(" ", "")
+    live à cosinus 0.744, sous le seuil sémantique) + PLIAGE DES DIACRITIQUES
+    (« géométrie » ≡ « geometrie » : les modèles sont incohérents sur les accents,
+    et Jaro-Winkler à 0.9 ne les rattrape pas — mesuré à 0.877)."""
+    import unicodedata
+    s = normalize_entity(s).replace("-", "").replace(" ", "")
+    return "".join(c for c in unicodedata.normalize("NFD", s)
+                   if unicodedata.category(c) != "Mn")
 
 
 @dataclass(frozen=True)

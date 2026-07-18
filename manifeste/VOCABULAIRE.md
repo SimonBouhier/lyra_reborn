@@ -45,6 +45,16 @@ l'autre dans les archives. Toute brique se réfère à ces définitions.
   existe hors dépôt (conclusion de Simon : « je me compliquais la vie pour
   rien ») — investigation à part entière quand il sera fourni.
 
+- **2026-07-18 — Récolte EPP_Verdict (organe aîné, jamais audité)** : cascade
+  de matching du consensus ESMM alignée sur l'ADR-011-v2 d'EPP — **exact
+  (match_key, diacritiques pliées) → Jaro-Winkler > 0.9 (stdlib, vérifié sur
+  vecteurs de référence) → embeddings mxbai ≥ 0.78** ; groupes de synonymes de
+  relations (ADR-006 d'EPP adapté à nos 8 canoniques français, FR+EN) pliés
+  AVANT le vote. Mesure ayant tranché : les variantes d'accents tombent à
+  JW≈0.877 < 0.9 → pliage des diacritiques dans match_key (exact, gratuit),
+  JW réservé aux coquilles. Effet live : « fractale partie_de théorie
+  mathématique » validé par 3 modèles au niveau exact.
+
 ## Décisions à trancher (à dater ici quand tranchées)
 
 - **κ = courbure d'Ollivier vs proxy Jaccard `j−0.2` ?** Les archives livrent en

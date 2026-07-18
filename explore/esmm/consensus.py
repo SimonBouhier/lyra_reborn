@@ -23,6 +23,11 @@ from dataclasses import dataclass, field
 from typing import Callable, Dict, List, Optional
 
 from explore.esmm.triplets import Extraction, Triplet, normalize_entity, match_key
+from explore.esmm.relations import canonical_relation
+from explore.esmm.textsim import jaro_winkler
+
+# seuil de l'étage Jaro-Winkler de la cascade (récolte EPP, ADR-011-v2 : 0.9)
+JW_THRESHOLD = 0.9
 
 
 @dataclass
@@ -55,11 +60,17 @@ def vote(extractions: List[Extraction], min_agree: int = 2,
     clusters: List[Dict] = []   # {skey, obj_repr, supporters:[], proposals:[(model, pred, t)]}
 
     def find_cluster(skey: str, obj: str) -> Optional[Dict]:
+        """Cascade EPP (ADR-011-v2) : exact → Jaro-Winkler > 0.9 → matcher
+        sémantique. Du moins cher au plus cher ; l'embedding n'est payé que si
+        le lexical strict ET le flou déterministe ont échoué."""
         okey = match_key(obj)
         for cl in clusters:
             if cl["skey"] != skey:
                 continue
-            if match_key(cl["obj_repr"]) == okey:
+            ckey = match_key(cl["obj_repr"])
+            if ckey == okey:
+                return cl
+            if jaro_winkler(ckey, okey) > JW_THRESHOLD:
                 return cl
             if matcher is not None and matcher(cl["obj_repr"], obj):
                 return cl
@@ -81,7 +92,9 @@ def vote(extractions: List[Extraction], min_agree: int = 2,
             voted.add(cluster_id)
             if ext.model not in cl["supporters"]:
                 cl["supporters"].append(ext.model)
-            cl["proposals"].append((ext.model, normalize_entity(t.predicate), t))
+            # pliage du prédicat vers son canonique (récolte EPP relation_vocabulary,
+            # ADR-006) : « type_of » et « est_un » votent ensemble → plus d'« exact »
+            cl["proposals"].append((ext.model, canonical_relation(t.predicate), t))
 
     for cl in clusters:
         supporters = cl["supporters"]
