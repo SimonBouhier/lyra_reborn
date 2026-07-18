@@ -75,6 +75,15 @@ Flux qui **mûrit après P3/P4/P7** (il les consomme). Détail : `docs/BANNIERE_
 | 1 — Pouponnière évolutive | le modèle cultive/élague/adopte ses modules de scaffold (harness auto-généré, génétique, adaptatif par-modèle) | **fondé, constructible après P3/P7** — maison provisoire `evolve/` | survey `docs/2607.13104v1.pdf` (Population-Based scaffolding SI) + `docs/2607.06906v1.pdf` (Harness Effect) + `docs/2607.14159v1.pdf` (MemoHarness : 6 dims + banc 2 couches + hors-ligne/en-ligne) + pouponnière `LyrArc` + NSGA-II `Lyra_Core` |
 | 2 — Le Songe | phases de « sommeil » : consolidation (Knowledge Seeding/replay) + Dreaming (curriculum synthétique auto-généré) | **FONDÉ** (papier *LMs Need Sleep*). **Palier 1** (rêve scaffold/mémoire) constructible sans entraînement, après P3 ; **Palier 2** (consolidation paramétrique LoRA) nécessite une voie de fine-tuning local | `docs/Language_Models_Need_Sleep_...pdf` ; s'appuie sur nemeton (P3), journal d'oubli, FLOATLAP, phases κ/ρ (NREM↔REM) ; **métriques figées : `docs/METRIQUES_SONGE.md`** |
 
+## Organes & ponts (doctrine inter-projets)
+
+Décision Simon 2026-07-18 : `lyra_reborn` = OS cognitif ; **EPP_Verdict** =
+moteur d'attestation (organe indépendant, ESMM mûr — jamais audité, hors lots) ;
+**Origami_Transformer** = instrument métrologique (géométrie de Fisher ; H-C v5
+pré-enregistrée = signature de la contestation épistémique). Indépendance
+stricte, ponts = contrats minces dégelés sur validation uniquement. Détail :
+`docs/ORGANES_ET_PONTS.md`. D'autres organes viendront.
+
 ## Quick wins restants (fort levier, cf. plan §7)
 
 - ~~⭐ P4 « fix once »~~ **FAIT et dépassé** : l'ESMM ré-implémenté produit ses
