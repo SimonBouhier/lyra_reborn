@@ -31,6 +31,20 @@ l'autre dans les archives. Toute brique se réfère à ces définitions.
   anti-windup ; l'hystérésis externe bloquait ses petits pas, constaté en live) ;
   la politique réactive pilote **ρ/κ** (garde-fous + EWMA). Un pilote par bouton.
 
+- **2026-07-18 — Consensus ESMM à deux niveaux + rapprochement sémantique** :
+  l'accord lexical exact entre modèles hétérogènes est une impasse empirique
+  (constaté : 38 puis 56 propositions, 0 accord — « figure géométrique » vs
+  « forme géométrique »). Le consensus vote sur des **clusters de liens** :
+  sujet identique (lexical strict via `match_key`) + objets équivalents
+  (lexical strict, sinon **cosinus mxbai-embed-large ≥ τ_obj=0.78** — calibré
+  sur 8 paires observées, choix conservateur précision-d'abord, à recalibrer
+  sur campagne). Niveaux : `exact` (même prédicat ≥2 modèles) / `pair` (même
+  lien, prédicats ≠, majoritaire retenu). Premier run productif : 48 proposés →
+  6 acceptés (4 exact + 2 pair), 34 rejetés.
+- **2026-07-18 — Topologie (κ/ρ/Betti) REPORTÉE** : un programme plus abouti
+  existe hors dépôt (conclusion de Simon : « je me compliquais la vie pour
+  rien ») — investigation à part entière quand il sera fourni.
+
 ## Décisions à trancher (à dater ici quand tranchées)
 
 - **κ = courbure d'Ollivier vs proxy Jaccard `j−0.2` ?** Les archives livrent en

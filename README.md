@@ -9,8 +9,8 @@ testé, et qui fait ce que la doc dit.
 
 ## État réel (pas la vision — cf. charte §4)
 
-Ce dépôt en est à : **fondations (P0) + noyau de contrôle (P1) + mémoire (P3)**.
-Ce qui existe et est **testé** :
+Ce dépôt en est à : **fondations (P0) + contrôle (P1) + pont réel (P2 partiel) +
+mémoire (P3) + exploration autonome (P4)**. Ce qui existe et est **testé** :
 
 - `core/knobs.py` — les 4 boutons ρ/δr/τc/κ et leur mapping vers les options de
   génération. **Source unique de vérité.**
@@ -33,6 +33,11 @@ Ce qui existe et est **testé** :
   différé, pas une suppression).
 - `memory/cbr/` — **Memento** : rappel par cas (cosinus) + navigateur à 4
   stratégies (stabilize / explore / case_guided / balanced).
+- `explore/esmm/` — l'**ESMM** : détection de lacunes du graphe → exploration
+  multi-modèles (séquentielle, Ollama) → **consensus sémantique à deux niveaux**
+  (exact / lien, matcher mxbai calibré) → connaissance commise au nemeton avec
+  ses modèles-soutiens. Premier run productif : 6 triplets validés par 2-3
+  modèles indépendants. Échec bruyant si un run ne produit rien.
 
 Le reste (`explore/esmm/`, `agency/`, `app/`, `eval/`, `core/topology/`,
 `research/`) est **stub** : dossiers-ancres avec la référence de leur phase et de

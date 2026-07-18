@@ -22,6 +22,7 @@ chaque brique à extraire.
 | **P3** | Injecteur nemeton **borné** (jamais de graphe entier dans un prompt) | `memory/graph/injector.py` | `Lyra_Uni_0_2/nemeton_prompt_injector.py` |
 | **P3** | Écologie mémorielle : pouponnière/journal d'oubli/compost + **réveil différé** + réveil du compost — les **4 bugs LyrArc explicitement exclus** | `memory/ecology/ecology.py` | ré-impl. du design `session_2/LyrArc` |
 | **P3** | Memento (CBR cosinus) + Navigator 4 stratégies, `Suggestion` à champs explicites (bug `/ispace/suggest` exclu) | `memory/cbr/memento.py` | port du design `session_2/IspaceNav.zip` |
+| **P4** | ESMM : lacunes (isolated/unstable/bridge/contradiction) → exploration multi-modèles séquentielle → **consensus sémantique à 2 niveaux** → graphe + cochaîne épistémique v1. Les 3 causes racines historiques exclues par construction + la **4ᵉ découverte en live** (impasse de l'accord lexical inter-modèles) résolue par matcher mxbai τ=0.78. **Premier run productif de l'histoire du projet** : 6 triplets consensuels commis (gemma3+mistral+llama3.1) | `explore/esmm/` (triplets, gaps, consensus, matcher, orchestrator) + `core/embeddings.py` | ré-impl. du design `lyra_clean_bis/services/esmm` |
 
 Preuves : `python -m pytest` (dont `test_modulation.py` = la modulation est réelle,
 `test_controller.py` = le P+I régule et reste borné).
@@ -57,9 +58,9 @@ des **masques transitoires de projection** du tour. Preuve :
 
 | Phase | Dossier | Quoi | Source (audit) — mode |
 |---|---|---|---|
-| P2 | `core/topology/` | κ/ρ + Betti GF(2) + garde de phase | `Lyra_Core` (+`Topologie`) — porter+dédup ; **recalibrer κc** |
+| P2 | `core/topology/` | κ/ρ + Betti GF(2) + garde de phase | **REPORTÉ (décision Simon 2026-07-18)** : un programme plus abouti existe hors périmètre — sa conclusion : « je me compliquais la vie pour rien ». Investigation à part entière quand Simon l'ouvrira ; ne PAS porter l'ancien pipeline d'ici là |
 | ~~P3~~ | ~~`memory/`~~ | **FAIT** — voir tableau ci-dessus. Notes de périmètre : implémentation mémoire pure-stdlib (persistance JSON) ; le Strategy multi-backend NetworkX/igraph d'Uni_0_2 volontairement simplifié en **une** implémentation propre derrière la même API (charte §5 — on ajoutera un backend si un besoin de perf le prouve) ; pas d'embeddings encore (arrivent avec le pont P2/éval) | — |
-| P4 | `explore/esmm/` | gap→cycle→consensus→graphe | `lyra_clean_bis/services/esmm` — **débuguer** (3 causes : amorcer le graphe ; `get_embedding`→`get_embeddings` ; consensus par-modèle) |
+| ~~P4~~ | ~~`explore/esmm/`~~ | **FAIT** — voir tableau ci-dessus. Restes : cochaîne 5D complète (v1 = support/diversité/sources), adaptation dynamique du plan de cycles, recalibration τ_obj sur campagne large | — |
 | P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
 | P6 | `app/` | serveur FastAPI unifié | `lyra_clean_bis` (socle) — porter |
 | P7 | `eval/` | juge **pairwise** + harnais + NSGA-II + logging forensique | `LLM_asa_judge`, `lyra_clean/evaluation`, `Lyra_Core/bench/ga_search.py` |
@@ -76,5 +77,7 @@ Flux qui **mûrit après P3/P4/P7** (il les consomme). Détail : `docs/BANNIERE_
 
 ## Quick wins restants (fort levier, cf. plan §7)
 
-- ⭐ **P4 « fix once »** : `get_embedding`→`get_embeddings` puis relancer un run ESMM
-  pour voir enfin des triplets. ~5 min de code, débloque la pépite n°1.
+- ~~⭐ P4 « fix once »~~ **FAIT et dépassé** : l'ESMM ré-implémenté produit ses
+  premiers triplets consensuels (cf. tableau P4). La découverte en prime : le
+  « fix once » n'aurait PAS suffi — l'accord lexical inter-modèles était une
+  4ᵉ cause racine invisible à l'audit, résolue par consensus sémantique.
