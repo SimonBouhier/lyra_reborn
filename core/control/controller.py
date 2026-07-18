@@ -44,7 +44,9 @@ class ControlConfig:
     tau_c_hi: float = 1.0        # cap normalisé (framework : 1.60 → non transférable)
     tension_setpoint: float = 0.55
     pressure_setpoint: float = 0.45
-    tension_band: float = 0.05
+    # bands : 0.06/0.06 = valeurs des RUNINFO des runs P1P2 validés (le starter-kit
+    # markdown disait 0.05/0.06 — contredit par les snapshots des runs réels).
+    tension_band: float = 0.06
     pressure_band: float = 0.06
     kp_tension: float = 0.23
     kp_pressure: float = 0.07

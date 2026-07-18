@@ -36,7 +36,6 @@ def test_loop_runs_and_modulates():
                     smoothing=SmoothingConfig(refractory_ms=0))
     res = loop.generate("Explique la récursivité avec un exemple.", task_type="focused")
     assert res.output  # non vide
-    assert "options" not in res.output or True
     assert set(res.options) == {"temperature", "top_p", "repeat_penalty", "num_predict"}
     assert res.modulated is True
     # les overrides de tâche 'focused' se reflètent dans les boutons utilisés

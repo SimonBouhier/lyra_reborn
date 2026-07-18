@@ -38,6 +38,15 @@ n'est pas fait :
 le P+I régule la vraie génération. Ne PAS faire semblant que measures.py mesure du
 réel (charte §1, §4).
 
+**Quirk hérité du canon (documenté au réexamen, à trancher en P2)** : dans
+`LyraLoop.generate`, les *task overrides* (creative/focused/strict) s'appliquent
+aux boutons du tour, puis la politique réactive part de ces valeurs *surchargées*
+et l'EWMA ramène l'état persistant vers elles. Conséquence : les overrides
+**fuient dans l'état durable** au fil des tours modulés. C'est le comportement du
+canon `conscious`, porté fidèlement — pas un bug de portage. Alternative à
+évaluer en P2 : moduler l'état *hors* overrides et n'appliquer l'override qu'à la
+projection du tour.
+
 ## Stubs — dossiers-ancres, à construire
 
 | Phase | Dossier | Quoi | Source (audit) — mode |

@@ -14,11 +14,12 @@ import sys
 # racine du dépôt sur sys.path (permet `python scripts/demo.py` depuis n'importe où)
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# console Windows en UTF-8 (sinon cp1252 ne sait pas afficher accents/symboles)
+# console Windows en UTF-8 (sinon cp1252 ne sait pas afficher accents/symboles).
+# except étroit (charte §2) : seul cas attendu = flux sans reconfigure() (pipe/IDE).
 try:
     sys.stdout.reconfigure(encoding="utf-8")
-except Exception:
-    pass
+except AttributeError:
+    pass  # flux non-reconfigurable : l'affichage ASCII reste correct
 
 from core.knobs import Knobs, KnobMapping
 from core.llm import EchoClient

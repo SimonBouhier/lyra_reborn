@@ -1,3 +1,17 @@
+> **⚠️ Note de provenance (réexamen Fable, 2026-07-18)** — Archive du
+> `README_ly_fr_bun.md` de `session_2/lyra_framework_bundle` (audité, fiabilité
+> haute). Deux mises en garde issues du recoupement avec les runs réels :
+> 1. **Le code inline du §11 n'est PAS celui des runs** : c'est une réécriture
+>    idéalisée (loi de contrôle différente — split appliqué à P+I entier — et
+>    `SUMMARY.json` qu'aucun run réel ne possède). La loi validée est celle de
+>    `src/run_loop3.py:controllers()` du bundle, portée dans
+>    `core/control/controller.py`.
+> 2. **`tension_band` réel des runs P1P2 = 0.06** (RUNINFO), pas 0.05 comme
+>    écrit §2.1. Vérifié par recalcul des `metrics_log.csv` : A02 ✗✗ →
+>    B03 ✓✓ (0.458/0.559) → P1P2 ✓✓ (0.454/0.560) → P1b ✓✓ (0.456/0.560).
+>    La config « P1b » finale du bundle (ki 0.015, band 0.07, share 0.10,
+>    kp_t 0.21) est une variante également validée, non retenue par défaut.
+
 # Lyra Local Atelier — Baseline **B03 + P1P2** — Starter Kit
 
 > **But**: relancer l’atelier Lyra en local (Windows, Ollama + `gpt-oss:20b`) avec une boucle stable (cohérence/fit/pressure/tension), contrôleurs (anti‑windup), phase λ, PatternEngine (R2/R1/R0), journalisation complète et carte **Nemeton** (PCA 2D). Inclut un **router minimal** prêt pour A/B.
