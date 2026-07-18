@@ -18,6 +18,10 @@ chaque brique à extraire.
 | P1 | Contrôleur P+I fuyant (**gains calibrés B03+P1P2** ; critères §8 → `tests/test_control_criteria.py`) | `core/control/controller.py` | `lyra_framework_bundle/src/run_loop3.py` + `docs/STARTER_KIT_ATELIER_B03_P1P2.md` |
 | P1 | Boucle réelle + autopilote | `core/loop.py` | consolidation |
 | P2 (acompte) | Politique de phase λ | `core/control/phase.py` | `lyra_framework_bundle/.../policies.py` |
+| **P3** | Nemeton : graphe typé + **deltas auditables/rollback** + bornes bruyantes + compaction + primitif `is_novel_link` k=2 (Songe §1d) | `memory/graph/store.py` | design `lyra_clean_bis` (deltas) + famille Uni ; **un seul** chemin de degré (bug double-comptage exclu) |
+| **P3** | Injecteur nemeton **borné** (jamais de graphe entier dans un prompt) | `memory/graph/injector.py` | `Lyra_Uni_0_2/nemeton_prompt_injector.py` |
+| **P3** | Écologie mémorielle : pouponnière/journal d'oubli/compost + **réveil différé** + réveil du compost — les **4 bugs LyrArc explicitement exclus** | `memory/ecology/ecology.py` | ré-impl. du design `session_2/LyrArc` |
+| **P3** | Memento (CBR cosinus) + Navigator 4 stratégies, `Suggestion` à champs explicites (bug `/ispace/suggest` exclu) | `memory/cbr/memento.py` | port du design `session_2/IspaceNav.zip` |
 
 Preuves : `python -m pytest` (dont `test_modulation.py` = la modulation est réelle,
 `test_controller.py` = le P+I régule et reste borné).
@@ -50,9 +54,7 @@ des **masques transitoires de projection** du tour. Preuve :
 | Phase | Dossier | Quoi | Source (audit) — mode |
 |---|---|---|---|
 | P2 | `core/topology/` | κ/ρ + Betti GF(2) + garde de phase | `Lyra_Core` (+`Topologie`) — porter+dédup ; **recalibrer κc** |
-| P3 | `memory/graph/` | nemeton : GraphBackend + deltas + rollback + injecteur | `Lyra_Uni_0_2`, `lyra_clean_bis` — porter |
-| P3 | `memory/ecology/` | pouponnière / journal d'oubli / compost + réveil différé | `session_2/LyrArc` — **ré-impl.** (4 bugs) |
-| P3 | `memory/cbr/` | Memento (CBR) + 4 stratégies de navigation | `session_2/IspaceNav.zip` (+ client `bundle_lyra`) — porter |
+| ~~P3~~ | ~~`memory/`~~ | **FAIT** — voir tableau ci-dessus. Notes de périmètre : implémentation mémoire pure-stdlib (persistance JSON) ; le Strategy multi-backend NetworkX/igraph d'Uni_0_2 volontairement simplifié en **une** implémentation propre derrière la même API (charte §5 — on ajoutera un backend si un besoin de perf le prouve) ; pas d'embeddings encore (arrivent avec le pont P2/éval) | — |
 | P4 | `explore/esmm/` | gap→cycle→consensus→graphe | `lyra_clean_bis/services/esmm` — **débuguer** (3 causes : amorcer le graphe ; `get_embedding`→`get_embeddings` ; consensus par-modèle) |
 | P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
 | P6 | `app/` | serveur FastAPI unifié | `lyra_clean_bis` (socle) — porter |

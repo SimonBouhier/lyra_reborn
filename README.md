@@ -9,8 +9,8 @@ testé, et qui fait ce que la doc dit.
 
 ## État réel (pas la vision — cf. charte §4)
 
-Ce dépôt en est à ses **fondations (P0) + noyau de contrôle (P1)**. Ce qui existe
-et est **testé** :
+Ce dépôt en est à : **fondations (P0) + noyau de contrôle (P1) + mémoire (P3)**.
+Ce qui existe et est **testé** :
 
 - `core/knobs.py` — les 4 boutons ρ/δr/τc/κ et leur mapping vers les options de
   génération. **Source unique de vérité.**
@@ -25,10 +25,18 @@ et est **testé** :
   politique réactive, politique de **phase λ**.
 - `core/metrics/cheap.py` — métriques sans modèle (répétition, structure, overlap,
   troncature, carry-over).
+- `memory/graph/` — le **nemeton** : graphe sémantique typé avec **deltas
+  auditables + rollback**, bornes anti-explosion bruyantes, compaction, primitif
+  local de nouveauté k=2 (pour le futur Songe), injecteur de prompt borné.
+- `memory/ecology/` — l'**écologie mémorielle** : pouponnière / journal d'oubli /
+  compost, réévaluation différée, **réveil des items compostés** (l'oubli est un
+  différé, pas une suppression).
+- `memory/cbr/` — **Memento** : rappel par cas (cosinus) + navigateur à 4
+  stratégies (stabilize / explore / case_guided / balanced).
 
-Tout le reste (`memory/`, `explore/esmm/`, `agency/`, `app/`, `eval/`,
-`core/topology/`, `research/`) est **stub** : dossiers-ancres avec la référence de
-leur phase et de leur source. Voir `BUILD_STATUS.md`.
+Le reste (`explore/esmm/`, `agency/`, `app/`, `eval/`, `core/topology/`,
+`research/`) est **stub** : dossiers-ancres avec la référence de leur phase et de
+leur source. Voir `BUILD_STATUS.md`.
 
 ## Démarrer
 
