@@ -56,6 +56,19 @@ la tâche qui le prend en main**.
   qu'un harness doit être **cultivé par-modèle et par-tâche** — exactement ton
   « s'adapte selon le modèle qui le prend en main ».
 
+- **`2607.14159v1.pdf` — *MemoHarness: Agent Harnesses That Learn from
+  Experience***. Le *comment* concret. Décompose le harness en **six dimensions
+  éditables** — *contexte, outils, orchestration, mémoire, décodage, sortie* ;
+  apprend via un **banc d'expérience à deux couches** (diagnostics **par-cas** +
+  **patterns globaux distillés**) ; **adapte le harness par cas via récupération,
+  sans recherche au moment du test**. ⭐ **Séparation clé pour nous** : la
+  **recherche évolutive lourde** se fait **hors-ligne** (= pendant la Jachère),
+  l'**adaptation par-cas légère** se fait **en ligne** par simple *retrieval* — ce
+  qui **répond au budget de calcul** (on ne relance pas d'évolution génétique à
+  chaque requête). Son banc à deux couches **est** notre **journal** (épisodique) +
+  **nemeton** (global distillé), et la distillation par-cas → global **est** une
+  opération de **consolidation** (nouveau pont vers l'Organe 2).
+
 **Filiation Lyra.** C'est **la pouponnière/compost de `LyrArc`** (auditée), promue
 de « cultiver des tâches » à « cultiver des modules ». L'écologie à 3 niveaux
 (pouponnière ≥ seuil / journal d'oubli / compost) devient le **substrat de
@@ -63,11 +76,16 @@ sélection** ; le **NSGA-II** de `Lyra_Core/bench` est l'optimiseur multi-object
 l'**ESMM** (P4) fournit des modules candidats ; l'**éval** (P7) fournit la fitness.
 
 **Forme dans le dépôt** (proposition — à valider) : un flux `evolve/`. Une
-**population** de modules-de-scaffold ; chacun a un *génome* (spec de
-prompt/outil/politique), une *fitness* (succès de tâche × économie de tokens — le
+**population** de modules-de-scaffold ; chacun a un *génome* = les **six
+dimensions éditables** (contexte, outils, orchestration, mémoire, décodage, sortie
+— cf. MemoHarness), une *fitness* (succès de tâche × économie de tokens — le
 double levier du Harness Effect), des opérateurs *mutation/croisement*, une
 *sélection*, et un cycle de vie *pouponnière → adoption / compost → mort*.
 **Conditionné au modèle** : la population s'adapte au modèle qui la porte.
+**Découpage MemoHarness** : la **recherche évolutive lourde** tourne **hors-ligne**
+(pendant la Jachère) ; à l'inférence, on ne fait qu'une **adaptation par-cas
+légère par *retrieval*** dans le banc d'expérience — jamais d'évolution au
+test-time (budget maîtrisé).
 
 **Definition of Done** (charte §1) : un run montre une population de harness
 améliorant un objectif mesurable (p. ex. qualité-par-token sur un jeu de tâches

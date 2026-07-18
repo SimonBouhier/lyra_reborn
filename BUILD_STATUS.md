@@ -15,7 +15,7 @@ chaque brique à extraire.
 | P1 | Métriques cheap | `core/metrics/cheap.py` | `conscious/metrics/cheap.py` |
 | P1 | Garde-fous (clamp/hystérésis/réfractaire) + EWMA | `core/control/guards.py`, `core/state.py` | `conscious/guards.py,state.py` |
 | P1 | Politique réactive | `core/control/reactive.py` | `conscious/policies/modulator.py` |
-| P1 | Contrôleur P+I fuyant | `core/control/controller.py` | `lyra_framework_bundle/src/run_loop3.py:59-130` |
+| P1 | Contrôleur P+I fuyant (**gains calibrés B03+P1P2** ; critères §8 → `tests/test_control_criteria.py`) | `core/control/controller.py` | `lyra_framework_bundle/src/run_loop3.py` + `docs/STARTER_KIT_ATELIER_B03_P1P2.md` |
 | P1 | Boucle réelle + autopilote | `core/loop.py` | consolidation |
 | P2 (acompte) | Politique de phase λ | `core/control/phase.py` | `lyra_framework_bundle/.../policies.py` |
 
@@ -58,7 +58,7 @@ Flux qui **mûrit après P3/P4/P7** (il les consomme). Détail : `docs/BANNIERE_
 
 | Organe | Quoi | Statut | Source / ancrage |
 |---|---|---|---|
-| 1 — Pouponnière évolutive | le modèle cultive/élague/adopte ses modules de scaffold (harness auto-généré, génétique, adaptatif par-modèle) | **fondé, constructible après P3/P7** — maison provisoire `evolve/` | survey `docs/2607.13104v1.pdf` (Population-Based scaffolding SI) + `docs/2607.06906v1.pdf` (Harness Effect) + pouponnière `LyrArc` + NSGA-II `Lyra_Core` |
+| 1 — Pouponnière évolutive | le modèle cultive/élague/adopte ses modules de scaffold (harness auto-généré, génétique, adaptatif par-modèle) | **fondé, constructible après P3/P7** — maison provisoire `evolve/` | survey `docs/2607.13104v1.pdf` (Population-Based scaffolding SI) + `docs/2607.06906v1.pdf` (Harness Effect) + `docs/2607.14159v1.pdf` (MemoHarness : 6 dims + banc 2 couches + hors-ligne/en-ligne) + pouponnière `LyrArc` + NSGA-II `Lyra_Core` |
 | 2 — Le Songe | phases de « sommeil » : consolidation (Knowledge Seeding/replay) + Dreaming (curriculum synthétique auto-généré) | **FONDÉ** (papier *LMs Need Sleep*). **Palier 1** (rêve scaffold/mémoire) constructible sans entraînement, après P3 ; **Palier 2** (consolidation paramétrique LoRA) nécessite une voie de fine-tuning local | `docs/Language_Models_Need_Sleep_...pdf` ; s'appuie sur nemeton (P3), journal d'oubli, FLOATLAP, phases κ/ρ (NREM↔REM) ; **métriques figées : `docs/METRIQUES_SONGE.md`** |
 
 ## Quick wins restants (fort levier, cf. plan §7)

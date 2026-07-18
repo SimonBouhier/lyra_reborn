@@ -29,24 +29,48 @@ def _clamp(x: float, lo: float = 0.0, hi: float = 1.0) -> float:
 
 @dataclass
 class ControlConfig:
-    tau_c_lo: float = 0.15
-    tau_c_hi: float = 0.90
+    """Valeurs **calibrées empiriquement « B03 + P1P2 »** (baseline documentée dans
+    `session_2/lyra_framework_bundle/README_ly_fr_bun.md`, alias le starter-kit de
+    l'atelier — archivé ici : `docs/STARTER_KIT_ATELIER_B03_P1P2.md`). Elles
+    remplacent les valeurs par défaut « au jugé » de la première version.
+
+    ⚠️ **Échelle de τc** : dans le framework d'origine `tau_c ∈ [0.22, 1.60]` (une
+    grandeur brute). Ici τc est un **bouton normalisé [0,1]** mappé vers la
+    température ⇒ on garde `tau_c_hi = 1.0` (on ne copie PAS 1.60). En revanche
+    setpoints, gains, zones mortes opèrent sur tension/pression ∈ [0,1] et sont
+    transférables tels quels.
+    """
+    tau_c_lo: float = 0.22       # plancher (cf. critère §8 : τc_min ≥ 0.22)
+    tau_c_hi: float = 1.0        # cap normalisé (framework : 1.60 → non transférable)
     tension_setpoint: float = 0.55
     pressure_setpoint: float = 0.45
-    tension_band: float = 0.0
-    pressure_band: float = 0.0
-    kp_tension: float = 0.25
-    kp_pressure: float = 0.20
-    ki_pressure: float = 0.015
-    pressure_i_leak: float = 0.02
+    tension_band: float = 0.05
+    pressure_band: float = 0.06
+    kp_tension: float = 0.23
+    kp_pressure: float = 0.07
+    ki_pressure: float = 0.012
+    pressure_i_leak: float = 0.03
     pressure_i_max: float = 0.12
     pressure_i_split_tau: float = 0.65     # part de l'intégrale réservée au partage vers τc
     pressure_tau_share_delta_r_gate: float = 0.82
-    pressure_tau_share_gain: float = 0.10
-    pressure_margin: float = 0.04
+    pressure_tau_share_gain: float = 0.12
+    pressure_margin: float = 0.02
     delta_r_nudge_high: float = 0.025
     delta_r_floor: float = 0.28
     delta_r_soft_cap: float = 0.90
+
+
+# Critères d'acceptation « on passe à la suite » (fenêtre 30 pas), issus du
+# starter-kit B03+P1P2 (§8). Ce sont des cibles de CALIBRATION pour un run réel
+# (métriques dérivées du graphe). L'autopilote synthétique (measures.py) ne vise
+# qu'un sous-ensemble robuste — cf. tests/test_control_criteria.py.
+ACCEPTANCE_CRITERIA = {
+    "pressure_mean": (0.44, 0.46),
+    "tension_mean": (0.54, 0.58),
+    "tau_c_min": 0.22,       # ne pas coller au plancher
+    "max_R2_streak": 10,     # strictement <
+    "lambda_count_low": True,
+}
 
 
 class PIController:
