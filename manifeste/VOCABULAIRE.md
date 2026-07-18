@@ -16,6 +16,21 @@ l'autre dans les archives. Toute brique se réfère à ces définitions.
 | **modules A/M/P/G/X/R** | ontologie de modules cognitifs typés | *à implémenter* | manifeste, `Archi/kit_lyra` |
 | **SilenceØ** | le refus/silence comme réponse de première classe | *à implémenter (P5)* | `LyrAgent` |
 
+## Décisions datées
+
+- **2026-07-18 — Réalignement des overrides** : les task overrides sont des
+  masques transitoires de projection ; la modulation porte sur l'état de base.
+- **2026-07-18 — Pont P2 v1 (signaux épistémiques réels)** : `coherence` =
+  structure + anti-emballement ; `fit` = recouvrement prompt↔sortie (pénalisé si
+  troncature) ; `pressure` = utilisation du budget de génération (tokens
+  produits / num_predict — le signal que δr pilote mécaniquement) ; `tension` =
+  combinateur commun. Pondérations dans `BridgeConfig` (calibrables). **À
+  calibrer sur campagne réelle** : `fit_gain` (observé ~0.14 sur gemma3, bas).
+- **2026-07-18 — Partage des responsabilités de modulation** : le P+I pilote
+  **δr/τc** (application directe — sa stabilité vient de ses bandes/fuite/
+  anti-windup ; l'hystérésis externe bloquait ses petits pas, constaté en live) ;
+  la politique réactive pilote **ρ/κ** (garde-fous + EWMA). Un pilote par bouton.
+
 ## Décisions à trancher (à dater ici quand tranchées)
 
 - **κ = courbure d'Ollivier vs proxy Jaccard `j−0.2` ?** Les archives livrent en

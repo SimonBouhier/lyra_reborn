@@ -37,10 +37,14 @@ n'est pas fait :
    **synthétique** (`core/control/measures.py`, formules-jouets honnêtement
    étiquetées, issues de `lyra_framework_bundle`).
 
-**Chantier P2 = le pont :** remplacer les mesures synthétiques par des signaux
-épistémiques dérivés des vraies métriques (cohérence/fit/pression réels), pour que
-le P+I régule la vraie génération. Ne PAS faire semblant que measures.py mesure du
-réel (charte §1, §4).
+**Pont P2 : FAIT (2026-07-18)** — `core/control/bridge.py` dérive
+coherence/fit/pressure/tension de la génération réelle ; `LyraLoop(controller=…)`
+active le mode pont (P+I → δr/τc en application directe ; réactif → ρ/κ).
+**Validé en génération réelle** (gemma3 via Ollama : δr 0.300→0.357 en 3 tours
+sous pression réelle 0.20 < consigne 0.45). `measures.py` ne sert plus qu'à
+l'autopilote (démo/tests de la loi de commande), comme étiqueté. Reste P2 :
+volet topologie (κ/ρ + Betti + calibration κc) et calibration du pont
+(`fit_gain`) sur campagne réelle.
 
 **Quirk hérité du canon — RÉSOLU (décision Simon, 2026-07-18)** : dans le canon
 `conscious`, les *task overrides* fuyaient dans l'état persistant via l'EWMA

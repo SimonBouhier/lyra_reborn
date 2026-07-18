@@ -34,22 +34,38 @@ class LoopResult:
     metrics: Dict[str, float]
     truncated: bool
     modulated: bool
+    epistemic: Optional[Dict[str, float]] = None  # signaux réels (mode pont P2)
 
 
 class LyraLoop:
-    """Enveloppe de contrôle autour d'un client LLM (`.generate(prompt, options)`)."""
+    """Enveloppe de contrôle autour d'un client LLM (`.generate(prompt, options)`).
+
+    Deux modes de modulation de l'état de base :
+    - sans `controller` : politique réactive seule (P1) ;
+    - avec `controller` (PIController) : **pont P2** — partage des responsabilités,
+      décision datée 2026-07-18 : le P+I régule **δr et τc** (consignes de
+      pression/tension sur signaux épistémiques RÉELS via EpistemicBridge), la
+      politique réactive garde **ρ et κ** (symptômes textuels). Un seul pilote
+      par bouton — pas de double-commande.
+    """
 
     def __init__(self, llm, mapping: Optional[KnobMapping] = None,
                  thresholds: Optional[HeuristicThresholds] = None,
                  smoothing: Optional[SmoothingConfig] = None,
                  state: Optional[CognitiveState] = None,
-                 enable_carryover_guard: bool = True):
+                 enable_carryover_guard: bool = True,
+                 controller=None, bridge=None):
         self.llm = llm
         self.mapping = mapping or KnobMapping()
         self.thresholds = thresholds or HeuristicThresholds()
         self.smoothing = smoothing or SmoothingConfig()
         self.state = state or CognitiveState()
         self.enable_carryover_guard = enable_carryover_guard
+        self.controller = controller          # Optional[PIController]
+        if controller is not None and bridge is None:
+            from core.control.bridge import EpistemicBridge
+            bridge = EpistemicBridge()
+        self.bridge = bridge
 
     def generate(self, prompt: str, task_type: str = "general") -> LoopResult:
         # 1) boutons du tour = état courant + overrides de tâche
@@ -81,8 +97,32 @@ class LyraLoop:
         # hérité d'un programme corrompu — cf. BUILD_STATUS). Ici : les métriques
         # observées corrigent la personnalité de base, le masque reste un masque.
         modulated = False
+        epistemic: Optional[Dict[str, float]] = None
+        if self.bridge is not None:
+            epistemic = self.bridge.derive(output, options, cheap)
         if refractory_ok(self.state, self.smoothing):
-            target = decide_next_knobs(self.state.knobs, cheap)
+            reactive = decide_next_knobs(self.state.knobs, cheap)
+            if self.controller is not None and epistemic is not None:
+                # pont P2 : P+I pilote δr/τc sur signaux réels ; réactif garde ρ/κ.
+                # δr/τc s'appliquent DIRECTEMENT (comme dans le framework source) :
+                # la stabilité du P+I vient de ses bandes + fuite + anti-windup ;
+                # l'hystérésis externe (0.05) bloquait ses petits pas (~0.02/tour)
+                # — constaté en génération réelle le 2026-07-18, δr/τc figés.
+                pi_knobs = self.controller.step(
+                    self.state.knobs,
+                    coherence=epistemic["coherence"],
+                    fit=epistemic["fit"],
+                    pressure=epistemic["pressure"],
+                )
+                self.state.knobs.delta_r = pi_knobs.delta_r
+                self.state.knobs.tau_c = pi_knobs.tau_c
+                # ρ/κ : chemin réactif classique (garde-fous + EWMA) ; δr/τc passés
+                # à leur valeur courante ⇒ l'EWMA les laisse intacts.
+                target = Knobs(rho=reactive.rho, kappa=reactive.kappa,
+                               delta_r=self.state.knobs.delta_r,
+                               tau_c=self.state.knobs.tau_c)
+            else:
+                target = reactive
             guarded = clamp_and_hysteresis(self.state, target.as_dict(), self.smoothing)
             self.state.ewma_update(guarded, alpha=self.smoothing.ewma_alpha)
             modulated = True
@@ -98,6 +138,7 @@ class LyraLoop:
             metrics=cheap,
             truncated=truncated,
             modulated=modulated,
+            epistemic=epistemic,
         )
 
 
