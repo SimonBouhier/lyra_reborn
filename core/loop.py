@@ -74,9 +74,15 @@ class LyraLoop:
         cheap["truncated"] = float(truncated)
 
         # 6) modulation (si période réfractaire écoulée) : réactif -> garde-fous -> EWMA
+        # RÉALIGNEMENT (2026-07-18, décision Simon) : la politique réactive ajuste
+        # l'ÉTAT DE BASE (self.state.knobs), PAS les boutons surchargés du tour.
+        # Les task overrides sont des masques transitoires de projection ; dans le
+        # canon `conscious` ils fuyaient dans l'état persistant via l'EWMA (design
+        # hérité d'un programme corrompu — cf. BUILD_STATUS). Ici : les métriques
+        # observées corrigent la personnalité de base, le masque reste un masque.
         modulated = False
         if refractory_ok(self.state, self.smoothing):
-            target = decide_next_knobs(knobs_used, cheap)
+            target = decide_next_knobs(self.state.knobs, cheap)
             guarded = clamp_and_hysteresis(self.state, target.as_dict(), self.smoothing)
             self.state.ewma_update(guarded, alpha=self.smoothing.ewma_alpha)
             modulated = True

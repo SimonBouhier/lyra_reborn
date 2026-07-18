@@ -40,3 +40,22 @@ def test_loop_runs_and_modulates():
     assert res.modulated is True
     # les overrides de tâche 'focused' se reflètent dans les boutons utilisés
     assert res.knobs_used["kappa"] == 0.70
+
+
+def test_task_overrides_do_not_leak_into_persistent_state():
+    """Réalignement 2026-07-18 : les masques de tâche ne contaminent pas la base.
+
+    Sous le design hérité du canon, des tours répétés en 'focused' (kappa
+    override = 0.70) tiraient l'état persistant vers 0.70 via l'EWMA. Désormais
+    la politique réactive module l'état de base : sans répétitions détectées,
+    kappa n'a aucune raison de bouger.
+    """
+    loop = LyraLoop(EchoClient(), state=CognitiveState(),
+                    smoothing=SmoothingConfig(refractory_ms=0))
+    k0 = loop.state.knobs.kappa  # 0.60 par défaut
+    for _ in range(5):
+        res = loop.generate("Analyse ce point précis maintenant.", task_type="focused")
+        assert res.modulated is True
+        assert res.knobs_used["kappa"] == 0.70  # le masque s'applique bien au tour
+    # ... mais la base n'a pas dérivé vers le masque
+    assert abs(loop.state.knobs.kappa - k0) < 1e-9

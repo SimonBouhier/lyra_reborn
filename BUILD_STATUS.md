@@ -38,14 +38,12 @@ n'est pas fait :
 le P+I régule la vraie génération. Ne PAS faire semblant que measures.py mesure du
 réel (charte §1, §4).
 
-**Quirk hérité du canon (documenté au réexamen, à trancher en P2)** : dans
-`LyraLoop.generate`, les *task overrides* (creative/focused/strict) s'appliquent
-aux boutons du tour, puis la politique réactive part de ces valeurs *surchargées*
-et l'EWMA ramène l'état persistant vers elles. Conséquence : les overrides
-**fuient dans l'état durable** au fil des tours modulés. C'est le comportement du
-canon `conscious`, porté fidèlement — pas un bug de portage. Alternative à
-évaluer en P2 : moduler l'état *hors* overrides et n'appliquer l'override qu'à la
-projection du tour.
+**Quirk hérité du canon — RÉSOLU (décision Simon, 2026-07-18)** : dans le canon
+`conscious`, les *task overrides* fuyaient dans l'état persistant via l'EWMA
+(porté trop fidèlement d'un programme corrompu). Réaligné : la politique réactive
+module désormais l'**état de base** (`self.state.knobs`) ; les overrides restent
+des **masques transitoires de projection** du tour. Preuve :
+`tests/test_modulation.py::test_task_overrides_do_not_leak_into_persistent_state`.
 
 ## Stubs — dossiers-ancres, à construire
 
