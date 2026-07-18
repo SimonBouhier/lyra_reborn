@@ -131,12 +131,24 @@ paliers** :
   grand). À ouvrir seulement si/quand une brique de fine-tuning local est ajoutée.
   Marqué **« Cible »** d'ici là.
 
-**Definition of Done (Palier 1, testable)** : une phase de sommeil produit des rêves
-qui sont (a) **nouveaux** (nouveauté mesurable vs les tours passés — pas des
-copies), (b) **consolidants** (le graphe/journal après sommeil est plus compact ou
-mieux organisé, mesurable), et (c) **utiles en aval** (au moins un rêve nourrit une
-tâche ou un module qui améliore une métrique tenue). **Échec bruyant** si les rêves
-sont des copies ou restent sans effet (charte §1).
+**Definition of Done (Palier 1, testable).** Spécification figée + seuils :
+`docs/METRIQUES_SONGE.md` (à pré-enregistrer avant le premier run réel). En bref,
+une phase de sommeil passe **ssi**, sur un *lot* de rêves :
+- **(a) Nouveauté** (bande bornée, ni copie ni bruit) : anti-copie `sim_max<τ_copie`
+  **∧** ancrage `sim_max>τ_plancher` **∧** anti-plagiat de surface **∧** nouveauté
+  compositionnelle **bornée** — lien neuf = *pas d'arête ni de voisin commun à
+  profondeur k=2* (local O(deg), **jamais** de plus court chemin ni de PMI globale).
+- **(b) Consolidation** (compression à information préservée) : compacité ↓ **∧**
+  **modularité `ΔQ>0`** (juge de paix) + `Δβ₀≤0` **∧** **fidélité** sur une
+  **fenêtre glissante** (les N dernières mémoires avant cette phase) qui ne chute
+  pas. `β₁` = **observation seule**, hors objectif.
+- **(c) Utilité aval** : au moins un rêve nourrit un module/tâche qui améliore une
+  métrique tenue.
+
+**Échec bruyant** si la médiane de nouveauté ≈ 0 (tout est copie) ou si la
+compression fait chuter la fidélité récente (oubli déguisé). Deux **baselines**
+bornent le sens : *rêve-copie* (doit échouer la nouveauté) et *rêve-nul* (doit
+échouer l'ancrage). Seuils **calibrés, non codés en dur** (leçon `KAPPA_C`).
 
 ---
 
