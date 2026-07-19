@@ -266,6 +266,20 @@ Deux aspects personnels manquaient au plan ; ils se réunissent sous **une même
 
 ---
 
+## 8·ter. Cap d'application n°1 — « La Vigie » : présence externe *(ajout 2026-07-19)*
+
+La doctrine de l'Architecte (`lyra_reborn/manifeste/DOCTRINE_ARCHITECTE.md`) identifie le goulot d'étranglement actuel : **l'attention** — l'architecture fonctionne mais opère dans le vide. Premier cap d'application hors laboratoire : **La Vigie** (`lyra_reborn/docs/LA_VIGIE.md`) — veille et contribution épistémique sur X, en démonstration publique de la thèse d'orchestration.
+
+- **Deux files** : Audit (EPP via pont — solidité épistémique d'affirmations publiques falsifiables) et Amplification (Lyra — addition technique sur les contenus résonants). Chaque brouillon : score de confiance + justification.
+- **Règles dures** : aucune publication automatique (le système n'a AUCUN accès réseau en écriture — l'humain est le bouton publier) ; la cible est l'affirmation, jamais la personne ; pas de confrontation systématique.
+- **Jachère Sociale** : différer un sujet bruyant dans le journal d'oubli (`memory/ecology`), analyse asynchrone à froid — l'écologie existante EST le mécanisme.
+- **Boucle stratégique** : les labels accepté/rejeté de l'Architecte = premier flux de fitness réel pour la Pouponnière (§8·bis).
+- **Critère d'arbitrage désormais double** pour toute brique : solidité interne ET/OU présence externe (doctrine).
+
+Ce cap **tire** P5 (outils d'ingestion), P7 (pré-évaluation des brouillons) et la Jachère. V0 constructible dès maintenant (P3+P4+embeddings faits, entrées 100 % gratuites : arXiv/RSS/captures).
+
+---
+
 ## 9. Voie séparée — KAIROS / trading *(hors périmètre de l'édification cognitive)*
 
 À votre demande, le volet marché est traité **à part**. Il ne doit pas contaminer le noyau cognitif (les deux partagent la métaphore fractale, pas le code). Base de départ quand vous y reviendrez : `session_2/BOT/AUDIT_2026-07-16.md`.

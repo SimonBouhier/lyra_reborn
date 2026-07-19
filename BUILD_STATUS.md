@@ -84,6 +84,16 @@ pré-enregistrée = signature de la contestation épistémique). Indépendance
 stricte, ponts = contrats minces dégelés sur validation uniquement. Détail :
 `docs/ORGANES_ET_PONTS.md`. D'autres organes viendront.
 
+## Cap d'application n°1 — « La Vigie » (doctrine 2026-07-19)
+
+Doctrine de l'Architecte versée (`manifeste/DOCTRINE_ARCHITECTE.md`) : le goulot
+est l'ATTENTION → présence externe. POC : `docs/LA_VIGIE.md` — veille +
+brouillons X validés à la main (files Audit/Amplification, Jachère Sociale =
+l'écologie existante, labels = fitness de la Pouponnière). Règles dures : zéro
+écriture réseau, la cible est l'affirmation jamais la personne. V0 constructible
+(P3+P4+embeddings faits ; entrées gratuites arXiv/RSS/captures). Critère
+d'arbitrage double désormais : solidité interne ET/OU présence externe.
+
 ## Quick wins restants (fort levier, cf. plan §7)
 
 - ~~⭐ P4 « fix once »~~ **FAIT et dépassé** : l'ESMM ré-implémenté produit ses
