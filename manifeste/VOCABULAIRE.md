@@ -55,10 +55,19 @@ l'autre dans les archives. Toute brique se réfère à ces définitions.
   JW réservé aux coquilles. Effet live : « fractale partie_de théorie
   mathématique » validé par 3 modèles au niveau exact.
 
+- **2026-07-19 — Surface affective (théâtre honnête)** : la valence (joy/
+  tension) est DÉRIVÉE des signaux réels du pont P2 (joy = 0.6·fit +
+  0.4·coherence — poids de l'esquisse de Simon, « resonance » ≡ fit), rendue
+  visible en fin de sortie (`[affect] joy=… tension=…`). C'est un AFFICHAGE,
+  pas un second pilote (« un pilote par bouton ») : la modulation voulue par
+  l'esquisse est déjà faite en amont par le P+I sur les mêmes signaux.
+  Désactivée par défaut, comme dans le canon. `core/affect.py`.
+
 ## Décisions à trancher (à dater ici quand tranchées)
 
 - **κ = courbure d'Ollivier vs proxy Jaccard `j−0.2` ?** Les archives livrent en
   réalité le proxy Jaccard, pas Ollivier. Décision : _à trancher en P2_.
+- **prajñā / papañca** (introduits par Simon, 2026-07-19 : « demandent de la valence ») — mapping exact sur l'architecture À DÉFINIR PAR SIMON (discernement ↔ ? ; prolifération conceptuelle ↔ ?). Ne pas inventer à sa place.
 - ⚠️ `ρ` topologique ≠ `ρ` de polarité de `Lyra_Jupyter_MCA` : ne pas confondre.
 
 ## Principe directeur

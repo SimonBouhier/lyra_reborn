@@ -35,6 +35,7 @@ class LoopResult:
     truncated: bool
     modulated: bool
     epistemic: Optional[Dict[str, float]] = None  # signaux réels (mode pont P2)
+    affect: Optional[Dict[str, float]] = None     # surface affective (théâtre honnête)
 
 
 class LyraLoop:
@@ -54,7 +55,8 @@ class LyraLoop:
                  smoothing: Optional[SmoothingConfig] = None,
                  state: Optional[CognitiveState] = None,
                  enable_carryover_guard: bool = True,
-                 controller=None, bridge=None):
+                 controller=None, bridge=None,
+                 enable_affective_surface: bool = False):
         self.llm = llm
         self.mapping = mapping or KnobMapping()
         self.thresholds = thresholds or HeuristicThresholds()
@@ -62,10 +64,18 @@ class LyraLoop:
         self.state = state or CognitiveState()
         self.enable_carryover_guard = enable_carryover_guard
         self.controller = controller          # Optional[PIController]
-        if controller is not None and bridge is None:
+        self.enable_affective_surface = enable_affective_surface
+        # le pont fournit les signaux réels : requis par le contrôleur ET par la
+        # surface affective (théâtre honnête = valence sur instruments réels)
+        if bridge is None and (controller is not None or enable_affective_surface):
             from core.control.bridge import EpistemicBridge
             bridge = EpistemicBridge()
         self.bridge = bridge
+        if enable_affective_surface:
+            from core.affect import AffectiveSurface
+            self._affect_surface = AffectiveSurface()
+        else:
+            self._affect_surface = None
 
     def generate(self, prompt: str, task_type: str = "general") -> LoopResult:
         # 1) boutons du tour = état courant + overrides de tâche
@@ -127,7 +137,15 @@ class LyraLoop:
             self.state.ewma_update(guarded, alpha=self.smoothing.ewma_alpha)
             modulated = True
 
-        # 7) mémoire légère
+        # 7) surface affective optionnelle : AFFICHAGE de la valence dérivée des
+        #    signaux réels — ne pilote rien (cf. core/affect.py). Comme dans le
+        #    canon : appendue à la sortie, jamais silencieusement injectée avant.
+        affect: Optional[Dict[str, float]] = None
+        if self._affect_surface is not None and epistemic is not None:
+            affect = self._affect_surface.derive(epistemic)
+            output = f"{output}\n\n{self._affect_surface.render(affect)}"
+
+        # 8) mémoire légère
         self.state.push(prompt=prompt, output=output, metrics=cheap)
 
         return LoopResult(
@@ -139,6 +157,7 @@ class LyraLoop:
             truncated=truncated,
             modulated=modulated,
             epistemic=epistemic,
+            affect=affect,
         )
 
 
