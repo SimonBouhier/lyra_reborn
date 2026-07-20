@@ -25,3 +25,6 @@ secrets.*
 desktop.ini
 .vscode/
 .idea/
+
+# articles tiers : liens dans docs/REFERENCES.md, jamais redistribues
+docs/*.pdf
