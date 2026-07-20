@@ -50,11 +50,16 @@
   chantier. D'ici là : récolte passive des idées d'EPP éprouvées (fingerprints
   Jaro-Winkler en cascade avant embeddings ; groupes de synonymes de relations ;
   track-record/tiers de `post_crystallization` → écologie mémorielle).
-- **Origa → lyra_reborn** : si H-C (v5) confirme, la géométrie de Fisher
-  devient un SIGNAL ÉPISTÉMIQUE RÉEL pour le pont P2 (une « tension » fondée
-  instrumentalement — le successeur légitime de la topologie κ/ρ abandonnée).
-  Condition de dégel : verdict v5 `H-C_CONFIRMÉ` aux seuils gelés.
+- **Origa → lyra_reborn** : la géométrie de Fisher comme SIGNAL ÉPISTÉMIQUE
+  RÉEL pour le pont P2 (une « tension » fondée instrumentalement — le
+  successeur légitime de la topologie κ/ρ abandonnée).
+  **✅ CONDITION DE DÉGEL REMPLIE (2026-07-20)** : verdict v5 `HC_CONFIRMÉ`
+  aux seuils gelés (3/4 modèles, 1 VOID — `Origa/NOTE_RESULTATS_v5.md`,
+  gel `ca588c3`). Le chantier du pont peut être DESSINÉ (spec puis code) —
+  ouverture sur décision de Simon.
 - **Origa → EPP_Verdict** : déjà spécifié côté Origa (`epp_adapter.py`, gelé).
+  **✅ Conditions de dégel du stub réunies (2026-07-20)** — mise à jour du
+  stub (ère v3 → H-C) et dégel à la main du chercheur.
 
 ## Leçon méthodologique importée d'Origa
 
