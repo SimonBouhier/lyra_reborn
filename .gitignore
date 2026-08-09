@@ -19,6 +19,8 @@ data/*.sqlite*
 # Corpus public capturé et labels humains de la campagne Vigie (locaux)
 corpora/vigie_shadow_v1/*.json
 corpora/vigie_shadow_v1/*.jsonl
+corpora/vigie_shadow_v2/*.json
+corpora/vigie_shadow_v2/*.jsonl
 
 # Secrets — JAMAIS de clés en clair (cf. charte §6 ; 3 clés exposées dans les archives auditées)
 .env
