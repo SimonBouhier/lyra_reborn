@@ -2,7 +2,7 @@
 
 **Frozen on**: 2026-08-09
 **Frozen by**: Simon Bouhier, avec assistance d'implémentation de Codex
-**Git commit at freeze**: PENDING — à remplir après le premier commit
+**Git commit at freeze**: `9ef4b05e7e8d6aa60baedcc945a702a2544455dc`
 
 ## Hypothesis
 
