@@ -138,7 +138,7 @@ réponse » — mais il se déclare).
 
 | Version | Contenu | Dépendances |
 |---|---|---|
-| **V0-q** | frontière de quarantaine locale, fail-closed ; contrat sidecar EPP sans accès mémoire ni outil réseau | contrat Lyra fait ; sidecar live à brancher |
+| **V0-q** | frontière de quarantaine locale, fail-closed ; sidecar EPP sans accès mémoire ni outil d'action | contrats Lyra et EPP faits ; modèles live à qualifier |
 | **V0** | ingestion arXiv/RSS/captures + score de résonance (mxbai) + brouillons file Amplification + file de validation avec labels | P3 (fait), embeddings (fait), V0-q |
 | **V1** | Jachère Sociale (écologie) + audit-léger local (ESMM VERIFY-lite) + profil de ton « clinique » | P4 (fait), P1 (fait) |
 | **V2** | pont EPP réel pour la file Audit (doctrine des ponts : dégel sur validation) | EPP + pont |

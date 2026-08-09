@@ -1,8 +1,9 @@
 # La Vigie — frontière de quarantaine
 
 **Date :** 2026-08-09  
-**Statut :** contrat Lyra implémenté et testé ; sidecar EPP réel non encore
-branché ; aucune promotion mémoire automatique.
+**Statut :** contrat Lyra et sidecar EPP autonome implémentés et testés ;
+qualification sur modèles Ollama réels non encore menée ; aucune promotion
+mémoire automatique.
 
 ## But
 
@@ -41,20 +42,27 @@ sortie trop grande, un JSON invalide, une identité différente ou un verdict
 dégradé donnent tous le même effet sûr : `QUARANTINE`, avec un code d'erreur
 explicite. Aucun fallback silencieux n'est admis.
 
-## Responsabilités du futur sidecar EPP
+## Sidecar EPP autonome
 
-Le sidecar devra :
+Implémentation : `EPP_Verdict/epp_quarantine_sidecar.py`.
 
-- exiger `EPP_QUARANTINE_MODE=1` et refuser sinon ;
-- recevoir des providers explicites ; aucun modèle par défaut ou provider API ;
-- n'accepter qu'Ollama local sur `127.0.0.1` ;
-- créer une base SQLite temporaire propre au run ;
-- désactiver cache, flywheel et sources déterministes externes ;
-- ne jamais ouvrir l'URL portée par le contenu ;
-- ne jamais utiliser la base, le graphe ou la couche Solana d'EPP ;
-- rendre uniquement le schéma `vigie.quarantine.v1`, sans logs sur stdout ou
-  stderr en cas de succès ;
-- détruire sa base temporaire après émission du verdict.
+Le sidecar :
+
+- exige `EPP_QUARANTINE_MODE=1` et refuse sinon ;
+- exige entre deux et huit modèles distincts explicitement nommés ; aucun
+  modèle par défaut ou provider API ;
+- n'accepte que l'endpoint exact `http://127.0.0.1:11434` et ouvre une connexion
+  directe sans mécanisme de redirection HTTP ;
+- ne charge aucun package historique EPP : aucune base, aucun graphe, aucun
+  cache, flywheel, orchestrateur ou stockage temporaire ;
+- ne transmet aucun outil au modèle, n'ouvre jamais l'URL portée par le contenu
+  et demande `keep_alive=0` ;
+- contraint chaque modèle par un schéma JSON fermé et ne laisse traverser aucun
+  texte libre généré : décisions, flags et raisons sont des vocabulaires clos ;
+- exige l'unanimité pour `PASS` comme pour `REJECT`. Une divergence devient
+  `QUARANTINE`, sauf demande explicite d'escalade ;
+- rend uniquement le schéma `vigie.quarantine.v1`, sans logs sur stdout ou
+  stderr en cas de succès.
 
 Le `run_pipeline()` EPP actuel ne doit pas être appelé contre une base réelle :
 il stocke les attestations, appelle le hook post-cristallisation et injecte des
@@ -65,16 +73,17 @@ triplets selon ses propres seuils. Le booléen `inject_triplets` de
 
 Le protocole subprocess retire les secrets, interdit le shell et rend les
 sorties inertes. Il ne crée pas une sandbox OS : le code Python du sidecar reste
-un code local de confiance disposant des droits du compte utilisateur. Le
-palier live devra ajouter une restriction réseau/processus vérifiable si EPP
-reçoit un jour autre chose qu'un provider Ollama local sans outils.
+un code local de confiance disposant des droits du compte utilisateur. Sa seule
+connexion implémentée vise directement la boucle locale, mais une restriction
+réseau au niveau OS restera nécessaire avant tout élargissement de capacité.
 
 ## Déploiement gradué
 
 ### S0 — Shadow
 
-L'ESMM rend un verdict journalisé mais sans effet. Une baseline déterministe
-rend un second verdict sur les mêmes cas. Aucun contenu ne rejoint Nemeton.
+L'ensemble EPP rend un verdict journalisé mais sans effet. Une baseline
+déterministe rend un second verdict sur les mêmes cas. Aucun contenu ne rejoint
+Nemeton.
 
 ### S1 — Probation
 
@@ -96,9 +105,10 @@ pré-enregistrés avant la campagne, pas choisis après observation.
 
 ## Comment l'utilité d'EPP sera jugée
 
-EPP n'est pas son propre oracle. Sur un corpus tenu mêlant contenus bénins,
-injections directes/indirectes et empoisonnements coordonnés, on comparera le
-gate ESMM à la baseline déterministe sur :
+EPP n'est pas son propre oracle. Sur un corpus tenu et annoté humainement mêlant
+contenus bénins, injections directes/indirectes, attaques adaptatives visant le
+filtre connu et empoisonnements coordonnés, on comparera le gate EPP à la
+baseline déterministe sur :
 
 - baits échappés ;
 - contenus bénins perdus ;
@@ -115,6 +125,20 @@ le verdict scientifique.
 des secrets, l'interdiction du shell, les limites de taille et de temps, les
 codes retour, `stderr`, le schéma fermé, le hash et les verdicts dégradés.
 
+Dans EPP, `tests/test_quarantine_sidecar.py` couvre le contrat d'entrée, la
+connexion Ollama directe, l'absence d'outils et de stockage, le schéma de sortie
+des modèles, l'unanimité, la divergence, les pannes et les contenus adversariaux.
+Au 2026-08-09 : 26 tests ciblés et la suite EPP complète (934 réussis, 11
+ignorés) sont verts sous Python 3.14.7. Un essai réel Lyra → processus EPP avec
+des modèles volontairement inexistants aboutit à
+`QUARANTINE / sidecar_degraded`.
+
+Un smoke test manuel sur Ollama local a ensuite confirmé le transport live et
+révélé une sortie modèle contradictoire (`PASS` associé à une raison
+d'exfiltration). Un test RED en conserve la trace : le parseur exige désormais
+la cohérence décision/raison et transforme ce cas en quarantaine dégradée. Ces
+essais exploratoires ne constituent pas une mesure de qualité.
+
 Ce que ces tests ne prouvent pas encore : la qualité de classification d'un
-ESMM live, l'isolation réseau OS et l'innocuité d'une promotion mémoire. Ces
-preuves appartiennent aux paliers suivants.
+ensemble Ollama live, l'isolation réseau OS et l'innocuité d'une promotion
+mémoire. Ces preuves appartiennent aux paliers suivants.

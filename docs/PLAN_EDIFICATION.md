@@ -277,8 +277,9 @@ La doctrine de l'Architecte (`lyra_reborn/manifeste/DOCTRINE_ARCHITECTE.md`) ide
 - **Critère d'arbitrage désormais double** pour toute brique : solidité interne ET/OU présence externe (doctrine).
 - **Frontière V0-q (2026-08-09)** : avant toute ingestion, un contrat de
   quarantaine sépare sécurité (`PASS/QUARANTINE/REJECT/ESCALATE`) et intérêt
-  éditorial. Le pont Lyra vers le futur sidecar EPP est sans shell, sans secret
-  hérité, fail-closed et sans accès mémoire. Voir `docs/VIGIE_QUARANTINE.md`.
+  éditorial. Le pont Lyra et le sidecar EPP autonome sont sans shell, sans
+  secret hérité, fail-closed et sans accès mémoire. La qualité des modèles live
+  reste à qualifier. Voir `docs/VIGIE_QUARANTINE.md`.
 
 Ce cap **tire** P5 (outils d'ingestion), P7 (pré-évaluation des brouillons) et la Jachère. V0 constructible dès maintenant (P3+P4+embeddings faits, entrées 100 % gratuites : arXiv/RSS/captures).
 

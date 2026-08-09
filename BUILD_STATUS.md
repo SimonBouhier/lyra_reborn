@@ -94,13 +94,14 @@ l'écologie existante, labels = fitness de la Pouponnière). Règles dures : zé
 (P3+P4+embeddings faits ; entrées gratuites arXiv/RSS/captures). Critère
 d'arbitrage double désormais : solidité interne ET/OU présence externe.
 
-**Acompte V0-q (2026-08-09) :** frontière de quarantaine Lyra implémentée dans
+**V0-q (2026-08-09) :** frontière de quarantaine Lyra implémentée dans
 `agency/tools/vigie/quarantine.py` : subprocess sans shell, environnement sans
 secrets hérités, identité liée au SHA-256, schéma fermé et échec explicite vers
 `QUARANTINE`. Tests de frontière et transport hostile dans
-`tests/test_vigie_quarantine.py`. Le sidecar ESMM live reste à construire dans
-EPP sur base éphémère ; aucune qualité de détection n'est encore revendiquée.
-Voir `docs/VIGIE_QUARANTINE.md`.
+`tests/test_vigie_quarantine.py`. Le sidecar autonome EPP est implémenté sans
+import de la base ou du pipeline historique, avec connexion directe à Ollama
+sur `127.0.0.1`, modèles explicites et unanimité pour `PASS/REJECT`. Sa qualité
+sur modèles live n'est pas encore revendiquée. Voir `docs/VIGIE_QUARANTINE.md`.
 
 ## Quick wins restants (fort levier, cf. plan §7)
 
