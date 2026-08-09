@@ -18,6 +18,7 @@ dev = ["pytest>=7.4"]
 packages = ["core", "core.control", "core.metrics", "core.topology",
             "memory", "memory.graph", "memory.ecology", "memory.cbr",
             "explore", "explore.esmm", "agency", "agency.tools",
+            "agency.tools.vigie",
             "app", "eval", "research"]
 
 [tool.pytest.ini_options]

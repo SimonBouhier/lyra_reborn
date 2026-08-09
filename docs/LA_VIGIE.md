@@ -57,6 +57,19 @@ ENTRÉES (v0 : 100 % gratuites)          FILES DE PRODUCTION
 - **Score + justification sur chaque brouillon** : la validation humaine reste
   rapide sur l'évident, concentrée sur l'ambigu (doctrine §2).
 
+## Frontière amont — quarantaine des entrées
+
+Tout contenu externe est une donnée hostile potentielle avant d'être une idée.
+La frontière `agency/tools/vigie/quarantine.py` sépare le verdict de sécurité
+`PASS/QUARANTINE/REJECT/ESCALATE` du verdict éditorial
+`IGNORE/DEFER/AUDIT/AMPLIFY`. Le premier pont vers EPP est un subprocess sans
+shell, sans secrets hérités et à schéma JSON fermé ; toute anomalie met le cas
+en quarantaine. Il ne possède aucune référence vers Nemeton ou Memento.
+
+La validation humaine ci-dessous porte sur la **publication** et, pendant la
+montée en charge, sur les escalades et un échantillon de contrôle — pas sur
+chaque entrée. Phasage et limites : `docs/VIGIE_QUARANTINE.md`.
+
 ## Validation humaine — règle non négociable, encodée en dur
 
 **Aucune publication automatique.** Concrètement, dans le code : le système
@@ -108,6 +121,9 @@ Chaque accepté/rejeté de Simon est **journalisé comme label**. Usages :
    pas sur-corriger sur les 10 premiers cas.
 4. **Constance de ton** : l'ironie sèche « occasionnelle » doit être une
    décision par-brouillon visible dans la justification, pas un tic.
+5. **Injection/empoisonnement** : un texte externe peut viser explicitement le
+   modèle ou jouer les métriques. Aucun texte brut ne rejoint la mémoire
+   durable ; EPP opérera d'abord en shadow sur base éphémère, puis en probation.
 
 ## Definition of Done (V0, anti-vide)
 
@@ -122,7 +138,8 @@ réponse » — mais il se déclare).
 
 | Version | Contenu | Dépendances |
 |---|---|---|
-| **V0** | ingestion arXiv/RSS/captures + score de résonance (mxbai) + brouillons file Amplification + file de validation avec labels | P3 (fait), embeddings (fait) |
+| **V0-q** | frontière de quarantaine locale, fail-closed ; contrat sidecar EPP sans accès mémoire ni outil réseau | contrat Lyra fait ; sidecar live à brancher |
+| **V0** | ingestion arXiv/RSS/captures + score de résonance (mxbai) + brouillons file Amplification + file de validation avec labels | P3 (fait), embeddings (fait), V0-q |
 | **V1** | Jachère Sociale (écologie) + audit-léger local (ESMM VERIFY-lite) + profil de ton « clinique » | P4 (fait), P1 (fait) |
 | **V2** | pont EPP réel pour la file Audit (doctrine des ponts : dégel sur validation) | EPP + pont |
 | **V3** | lecture X par API si budget ; jamais d'écriture automatique | budget |

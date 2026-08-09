@@ -35,6 +35,14 @@ def test_rollback_restores_exact_state():
     assert g.snapshot() == before  # état strictement identique
 
 
+def test_rollback_restores_updated_node_exactly():
+    g = _mini()
+    before = g.snapshot()
+    g.upsert_node("a", "state", {"temporary": True})
+    assert g.rollback() == 1
+    assert g.snapshot() == before
+
+
 def test_limits_fail_loudly():
     g = GraphStore(max_nodes=2)
     g.upsert_node("a", "concept")
@@ -71,6 +79,7 @@ def test_snapshot_bounded_and_roundtrip():
     g2 = GraphStore.from_snapshot(s)
     assert g2.counts() == g.counts()
     assert g2.edge("a", "b").count == g.edge("a", "b").count
+    assert g2.snapshot() == s
     with pytest.raises(GraphLimitExceeded):
         g.snapshot(max_bytes=10)   # refuse de produire un monstre
 

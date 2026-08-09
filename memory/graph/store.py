@@ -68,7 +68,9 @@ class GraphStore:
             raise GraphLimitExceeded(f"max_nodes={self.max_nodes} atteint (upsert '{id}')")
         self._deltas.append({
             "op": "upsert_node", "id": id,
-            "prev": None if prev is None else {"type": prev.type, "data": dict(prev.data)},
+            "prev": None if prev is None else {
+                "type": prev.type, "data": dict(prev.data), "ts": prev.ts,
+            },
         })
         self._nodes[id] = Node(id=id, type=type, data=dict(data or {}))
         self._adj.setdefault(id, set())
@@ -88,7 +90,7 @@ class GraphStore:
         self._deltas.append({
             "op": "add_edge", "key": key,
             "prev": None if prev is None else {"type": prev.type, "count": prev.count,
-                                               "data": dict(prev.data)},
+                                               "data": dict(prev.data), "ts": prev.ts},
         })
         if prev is None:
             self._edges[key] = Edge(a=key[0], b=key[1], type=type, data=dict(data or {}))
@@ -108,7 +110,8 @@ class GraphStore:
             return False
         self._deltas.append({
             "op": "remove_edge", "key": key,
-            "prev": {"type": prev.type, "count": prev.count, "data": dict(prev.data)},
+            "prev": {"type": prev.type, "count": prev.count,
+                     "data": dict(prev.data), "ts": prev.ts},
         })
         self._adj[key[0]].discard(key[1])
         self._adj[key[1]].discard(key[0])
@@ -134,6 +137,7 @@ class GraphStore:
                     cur = self._nodes[d["id"]]
                     cur.type = d["prev"]["type"]
                     cur.data = dict(d["prev"]["data"])
+                    cur.ts = d["prev"]["ts"]
             elif d["op"] == "add_edge":
                 key = d["key"]
                 if d["prev"] is None:
@@ -145,11 +149,13 @@ class GraphStore:
                     e.type = d["prev"]["type"]
                     e.count = d["prev"]["count"]
                     e.data = dict(d["prev"]["data"])
+                    e.ts = d["prev"]["ts"]
             elif d["op"] == "remove_edge":
                 key = d["key"]
                 p = d["prev"]
                 self._edges[key] = Edge(a=key[0], b=key[1], type=p["type"],
-                                        count=p["count"], data=dict(p["data"]))
+                                        count=p["count"], data=dict(p["data"]),
+                                        ts=p["ts"])
                 self._adj[key[0]].add(key[1])
                 self._adj[key[1]].add(key[0])
             undone += 1
@@ -244,8 +250,11 @@ class GraphStore:
         payload = json.loads(s)
         for n in payload["nodes"]:
             g.upsert_node(n["id"], n["type"], n["data"])
+            g._nodes[n["id"]].ts = n["ts"]
         for e in payload["edges"]:
             g.add_edge(e["a"], e["b"], e["type"], e["data"])
-            g._edges[_edge_key(e["a"], e["b"])].count = e["count"]
+            restored = g._edges[_edge_key(e["a"], e["b"])]
+            restored.count = e["count"]
+            restored.ts = e["ts"]
         g._deltas.clear()  # un chargement n'est pas une mutation à rejouer
         return g
