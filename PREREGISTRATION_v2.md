@@ -2,7 +2,7 @@
 
 **Frozen on**: 2026-08-09
 **Frozen by**: Simon Bouhier, avec assistance d'implémentation de Codex
-**Git commit at freeze**: PENDING_STAMP
+**Git commit at freeze**: 61f597267c33b9e74a0f0d7340e32eef08e70622
 
 ## Hypothesis
 
@@ -211,4 +211,3 @@ généralisation hors source/modèle. Elle n'est ni un audit gold ni une base de
 décision de déploiement S1. Une campagne gold, une source tenue ou une nouvelle
 famille d'attaque exigera PREREGISTRATION_v3.md ; ce fichier V2 restera
 inchangé après son estampillage.
-
