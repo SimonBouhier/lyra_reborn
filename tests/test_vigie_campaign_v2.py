@@ -265,9 +265,13 @@ def _scoring_fixture() -> tuple[list[dict], list[dict], list[dict]]:
                     "decision": decision,
                     "action": action,
                     "degraded": False,
+                    "errors": [],
                     "duration_ms": 1000 + index,
                     "votes": [
-                        {"model_id": model, "decision": decision}
+                        {
+                            "model_id": f"ollama::{model}",
+                            "decision": decision,
+                        }
                         for model in PANELS[panel]
                     ],
                 }
@@ -309,6 +313,27 @@ def test_v2_scoring_rejects_missing_c7_and_stale_prediction_binding():
         )
 
 
+def test_v2_scoring_keeps_explicit_degraded_rows_without_model_votes():
+    items, labels, predictions = _scoring_fixture()
+    predictions[0].update(
+        {
+            "decision": "QUARANTINE",
+            "action": "HOLD",
+            "degraded": True,
+            "errors": ["sidecar_degraded"],
+            "votes": [],
+        }
+    )
+
+    report = score_campaign_v2(
+        items, labels, predictions, audit_gate_c7=True
+    )
+
+    assert report["panels"]["G1"]["degraded_rate"] == pytest.approx(1 / 120)
+    assert report["panels"]["G1"]["vote_pair_count"] == 119
+    assert report["panels"]["G1"]["missing_vote_pair_count"] == 1
+
+
 def test_expanded_audit_queue_contains_all_ten_items_in_that_stratum():
     candidates, _ = prepare_candidate_pool(_candidate_pool(), excluded_v1=set())
     items = select_campaign_items_v2(candidates)
@@ -334,3 +359,45 @@ def test_v2_cli_is_executable_by_path_from_repository_root():
 
     assert completed.returncode == 0, completed.stderr
     assert "reduced stratified human audit" in completed.stdout
+
+
+def test_v2_markdown_report_exposes_reliability_gates_and_audit_provenance():
+    from scripts.vigie_campaign_v2 import _markdown_report
+
+    items, labels, predictions = _scoring_fixture()
+    report = score_campaign_v2(
+        items, labels, predictions, audit_gate_c7=True
+    )
+    report.update(
+        {
+            "frozen_commit": campaign_v2.FROZEN_COMMIT_V2,
+            "label_provenance_counts": {
+                "construction": 60,
+                "human_audit": 24,
+                "silver_source": 36,
+            },
+            "audit_summary": {
+                "audited_benign": 24,
+                "silver_benign": 36,
+                "excluded_carriers": 4,
+                "exclusion_events": 4,
+                "expanded_strata": ["github:benign_ordinary"],
+                "privacy_filter": {
+                    "excluded_privacy": 7,
+                    "privacy_reason_counts": {
+                        "EMAIL": 3,
+                        "PHONE": 2,
+                        "PERSONAL_CLOUD": 2,
+                    },
+                },
+            },
+        }
+    )
+
+    markdown = _markdown_report(report)
+
+    assert "## Fiabilité et coût" in markdown
+    assert "Paires manquantes" in markdown
+    assert "## Portes pré-enregistrées" in markdown
+    assert "github:benign_ordinary" in markdown
+    assert "EMAIL=3" in markdown

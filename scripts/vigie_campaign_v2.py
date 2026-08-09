@@ -278,6 +278,11 @@ def _validate_existing_predictions(
             raise CampaignError("existing V2 prediction action contradicts decision")
         if not isinstance(row.get("degraded"), bool):
             raise CampaignError("existing V2 prediction degraded flag is invalid")
+        errors = row.get("errors")
+        if not isinstance(errors, list) or any(
+            not isinstance(error, str) or not error for error in errors
+        ):
+            raise CampaignError("existing V2 prediction errors are invalid")
         duration = row.get("duration_ms")
         if (
             isinstance(duration, bool)
@@ -286,8 +291,16 @@ def _validate_existing_predictions(
         ):
             raise CampaignError("existing V2 prediction duration is invalid")
         votes = row.get("votes")
-        if not isinstance(votes, list) or len(votes) != 2:
-            raise CampaignError("existing V2 prediction must contain two votes")
+        degraded = bool(row["degraded"])
+        expected_vote_count = 0 if degraded else 2
+        if not isinstance(votes, list) or len(votes) != expected_vote_count:
+            raise CampaignError(
+                "existing degraded predictions require zero votes and others require two"
+            )
+        if degraded != bool(errors):
+            raise CampaignError(
+                "existing V2 degraded flag and errors are inconsistent"
+            )
         vote_models = {
             vote.get("model_id")
             for vote in votes
@@ -295,7 +308,10 @@ def _validate_existing_predictions(
             and vote.get("decision")
             in {"PASS", "QUARANTINE", "REJECT", "ESCALATE"}
         }
-        if vote_models != set(PANELS[panel]):
+        expected_vote_models = {
+            f"ollama::{model}" for model in PANELS[panel]
+        }
+        if vote_models != expected_vote_models:
             raise CampaignError("existing V2 prediction votes are invalid")
 
 
@@ -403,12 +419,24 @@ def _score(
         read_jsonl(predictions_path),
         audit_gate_c7=manifest.get("audit_gate_c7") is True,
     )
+    audit_state = json.loads(
+        (corpus_dir / "audit_state.json").read_text(encoding="utf-8")
+    )
+    audit_summary = {
+        "audited_benign": manifest["label_provenance_counts"]["human_audit"],
+        "silver_benign": manifest["label_provenance_counts"]["silver_source"],
+        "excluded_carriers": len(audit_state["excluded_carriers"]),
+        "exclusion_events": len(audit_state["history"]),
+        "expanded_strata": list(audit_state["expanded_strata"]),
+        "privacy_filter": manifest["privacy_summary"],
+    }
     report.update(
         {
             "frozen_commit": manifest["frozen_commit"],
             "items_sha256": manifest["items_sha256"],
             "labels_sha256": manifest["labels_sha256"],
             "label_provenance_counts": manifest["label_provenance_counts"],
+            "audit_summary": audit_summary,
             "predictions_sha256": sha256_file(predictions_path),
             "scored_at": datetime.now(timezone.utc)
             .isoformat()
@@ -440,6 +468,8 @@ def _display_rate(value: Any) -> str:
 
 def _markdown_report(report: Mapping[str, Any]) -> str:
     provenance = report["label_provenance_counts"]
+    audit = report["audit_summary"]
+    privacy = audit["privacy_filter"]
     lines = [
         "# Vigie shadow V2 — résultat pré-enregistré",
         "",
@@ -452,6 +482,13 @@ def _markdown_report(report: Mapping[str, Any]) -> str:
         f"{provenance['construction']} construction, "
         f"{provenance['human_audit']} audités humains, "
         f"{provenance['silver_source']} silver non audités.",
+        f"- Audit : {audit['excluded_carriers']} porteurs exclus ; strates "
+        f"étendues : {', '.join(audit['expanded_strata']) or 'aucune'}.",
+        "- Filtre de confidentialité : "
+        f"{privacy['excluded_privacy']} porteurs exclus "
+        f"(EMAIL={privacy['privacy_reason_counts']['EMAIL']}, "
+        f"PHONE={privacy['privacy_reason_counts']['PHONE']}, "
+        f"PERSONAL_CLOUD={privacy['privacy_reason_counts']['PERSONAL_CLOUD']}).",
         "",
         "| Politique | UER construction | BRR total | BRR audité | "
         "BRR silver | AER | Perte | Dégradé | Soutenu |",
@@ -477,6 +514,40 @@ def _markdown_report(report: Mapping[str, Any]) -> str:
             f"{metrics['degraded_rate']:.3f} | "
             f"{'oui' if metrics['supported_in_v2'] else 'non'} |"
         )
+    lines.extend(
+        [
+            "",
+            "## Fiabilité et coût",
+            "",
+            "| Jury | Paires présentes | Paires manquantes | Désaccord / total | "
+            "Désaccord / paires | Médiane ms | p95 ms | Maximum ms |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|",
+        ]
+    )
+    for panel, metrics in report["panels"].items():
+        completed_disagreement = metrics["disagreement_rate_completed_pairs"]
+        lines.append(
+            f"| {panel} | {metrics['vote_pair_count']} | "
+            f"{metrics['missing_vote_pair_count']} | "
+            f"{metrics['disagreement_rate']:.3f} | "
+            f"{_display_rate(completed_disagreement)} | "
+            f"{metrics['latency_ms']['median']:.1f} | "
+            f"{metrics['latency_ms']['p95']:.1f} | "
+            f"{metrics['latency_ms']['maximum']:.1f} |"
+        )
+    lines.extend(
+        [
+            "",
+            "## Portes pré-enregistrées",
+            "",
+            "| Jury | C1 | C2 | C3 | C4 | C5 | C6 | C7 |",
+            "|---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+        ]
+    )
+    for panel, metrics in report["panels"].items():
+        conditions = metrics["conditions"]
+        rendered = ["oui" if conditions[f"C{index}"] else "non" for index in range(1, 8)]
+        lines.append(f"| {panel} | " + " | ".join(rendered) + " |")
     lines.extend(
         [
             "",

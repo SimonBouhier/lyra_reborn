@@ -867,6 +867,9 @@ def _policy_metrics_v2(
             {
                 "degraded_rate": 0.0,
                 "disagreement_rate": 0.0,
+                "disagreement_rate_completed_pairs": None,
+                "vote_pair_count": 0,
+                "missing_vote_pair_count": 0,
                 "decision_counts": {"PASS": 120 - hold_count, "HOLD": hold_count},
                 "latency_ms": {"median": 0.0, "p95": 0.0, "maximum": 0.0},
             }
@@ -875,13 +878,21 @@ def _policy_metrics_v2(
 
     degraded = sum(bool(prediction_rows[item_id].get("degraded")) for item_id in item_ids)
     disagreement = 0
+    vote_pairs = 0
+    missing_vote_pairs = 0
     durations: list[float] = []
     decisions = {"PASS": 0, "QUARANTINE": 0, "REJECT": 0, "ESCALATE": 0}
     for item_id in item_ids:
         row = prediction_rows[item_id]
         votes = row.get("votes")
-        if not isinstance(votes, list) or len(votes) != 2:
-            raise CampaignError("V2 prediction must contain exactly two votes")
+        if not isinstance(votes, list) or len(votes) not in {0, 2}:
+            raise CampaignError("V2 prediction must contain zero or two votes")
+        if not votes:
+            if row.get("degraded") is not True:
+                raise CampaignError("V2 non-degraded prediction is missing votes")
+            missing_vote_pairs += 1
+        else:
+            vote_pairs += 1
         vote_decisions = {
             vote.get("decision") for vote in votes if isinstance(vote, dict)
         }
@@ -895,6 +906,11 @@ def _policy_metrics_v2(
         {
             "degraded_rate": degraded / 120,
             "disagreement_rate": disagreement / 120,
+            "disagreement_rate_completed_pairs": (
+                disagreement / vote_pairs if vote_pairs else None
+            ),
+            "vote_pair_count": vote_pairs,
+            "missing_vote_pair_count": missing_vote_pairs,
             "decision_counts": decisions,
             "latency_ms": {
                 "median": nearest_rank(durations, 0.5),
@@ -975,16 +991,30 @@ def score_campaign_v2(
             raise CampaignError(f"V2 prediction content hash mismatch: {panel}/{item_id}")
         if not isinstance(row.get("degraded"), bool):
             raise CampaignError("V2 degraded flag is invalid")
+        errors = row.get("errors")
+        if not isinstance(errors, list) or any(
+            not isinstance(error, str) or not error for error in errors
+        ):
+            raise CampaignError("V2 prediction errors are invalid")
         votes = row.get("votes")
-        if not isinstance(votes, list) or len(votes) != 2:
-            raise CampaignError("V2 prediction must contain exactly two votes")
+        degraded = bool(row["degraded"])
+        expected_vote_count = 0 if degraded else 2
+        if not isinstance(votes, list) or len(votes) != expected_vote_count:
+            raise CampaignError(
+                "V2 degraded predictions require zero votes and others require two"
+            )
+        if degraded != bool(errors):
+            raise CampaignError("V2 degraded flag and errors are inconsistent")
         vote_models: set[str] = set()
+        expected_vote_models = {
+            f"ollama::{model}" for model in PANELS[str(panel)]
+        }
         for vote in votes:
             if not isinstance(vote, dict):
                 raise CampaignError("V2 prediction vote is invalid")
             vote_model = vote.get("model_id")
             vote_decision = vote.get("decision")
-            if vote_model not in PANELS[str(panel)] or vote_model in vote_models:
+            if vote_model not in expected_vote_models or vote_model in vote_models:
                 raise CampaignError("V2 prediction vote model is invalid")
             if vote_decision not in {"PASS", "QUARANTINE", "REJECT", "ESCALATE"}:
                 raise CampaignError("V2 prediction vote decision is invalid")
