@@ -2,7 +2,7 @@
 
 **Frozen on**: 2026-08-12
 **Frozen by**: Simon Bouhier, avec assistance méthodologique de Codex
-**Git commit at freeze**: PENDING — sera estampillé par le commit suivant
+**Git commit at freeze**: 0b20eeb1c93ff43959aaffe18bbd9da969b2abd4
 
 ## Hypothesis
 
