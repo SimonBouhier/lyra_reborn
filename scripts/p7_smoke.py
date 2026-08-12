@@ -1,0 +1,87 @@
+#!/usr/bin/env python
+"""Smoke-test live P7 sur une source synthétique, sans ouvrir le jeu tenu."""
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+
+from core.knobs import Knobs
+from core.llm import OllamaClient
+from eval.p7_trajectory import EvaluationCase, PolicyTrace, run_policy_pair
+
+
+MODEL_DIGESTS = {
+    "mistral:latest": "6577803aa9a036369e481d648a2baebb381ebc6e897f2bb9a766a2aa7bfbc1cf",
+    "gemma3:latest": "a2af6cc3eb7fa8be8504abaf9b04e88f17a119ec3f04a3addf55f92841195f5a",
+    "granite3.3:latest": "fd429f23b90980ed1bef53b990894e7b0199331f6ae90c5650240a7d5b70f1f7",
+}
+
+SYNTHETIC_SOURCE = (
+    "Adaptive policies can change decoding parameters after observing a first "
+    "draft, but the resulting decision still requires independent evidence "
+    "and a held-out comparison before promotion."
+)
+
+
+def _summary(trace: PolicyTrace) -> dict:
+    return {
+        "complete": trace.complete,
+        "contract_error": trace.contract_error,
+        "options": [turn.options for turn in trace.turns],
+        "output_sha256": [
+            hashlib.sha256(turn.output.encode("utf-8")).hexdigest()
+            for turn in trace.turns
+        ],
+        "output_chars": [len(turn.output) for turn in trace.turns],
+    }
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--model", choices=sorted(MODEL_DIGESTS), default="mistral:latest")
+    parser.add_argument("--timeout", type=int, default=180)
+    args = parser.parse_args()
+    if args.timeout <= 0:
+        parser.error("--timeout must be positive")
+
+    case = EvaluationCase("synthetic:live:1", "synthetic", SYNTHETIC_SOURCE)
+    pair = run_policy_pair(
+        case,
+        llm_factory=lambda: OllamaClient(model=args.model, timeout=args.timeout),
+        model_digest=MODEL_DIGESTS[args.model],
+        static_best=Knobs(),
+    )
+    a1 = pair.adaptive.turns[0]
+    s1 = pair.static.turns[0]
+    invariants = {
+        "turn1_prompt_equal": a1.prompt == s1.prompt,
+        "turn1_options_equal": a1.options == s1.options,
+        "turn1_output_equal": a1.output == s1.output,
+    }
+    print(
+        json.dumps(
+            {
+                "schema_version": "lyra.p7.smoke.v1",
+                "model": args.model,
+                "model_digest": MODEL_DIGESTS[args.model],
+                "synthetic_source_sha256": hashlib.sha256(
+                    SYNTHETIC_SOURCE.encode("utf-8")
+                ).hexdigest(),
+                "turn1_invariants": invariants,
+                "adaptive": _summary(pair.adaptive),
+                "static": _summary(pair.static),
+            },
+            ensure_ascii=False,
+            indent=2,
+        )
+    )
+    if not invariants["turn1_prompt_equal"] or not invariants["turn1_options_equal"]:
+        return 3
+    if not invariants["turn1_output_equal"]:
+        return 4
+    return 0 if pair.adaptive.complete and pair.static.complete else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

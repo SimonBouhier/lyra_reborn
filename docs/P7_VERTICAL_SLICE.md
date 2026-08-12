@@ -45,6 +45,21 @@ Régressions directes du noyau :
 Résultat attendu : `14 passed, 1 skipped` ; le skip est le test Ollama live
 conditionné par `LYRA_LIVE`.
 
+Smoke-test producteur live, toujours sur source synthétique et sans afficher les
+sorties :
+
+```powershell
+.\.venv\Scripts\python.exe scripts\p7_smoke.py --model mistral:latest
+```
+
+Le script ne publie que le digest du modèle, les options, tailles et SHA-256 des
+sorties, les invariants du tour 1 et le statut du contrat final. Codes non nuls :
+2 si un contrat final échoue ; 3 si prompt/options du tour 1 diffèrent ; 4 si le
+runtime produit deux sorties différentes malgré prompt/options/graine égaux.
+
+Le smoke Mistral du 2026-08-12 a rendu le code 4. V3 est donc arrêtée avant
+mesure ; voir `docs/P7_V3_STATUS.md`.
+
 Le test complet contient encore une contrainte historique de la campagne V1 :
 `tests/test_vigie_campaign.py::test_frozen_epp_sidecar_revision_is_verified`
 échoue si le dépôt voisin EPP n'est pas positionné sur le sidecar gelé
