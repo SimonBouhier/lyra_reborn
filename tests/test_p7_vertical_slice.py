@@ -183,9 +183,11 @@ class ScriptedJudge:
 
     def generate(self, prompt, options, response_format=None):
         script = [
-            {"action": "READ_SOURCE", "start": 0, "end": 4000},
+            {"action": "READ_SOURCE"},
             {"action": "READ_TRACE", "candidate": "A"},
             {"action": "READ_TRACE", "candidate": "B"},
+            {"action": "CHECK_SPANS", "candidate": "A"},
+            {"action": "CHECK_SPANS", "candidate": "B"},
             {
                 "action": "VERDICT",
                 "preference": self.final_preference,
@@ -217,7 +219,7 @@ def test_judge_is_blind_and_must_gather_evidence_before_verdict():
 
     pair = _complete_pair()
     premature = ScriptedJudge("A")
-    premature.calls = 3
+    premature.calls = 5
     with pytest.raises(JudgeProtocolError, match="mandatory"):
         PairwiseJudgeAgent(premature).judge(
             SOURCE, {"A": pair.adaptive, "B": pair.static}

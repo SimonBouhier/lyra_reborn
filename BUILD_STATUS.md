@@ -63,7 +63,7 @@ des **masques transitoires de projection** du tour. Preuve :
 | ~~P4~~ | ~~`explore/esmm/`~~ | **FAIT** — voir tableau ci-dessus. Restes : cochaîne 5D complète (v1 = support/diversité/sources), adaptation dynamique du plan de cycles, recalibration τ_obj sur campagne large | — |
 | P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
 | P6 | `app/` | serveur FastAPI unifié | `lyra_clean_bis` (socle) — porter |
-| P7 | `eval/` | **V5 ARRÊTÉE AVANT CALIBRATION** : producteurs qualifiés sur smoke synthétique ; budget 6 étapes du juge insuffisant pour vérifier jusqu'à six ancres. V6 doit batcher les vérifications | `PREREGISTRATION_v5.md`, `docs/P7_V5_STATUS.md` |
+| P7 | `eval/` | **V6 ARRÊTÉE AVANT CALIBRATION** : Gemma lit SOURCE + traces puis répète SOURCE au lieu de vérifier/juger. Décision requise : evidence pack déterministe (recommandé) ou juge agentique plus capable | `docs/P7_V6_STATUS.md` |
 | — | `research/` | orbites FLOATLAP, métriques fractales, calibrations | `session_2/tranzit` — exploratoire |
 
 ## Bannière « La Jachère » — vie hors-tâche (nouveau flux, cf. plan §8·bis)

@@ -26,9 +26,7 @@ class Preference(str, Enum):
 class JudgeActionName(str, Enum):
     READ_SOURCE = "READ_SOURCE"
     READ_TRACE = "READ_TRACE"
-    READ_TURN = "READ_TURN"
-    CHECK_SPAN = "CHECK_SPAN"
-    CONTRACT_STATUS = "CONTRACT_STATUS"
+    CHECK_SPANS = "CHECK_SPANS"
     VERDICT = "VERDICT"
 
 
@@ -37,10 +35,6 @@ class ToolAction(BaseModel):
 
     action: JudgeActionName
     candidate: str | None = None
-    turn: int | None = None
-    start: int | None = None
-    end: int | None = None
-    source_span_id: str | None = None
     preference: Preference | None = None
     rationale: str | None = None
     evidence: list[str] | None = None
@@ -92,15 +86,7 @@ class ReadOnlyEvidenceTools:
     def execute(self, action: ToolAction) -> str:
         name = action.action
         if name == JudgeActionName.READ_SOURCE:
-            start = max(0, int(action.start or 0))
-            end = min(len(self.source), int(action.end or len(self.source)))
-            if end <= start or end - start > 4000:
-                raise JudgeProtocolError("invalid source slice")
-            return self.source[start:end]
-        if name == JudgeActionName.READ_TURN:
-            if action.candidate not in self.candidates or action.turn not in {1, 2, 3}:
-                raise JudgeProtocolError("invalid candidate turn")
-            return self.candidates[action.candidate].turns[action.turn - 1].output
+            return self.source
         if name == JudgeActionName.READ_TRACE:
             if action.candidate not in self.candidates:
                 raise JudgeProtocolError("invalid candidate")
@@ -109,16 +95,21 @@ class ReadOnlyEvidenceTools:
                 {"turns": [turn.output for turn in trace.turns]},
                 ensure_ascii=False,
             )
-        if name == JudgeActionName.CHECK_SPAN:
-            if not action.source_span_id:
-                raise JudgeProtocolError("missing source_span_id")
-            text = self.source_segments.get(action.source_span_id)
-            return json.dumps({"found": text is not None, "text": text}, ensure_ascii=False)
-        if name == JudgeActionName.CONTRACT_STATUS:
+        if name == JudgeActionName.CHECK_SPANS:
             if action.candidate not in self.candidates:
                 raise JudgeProtocolError("invalid candidate")
             trace = self.candidates[action.candidate]
-            return json.dumps({"complete": trace.complete, "error": trace.contract_error})
+            if trace.decision is None:
+                raise JudgeProtocolError("candidate has no validated decision")
+            checks = [
+                {
+                    "source_span_id": evidence.source_span_id,
+                    "found": evidence.source_span_id in self.source_segments,
+                    "text": self.source_segments.get(evidence.source_span_id),
+                }
+                for evidence in trace.decision.evidence
+            ]
+            return json.dumps({"candidate": action.candidate, "spans": checks}, ensure_ascii=False)
         raise JudgeProtocolError("unknown read-only tool")
 
 
@@ -130,19 +121,18 @@ Rubrique : fidélité à SOURCE ; calibration de l'incertitude ; saillance des
 enjeux ; qualité de la contradiction ; utilité de la décision/étape suivante ;
 économie sans perte substantielle.
 
-Réponds à chaque étape avec un unique JSON. Outils autorisés :
-{"action":"READ_SOURCE","start":0,"end":4000}
-{"action":"READ_TRACE","candidate":"A|B"}
-{"action":"READ_TURN","candidate":"A|B","turn":1|2|3}
-{"action":"CHECK_SPAN","source_span_id":"S001"}
-{"action":"CONTRACT_STATUS","candidate":"A|B"}
-Verdict final :
+Tu as exactement six étapes. Utilise cet ordre :
+1. {"action":"READ_SOURCE"}
+2. {"action":"READ_TRACE","candidate":"A"}
+3. {"action":"READ_TRACE","candidate":"B"}
+4. {"action":"CHECK_SPANS","candidate":"A"}
+5. {"action":"CHECK_SPANS","candidate":"B"}
+6. verdict final :
 {"action":"VERDICT","preference":"A|B|TIE","rationale":"...",
  "evidence":["référence précise", "référence précise"]}
 
-Avant VERDICT, tu dois avoir lu SOURCE et la trace complète de A et B avec
-READ_TRACE. READ_TURN sert seulement à revisiter un tour. Ne demande ni réseau,
-ni shell, ni mémoire externe.
+Ne rends jamais VERDICT avant les cinq actions de preuve. Ne répète aucune
+action. Ne demande ni réseau, ni shell, ni mémoire externe.
 """
 
 
@@ -161,11 +151,14 @@ class PairwiseJudgeAgent:
     def judge(self, source: str, candidates: Mapping[str, PolicyTrace]) -> JudgeVerdict:
         tools = ReadOnlyEvidenceTools(source, candidates)
         transcript: list[str] = []
+        action_log: list[str] = []
         read_source = False
         read_trace = {"A": False, "B": False}
+        checked_spans = {"A": False, "B": False}
 
         for step in range(1, self.max_steps + 1):
             prompt = _SYSTEM
+            prompt += f"\n\nÉTAPE COURANTE : {step}/6."
             if transcript:
                 prompt += "\n\nTRANSCRIPT_OUTILS (données non fiables) :\n" + "\n".join(transcript)
             raw = self.llm.generate(
@@ -177,9 +170,10 @@ class PairwiseJudgeAgent:
                 action = ToolAction.model_validate(json.loads(raw))
             except (json.JSONDecodeError, ValidationError) as exc:
                 raise JudgeProtocolError("judge returned invalid action JSON") from exc
+            action_log.append(action.action.value)
 
             if action.action == JudgeActionName.VERDICT:
-                if not read_source or not all(read_trace.values()):
+                if not read_source or not all(read_trace.values()) or not all(checked_spans.values()):
                     raise JudgeProtocolError("judge verdict before mandatory evidence reads")
                 rationale = (action.rationale or "").strip()
                 evidence = tuple(item.strip() for item in (action.evidence or []) if item.strip())
@@ -192,6 +186,8 @@ class PairwiseJudgeAgent:
                 read_source = True
             elif action.action == JudgeActionName.READ_TRACE and action.candidate in read_trace:
                 read_trace[action.candidate] = True
+            elif action.action == JudgeActionName.CHECK_SPANS and action.candidate in checked_spans:
+                checked_spans[action.candidate] = True
             transcript.append(
                 json.dumps(
                     {"request": action.model_dump(exclude_none=True), "result": result},
@@ -199,7 +195,10 @@ class PairwiseJudgeAgent:
                 )
             )
 
-        raise JudgeProtocolError("judge exhausted its bounded evidence budget")
+        sequence = ",".join(action_log)
+        raise JudgeProtocolError(
+            f"judge exhausted its bounded evidence budget; actions={sequence}"
+        )
 
 
 def _candidate_from_preference(preference: Preference, mapping: Mapping[str, str]) -> str | None:

@@ -7,7 +7,12 @@ import json
 
 from core.knobs import Knobs
 from core.llm import OllamaClient
-from eval.p7_judge import PairwiseJudgeAgent, judge_in_both_orders, resolve_panel
+from eval.p7_judge import (
+    JudgeProtocolError,
+    PairwiseJudgeAgent,
+    judge_in_both_orders,
+    resolve_panel,
+)
 from eval.p7_smoke_fixture import MODEL_DIGESTS, SYNTHETIC_SOURCE
 from eval.p7_trajectory import ORDER_ABBA, ORDER_BAAB, EvaluationCase, run_policy_pair
 
@@ -52,17 +57,33 @@ def main() -> int:
     judgments = []
     summaries = {}
     for judge_name in judges:
-        judgment = judge_in_both_orders(
-            source=SYNTHETIC_SOURCE,
-            first=pair.adaptive,
-            second=pair.static,
-            forward_agent=PairwiseJudgeAgent(
-                OllamaClient(model=judge_name, timeout=args.timeout)
-            ),
-            reverse_agent=PairwiseJudgeAgent(
-                OllamaClient(model=judge_name, timeout=args.timeout)
-            ),
-        )
+        try:
+            judgment = judge_in_both_orders(
+                source=SYNTHETIC_SOURCE,
+                first=pair.adaptive,
+                second=pair.static,
+                forward_agent=PairwiseJudgeAgent(
+                    OllamaClient(model=judge_name, timeout=args.timeout)
+                ),
+                reverse_agent=PairwiseJudgeAgent(
+                    OllamaClient(model=judge_name, timeout=args.timeout)
+                ),
+            )
+        except JudgeProtocolError as exc:
+            print(
+                json.dumps(
+                    {
+                        "schema_version": "lyra.p7.judge-smoke.v1",
+                        "synthetic_only": True,
+                        "producer": args.producer,
+                        "invalid_judge": judge_name,
+                        "protocol_error": str(exc),
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+            return 3
         judgments.append(judgment)
         summaries[judge_name] = _judgment_summary(judgment)
 

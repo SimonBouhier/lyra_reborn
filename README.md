@@ -43,7 +43,7 @@ aucun chiffre non reproductible, aucun pipeline « vert mais vide ».)*
 | **P4 — Exploration** | ESMM : lacunes → exploration multi-modèles → **consensus sémantique à 2 niveaux** → graphe. Premier pipeline productif de l'histoire du projet | ✅ validé live (3 modèles) |
 | P5 — Agentivité | outils + auto-plugins + SilenceØ | ⬜ à construire |
 | P6 — Application | serveur unifié | ⬜ à construire |
-| P7 — Évaluation | V5 : préfixe commun + ancres source + branches contrebalancées ; budget du juge à corriger en V6 | 🧪 V5 arrêtée avant calibration, aucune mesure réelle ([preuve](docs/P7_VERTICAL_SLICE.md)) |
+| P7 — Évaluation | V6 : producteurs qualifiés, mais Gemma ne suit pas la boucle d'outils bornée ; arbitrage evidence pack vs juge plus capable | 🛑 arrêt avant calibration, aucune mesure réelle ([preuve](docs/P7_V6_STATUS.md)) |
 | **La Jachère** | Pouponnière évolutive (harness auto-cultivé) + le Songe (sommeil/rêve) | 📐 fondé (littérature versée, métriques pré-spécifiées) |
 
 ## Architecture

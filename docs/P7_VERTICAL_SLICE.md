@@ -79,6 +79,13 @@ ordres. Il ne publie que préférences anonymes, nombre d'étapes, stabilité et
 résolution du panel. `UNRESOLVED` est un résultat valide ; une violation du
 protocole d'outils reste une erreur explicite.
 
+En V6, chaque jugement suit exactement six actions : SOURCE, TRACE A, TRACE B,
+batch d'ancres A, batch d'ancres B, VERDICT. Voir `PREREGISTRATION_v6.md`.
+
+Le smoke Gemma a répété `READ_SOURCE` aux étapes 4–6 au lieu de vérifier les
+ancres et juger. V6 est arrêtée avant calibration ; voir
+`docs/P7_V6_STATUS.md`.
+
 Le test complet contient encore une contrainte historique de la campagne V1 :
 `tests/test_vigie_campaign.py::test_frozen_epp_sidecar_revision_is_verified`
 échoue si le dépôt voisin EPP n'est pas positionné sur le sidecar gelé
