@@ -56,7 +56,8 @@ class LyraLoop:
                  state: Optional[CognitiveState] = None,
                  enable_carryover_guard: bool = True,
                  controller=None, bridge=None,
-                 enable_affective_surface: bool = False):
+                 enable_affective_surface: bool = False,
+                 enable_modulation: bool = True):
         self.llm = llm
         self.mapping = mapping or KnobMapping()
         self.thresholds = thresholds or HeuristicThresholds()
@@ -64,6 +65,7 @@ class LyraLoop:
         self.state = state or CognitiveState()
         self.enable_carryover_guard = enable_carryover_guard
         self.controller = controller          # Optional[PIController]
+        self.enable_modulation = bool(enable_modulation)
         self.enable_affective_surface = enable_affective_surface
         # le pont fournit les signaux réels : requis par le contrôleur ET par la
         # surface affective (théâtre honnête = valence sur instruments réels)
@@ -77,7 +79,8 @@ class LyraLoop:
         else:
             self._affect_surface = None
 
-    def generate(self, prompt: str, task_type: str = "general") -> LoopResult:
+    def generate(self, prompt: str, task_type: str = "general",
+                 generation_options: Optional[Dict[str, Any]] = None) -> LoopResult:
         # 1) boutons du tour = état courant + overrides de tâche
         knobs_used = apply_task_overrides(self.state.knobs, task_type)
 
@@ -90,6 +93,12 @@ class LyraLoop:
 
         # 3) boutons -> options (correctif options{} appliqué dans le client)
         options = self.mapping.to_generation_options(knobs_used)
+        if generation_options:
+            collisions = set(options).intersection(generation_options)
+            if collisions:
+                names = ", ".join(sorted(collisions))
+                raise ValueError(f"generation options override controlled keys: {names}")
+            options.update(generation_options)
 
         # 4) génération
         output = self.llm.generate(prompt, options)
@@ -110,7 +119,7 @@ class LyraLoop:
         epistemic: Optional[Dict[str, float]] = None
         if self.bridge is not None:
             epistemic = self.bridge.derive(output, options, cheap)
-        if refractory_ok(self.state, self.smoothing):
+        if self.enable_modulation and refractory_ok(self.state, self.smoothing):
             reactive = decide_next_knobs(self.state.knobs, cheap)
             if self.controller is not None and epistemic is not None:
                 # pont P2 : P+I pilote δr/τc sur signaux réels ; réactif garde ρ/κ.

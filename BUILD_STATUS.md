@@ -63,7 +63,7 @@ des **masques transitoires de projection** du tour. Preuve :
 | ~~P4~~ | ~~`explore/esmm/`~~ | **FAIT** — voir tableau ci-dessus. Restes : cochaîne 5D complète (v1 = support/diversité/sources), adaptation dynamique du plan de cycles, recalibration τ_obj sur campagne large | — |
 | P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
 | P6 | `app/` | serveur FastAPI unifié | `lyra_clean_bis` (socle) — porter |
-| P7 | `eval/` | juge **pairwise** + harnais + NSGA-II + logging forensique | `LLM_asa_judge`, `lyra_clean/evaluation`, `Lyra_Core/bench/ga_search.py` |
+| P7 | `eval/` | **TRANCHE V3 SYNTHÉTIQUE** : paire statique/adaptative, contrat anti-vide, juge agentique aveugle + ordre inversé ; aucune mesure réelle. Restes : corpus tenu, scoreur C0–C8, logging de ressources, NSGA-II | `PREREGISTRATION_v3.md`, `docs/P7_VERTICAL_SLICE.md` |
 | — | `research/` | orbites FLOATLAP, métriques fractales, calibrations | `session_2/tranzit` — exploratoire |
 
 ## Bannière « La Jachère » — vie hors-tâche (nouveau flux, cf. plan §8·bis)
