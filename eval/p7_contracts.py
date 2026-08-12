@@ -74,3 +74,8 @@ def validate_editorial_decision(raw: str, source: str) -> EditorialDecision:
 def decision_json_schema() -> str:
     """Schéma compact inclus dans le prompt final, produit par la source canonique."""
     return json.dumps(EditorialDecision.model_json_schema(), ensure_ascii=False)
+
+
+def decision_schema() -> dict:
+    """Objet transmis au champ natif Ollama `format`."""
+    return EditorialDecision.model_json_schema()

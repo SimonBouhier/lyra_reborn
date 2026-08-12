@@ -19,18 +19,22 @@ import os
 
 
 def build_ollama_payload(model: str, prompt: str, options: Dict[str, Any],
-                         stream: bool = False) -> Dict[str, Any]:
+                         stream: bool = False,
+                         response_format: Any = None) -> Dict[str, Any]:
     """Construit le payload /api/generate d'Ollama avec les options AU BON ENDROIT.
 
     C'est l'unité testable du correctif P0 : `options` est imbriqué, jamais
     étalé à la racine.
     """
-    return {
+    payload = {
         "model": model,
         "prompt": prompt,
         "stream": bool(stream),
         "options": dict(options) if options else {},
     }
+    if response_format is not None:
+        payload["format"] = response_format
+    return payload
 
 
 class OllamaClient:
@@ -43,9 +47,12 @@ class OllamaClient:
                                                "http://127.0.0.1:11434")).rstrip("/")
         self.timeout = timeout
 
-    def generate(self, prompt: str, options: Optional[Dict[str, Any]] = None) -> str:
+    def generate(self, prompt: str, options: Optional[Dict[str, Any]] = None,
+                 response_format: Any = None) -> str:
         import requests  # paresseux : les tests hors-ligne n'en ont pas besoin
-        payload = build_ollama_payload(self.model, prompt, options or {})
+        payload = build_ollama_payload(
+            self.model, prompt, options or {}, response_format=response_format
+        )
         r = requests.post(f"{self.base_url}/api/generate", json=payload, timeout=self.timeout)
         r.raise_for_status()
         data = r.json()
@@ -62,7 +69,8 @@ class EchoClient:
     def __init__(self, model: str = "echo"):
         self.model = model
 
-    def generate(self, prompt: str, options: Optional[Dict[str, Any]] = None) -> str:
+    def generate(self, prompt: str, options: Optional[Dict[str, Any]] = None,
+                 response_format: Any = None) -> str:
         opts = options or {}
         t = opts.get("temperature")
         p = opts.get("top_p")

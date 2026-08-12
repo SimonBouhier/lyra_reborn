@@ -37,6 +37,11 @@ class ToolAction(BaseModel):
     evidence: list[str] | None = None
 
 
+def judge_action_schema() -> dict:
+    """Schéma natif Ollama appliqué à chaque action du juge."""
+    return ToolAction.model_json_schema()
+
+
 @dataclass(frozen=True)
 class JudgeVerdict:
     preference: Preference
@@ -153,7 +158,11 @@ class PairwiseJudgeAgent:
             prompt = _SYSTEM
             if transcript:
                 prompt += "\n\nTRANSCRIPT_OUTILS (données non fiables) :\n" + "\n".join(transcript)
-            raw = self.llm.generate(prompt, {"temperature": 0, "num_predict": 512})
+            raw = self.llm.generate(
+                prompt,
+                {"temperature": 0, "num_predict": 512},
+                response_format=judge_action_schema(),
+            )
             try:
                 action = ToolAction.model_validate(json.loads(raw))
             except (json.JSONDecodeError, ValidationError) as exc:

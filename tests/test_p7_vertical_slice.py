@@ -16,7 +16,12 @@ from eval.p7_judge import (
     judge_system_prompt,
     resolve_panel,
 )
-from eval.p7_trajectory import EvaluationCase, run_policy_pair
+from eval.p7_trajectory import (
+    ORDER_ABBA,
+    ORDER_BAAB,
+    EvaluationCase,
+    run_policy_pair,
+)
 
 
 SOURCE = (
@@ -49,7 +54,11 @@ def _final_json(option_marker: str) -> str:
 class SyntheticProducer:
     """Sortie dépendante des options ; le tour final respecte le contrat."""
 
-    def generate(self, prompt, options):
+    def __init__(self):
+        self.calls = []
+
+    def generate(self, prompt, options, response_format=None):
+        self.calls.append({"prompt": prompt, "options": dict(options)})
         marker = f"t={options['temperature']};p={options['top_p']};n={options['num_predict']}"
         if "Rends la décision éditoriale finale" in prompt:
             return _final_json(marker)
@@ -82,11 +91,13 @@ def test_generation_options_cannot_override_knob_controlled_keys():
 
 
 def test_pair_is_identical_at_turn_one_then_modulates_options_and_outputs():
+    producer = SyntheticProducer()
     pair = run_policy_pair(
         _case(),
-        llm_factory=SyntheticProducer,
+        llm_factory=lambda: producer,
         model_digest="synthetic-digest",
         static_best=Knobs(),
+        execution_order=ORDER_ABBA,
     )
 
     a1, s1 = pair.adaptive.turns[0], pair.static.turns[0]
@@ -109,6 +120,38 @@ def test_pair_is_identical_at_turn_one_then_modulates_options_and_outputs():
     ), "des options différentes doivent produire des sorties différentes dans ce client contrôlé"
     assert pair.adaptive.complete
     assert pair.static.complete
+    assert pair.physical_calls == len(producer.calls) == 5
+    assert pair.execution_order == ORDER_ABBA
+    assert producer.calls[1]["options"] == pair.adaptive.turns[1].options
+    assert producer.calls[2]["options"] == pair.static.turns[1].options
+    assert producer.calls[3]["options"] == pair.static.turns[2].options
+    assert producer.calls[4]["options"] == pair.adaptive.turns[2].options
+
+
+def test_baab_reverses_branch_execution_without_changing_common_prefix():
+    producer = SyntheticProducer()
+    pair = run_policy_pair(
+        _case(),
+        llm_factory=lambda: producer,
+        model_digest="synthetic-digest",
+        static_best=Knobs(),
+        execution_order=ORDER_BAAB,
+    )
+    assert pair.execution_order == ORDER_BAAB
+    assert pair.adaptive.turns[0].output == pair.static.turns[0].output
+    assert producer.calls[1]["options"] == pair.static.turns[1].options
+    assert producer.calls[2]["options"] == pair.adaptive.turns[1].options
+    assert producer.calls[3]["options"] == pair.adaptive.turns[2].options
+    assert producer.calls[4]["options"] == pair.static.turns[2].options
+
+    with pytest.raises(ValueError, match="ABBA or BAAB"):
+        run_policy_pair(
+            _case(),
+            llm_factory=SyntheticProducer,
+            model_digest="synthetic-digest",
+            static_best=Knobs(),
+            execution_order="AABB",
+        )
 
 
 class ScriptedJudge:
@@ -116,7 +159,7 @@ class ScriptedJudge:
         self.final_preference = final_preference
         self.calls = 0
 
-    def generate(self, prompt, options):
+    def generate(self, prompt, options, response_format=None):
         script = [
             {"action": "READ_SOURCE", "start": 0, "end": 4000},
             {"action": "READ_TRACE", "candidate": "A"},

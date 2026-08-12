@@ -80,7 +80,8 @@ class LyraLoop:
             self._affect_surface = None
 
     def generate(self, prompt: str, task_type: str = "general",
-                 generation_options: Optional[Dict[str, Any]] = None) -> LoopResult:
+                 generation_options: Optional[Dict[str, Any]] = None,
+                 response_format: Any = None) -> LoopResult:
         # 1) boutons du tour = état courant + overrides de tâche
         knobs_used = apply_task_overrides(self.state.knobs, task_type)
 
@@ -101,7 +102,10 @@ class LyraLoop:
             options.update(generation_options)
 
         # 4) génération
-        output = self.llm.generate(prompt, options)
+        if response_format is None:
+            output = self.llm.generate(prompt, options)
+        else:
+            output = self.llm.generate(prompt, options, response_format=response_format)
 
         # 5) métriques cheap RÉELLES sur la sortie
         cheap = hedge_score(prompt, output)

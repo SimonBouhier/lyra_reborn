@@ -8,7 +8,13 @@ import json
 
 from core.knobs import Knobs
 from core.llm import OllamaClient
-from eval.p7_trajectory import EvaluationCase, PolicyTrace, run_policy_pair
+from eval.p7_trajectory import (
+    ORDER_ABBA,
+    ORDER_BAAB,
+    EvaluationCase,
+    PolicyTrace,
+    run_policy_pair,
+)
 
 
 MODEL_DIGESTS = {
@@ -41,6 +47,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", choices=sorted(MODEL_DIGESTS), default="mistral:latest")
     parser.add_argument("--timeout", type=int, default=180)
+    parser.add_argument("--execution-order", choices=(ORDER_ABBA, ORDER_BAAB), default=ORDER_ABBA)
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
@@ -51,6 +58,7 @@ def main() -> int:
         llm_factory=lambda: OllamaClient(model=args.model, timeout=args.timeout),
         model_digest=MODEL_DIGESTS[args.model],
         static_best=Knobs(),
+        execution_order=args.execution_order,
     )
     a1 = pair.adaptive.turns[0]
     s1 = pair.static.turns[0]
@@ -65,6 +73,8 @@ def main() -> int:
                 "schema_version": "lyra.p7.smoke.v1",
                 "model": args.model,
                 "model_digest": MODEL_DIGESTS[args.model],
+                "execution_order": pair.execution_order,
+                "physical_calls": pair.physical_calls,
                 "synthetic_source_sha256": hashlib.sha256(
                     SYNTHETIC_SOURCE.encode("utf-8")
                 ).hexdigest(),
