@@ -8,10 +8,18 @@ import pytest
 from core.knobs import Knobs
 from core.llm import EchoClient
 from core.loop import LyraLoop
-from eval.p7_contracts import DecisionContractError, validate_editorial_decision
+from eval.p7_contracts import (
+    DecisionContractError,
+    decision_schema,
+    segment_source,
+    source_segments_sha256,
+    validate_editorial_decision,
+)
 from eval.p7_judge import (
+    JudgeActionName,
     JudgeProtocolError,
     PairwiseJudgeAgent,
+    judge_action_schema,
     judge_in_both_orders,
     judge_system_prompt,
     resolve_panel,
@@ -41,7 +49,7 @@ def _final_json(option_marker: str) -> str:
             ),
             "evidence": [
                 {
-                    "quote": "the resulting decision still requires independent evidence",
+                    "source_span_id": "S001",
                     "why": "This directly limits what can be concluded from adaptive control alone.",
                 }
             ],
@@ -79,9 +87,23 @@ def test_contract_rejects_empty_trivial_and_non_source_evidence():
         validate_editorial_decision(json.dumps({"decision": "AUDIT"}), SOURCE)
 
     payload = json.loads(_final_json("x"))
-    payload["evidence"][0]["quote"] = "This fabricated quotation is definitely absent from the source."
+    payload["evidence"][0]["source_span_id"] = "S999"
     with pytest.raises(DecisionContractError, match="absent"):
         validate_editorial_decision(json.dumps(payload), SOURCE)
+
+
+def test_source_segmentation_and_dynamic_enum_are_deterministic():
+    source = "  alpha   beta\n" + ("gamma " * 80)
+    first = segment_source(source)
+    second = segment_source(source)
+    assert first == second
+    assert [item.span_id for item in first] == [f"S{i:03d}" for i in range(1, len(first) + 1)]
+    assert all(len(item.text) <= 220 for item in first)
+    assert source_segments_sha256(source) == source_segments_sha256(source)
+
+    schema = decision_schema(source)
+    enum = schema["$defs"]["Evidence"]["properties"]["source_span_id"]["enum"]
+    assert enum == [item.span_id for item in first]
 
 
 def test_generation_options_cannot_override_knob_controlled_keys():
@@ -200,6 +222,9 @@ def test_judge_is_blind_and_must_gather_evidence_before_verdict():
         PairwiseJudgeAgent(premature).judge(
             SOURCE, {"A": pair.adaptive, "B": pair.static}
         )
+
+    action_enum = judge_action_schema()["$defs"]["JudgeActionName"]["enum"]
+    assert action_enum == [item.value for item in JudgeActionName]
 
 
 def test_order_reversal_and_panel_refuse_to_force_uncertain_result():

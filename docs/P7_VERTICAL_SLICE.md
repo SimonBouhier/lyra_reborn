@@ -1,10 +1,11 @@
 # P7 — tranche verticale V3
 
-**Statut :** harnais synthétique V4 construit puis arrêté avant calibration ;
-aucune campagne réelle exécutée.
-**Dernière préinscription gelée :** `PREREGISTRATION_v4.md`, au commit
-`93fc5611f09c1622a469bc54427dd920c8455d76` et estampillée au commit
-`3bf1307`. Statuts : `docs/P7_V3_STATUS.md` et `docs/P7_V4_STATUS.md`.
+**Statut :** harnais synthétique V5 à ancres source construit puis arrêté avant
+calibration ; aucune campagne réelle exécutée.
+**Dernière préinscription gelée :** `PREREGISTRATION_v5.md`, au commit
+`f367930f91c61ec5829bd5fcc1e9507e46ba154e` et estampillée au commit
+`d7c0bcb`. Statuts antérieurs : `docs/P7_V3_STATUS.md` et
+`docs/P7_V4_STATUS.md`. Statut V5 : `docs/P7_V5_STATUS.md`.
 
 ## Ce que cette tranche prouve
 
@@ -18,8 +19,8 @@ Le chemin minimal existe de bout en bout sans toucher au jeu tenu :
 4. le client synthétique produit alors des sorties différentes ;
 5. les quatre appels de branche suivent ABBA ou BAAB, pour cinq appels physiques
    par cas ;
-6. le tour final doit satisfaire un contrat Pydantic fermé et citer exactement
-   la source ;
+6. la source est segmentée déterministiquement en `S001…` et le tour final doit
+   satisfaire un contrat Pydantic fermé en référant une ancre existante ;
 7. le juge anonyme doit lire la source et les deux traces complètes avec des
    outils locaux bornés ;
 8. chaque comparaison est rejouée ordre inversé ; instabilité, égalité ou
@@ -36,7 +37,7 @@ Dans l'environnement Lyra où Pydantic 2.13.4 est installé :
 .\.venv\Scripts\python.exe -m pytest tests\test_p7_vertical_slice.py -q
 ```
 
-Résultat attendu à l'état de ce document : `6 passed`.
+Résultat attendu à l'état de ce document : `7 passed`.
 
 Régressions directes du noyau :
 
@@ -65,6 +66,18 @@ pas exactement la même sortie COMMON T1.
 Le smoke Mistral V3 du 2026-08-12 avait rendu le code 4 parce que V3 générait le
 tour 1 deux fois. V4 le génère une fois puis le partage ; voir
 `docs/P7_V3_STATUS.md`.
+
+Smoke live du panel sur la même source synthétique :
+
+```powershell
+.\.venv\Scripts\python.exe scripts\p7_judge_smoke.py `
+  --producer mistral:latest --execution-order ABBA
+```
+
+Le script utilise les deux autres modèles comme juges, chacun dans les deux
+ordres. Il ne publie que préférences anonymes, nombre d'étapes, stabilité et
+résolution du panel. `UNRESOLVED` est un résultat valide ; une violation du
+protocole d'outils reste une erreur explicite.
 
 Le test complet contient encore une contrainte historique de la campagne V1 :
 `tests/test_vigie_campaign.py::test_frozen_epp_sidecar_revision_is_verified`
