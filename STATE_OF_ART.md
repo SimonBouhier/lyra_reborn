@@ -1,6 +1,6 @@
 # État de l'art — politique adaptative et évaluation agentique
 
-**Dernière revue : 2026-08-12**
+**Dernière revue : 2026-08-13**
 **Question locale :** une politique qui transforme des métriques textuelles bon
 marché en décisions de contrôle produit-elle de meilleures trajectoires qu'une
 politique statique, sur des cas réels tenus ?
@@ -65,6 +65,29 @@ Une préférence qui change avec l'ordre, un `TIE` ou un désaccord du panel res
 victoire.
 
 Source primaire : [Feng et al., 2025](https://arxiv.org/abs/2512.16041).
+
+### 1.4 Une grammaire de sortie ne remplace pas le contrat de validation
+
+*Generating Structured Outputs from Language Models: Benchmark and Studies*
+évalue plusieurs moteurs de décodage contraint sur des milliers de schémas JSON
+réels et montre que la couverture pratique des contraintes dépend du moteur.
+Conséquence pour Lyra : le schéma accepté par le compilateur de grammaire
+d'Ollama doit être gelé et testé comme un artefact distinct ; il ne peut pas
+être supposé équivalent à tout le vocabulaire JSON Schema produit par
+Pydantic.
+
+Source primaire : [Geng et al., 2025](https://arxiv.org/abs/2501.10868).
+
+Les grammaires incrémentales garantissent utilement la forme syntaxique des
+sorties structurées, mais des travaux sur le *grammar-aligned decoding*
+montrent aussi qu'une contrainte peut déformer la distribution du modèle.
+Conséquence pour Lyra : la même grammaire doit être appliquée à tous les
+juges et candidats ; la conformité grammaticale reste séparée de la qualité du
+jugement et toute réponse non conforme au contrat Pydantic complet reste
+`INVALID`, sans réparation.
+
+Sources primaires : [Geng et al., 2023](https://arxiv.org/abs/2305.13971),
+[Park et al., 2024](https://arxiv.org/abs/2405.21047).
 
 ## 2. Ce que l'audit local change
 
