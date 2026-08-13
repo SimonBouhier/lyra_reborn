@@ -8,7 +8,7 @@ import pytest
 from eval.p7_judge_backend import (
     JudgeBackendRequest,
     OllamaJudgeBackend,
-    OpenAICompatibleJudgeBackend,
+    LlamaServerJudgeBackend,
     canonical_payload_bytes,
 )
 from eval.p7_judge_prompt import judge_prompt_with_contract
@@ -71,11 +71,12 @@ def test_ollama_modes_change_only_the_format_constraint():
 
 def test_openai_backend_uses_the_full_schema_without_ollama_translation():
     _, request = _request()
-    payload = OpenAICompatibleJudgeBackend("http://localhost:8080").build_payload(request)
+    payload = LlamaServerJudgeBackend("http://localhost:8080").build_payload(request)
     wrapped = payload["response_format"]
     assert wrapped["type"] == "json_schema"
-    assert wrapped["json_schema"]["strict"] is True
-    assert wrapped["json_schema"]["schema"] == request.full_schema
+    assert wrapped["schema"] == request.full_schema
+    assert "json_schema" not in wrapped
+    assert payload["reasoning_effort"] == "none"
     assert payload["messages"] == [{"role": "user", "content": request.prompt}]
 
 
@@ -103,7 +104,7 @@ class _FakeResponse:
             "{}",
         ),
         (
-            OpenAICompatibleJudgeBackend("http://localhost:8080"),
+            LlamaServerJudgeBackend("http://localhost:8080"),
             {
                 "choices": [
                     {"message": {"content": "{}"}, "finish_reason": "stop"}

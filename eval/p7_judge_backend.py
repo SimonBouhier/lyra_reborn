@@ -103,10 +103,10 @@ class OllamaJudgeBackend:
         )
 
 
-class OpenAICompatibleJudgeBackend:
-    """Adaptateur futur pour llama-server, LM Studio ou vLLM."""
+class LlamaServerJudgeBackend:
+    """Adaptateur du dialecte ``response_format`` de llama-server."""
 
-    name = "openai:OPENAI_FULL_SCHEMA"
+    name = "llama-server:OPENAI_FULL_SCHEMA"
 
     def __init__(self, base_url: str, api_key: str = "local"):
         self.base_url = base_url.rstrip("/")
@@ -119,13 +119,10 @@ class OpenAICompatibleJudgeBackend:
             "stream": False,
             "temperature": request.temperature,
             "max_tokens": request.max_tokens,
+            "reasoning_effort": "none",
             "response_format": {
                 "type": "json_schema",
-                "json_schema": {
-                    "name": "lyra_judge_verdict",
-                    "strict": True,
-                    "schema": request.full_schema,
-                },
+                "schema": request.full_schema,
             },
         }
 
