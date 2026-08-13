@@ -89,6 +89,29 @@ jugement et toute réponse non conforme au contrat Pydantic complet reste
 Sources primaires : [Geng et al., 2023](https://arxiv.org/abs/2305.13971),
 [Park et al., 2024](https://arxiv.org/abs/2405.21047).
 
+La contrainte n'est pas seulement un filtre syntaxique. *The Format Tax* et
+*The Constraint Tax* observent, sur des modèles ouverts, une baisse de qualité
+qui peut apparaître dès l'instruction de répondre dans un format et s'aggraver
+sous masquage grammatical. Une sortie parfaitement valide peut donc être
+sémantiquement fausse. La génération conditionnée par un brouillon récupère une
+partie de cette perte, au prix d'un second passage. Conséquence pour Lyra : un
+banc de backend doit rapporter séparément validité Pydantic, justesse attendue
+et coût ; un mode ne gagne jamais par sa seule conformité JSON. Le double
+passage reste hors du protocole confirmatoire tant qu'il n'a pas été autorisé
+et budgété avant gel.
+
+Sources primaires : [Lee et al., 2026](https://arxiv.org/abs/2604.03616),
+[Ray, 2026](https://arxiv.org/abs/2605.26128),
+[Reddy et al., 2026](https://arxiv.org/abs/2603.03305).
+
+Enfin, la simple demande de JSON peut homogénéiser les choix d'un panel, même
+sans contrainte au décodeur. Conséquence : le futur verdict de Lyra ne pourra
+pas interpréter l'accord de deux juges structurés comme une indépendance
+forte ; l'accord, la stabilité après inversion et les `UNRESOLVED` restent des
+observables distinctes.
+
+Source primaire : [Parikh, 2026](https://arxiv.org/abs/2607.18476).
+
 ## 2. Ce que l'audit local change
 
 ### 2.1 Les métriques Lyra sont des capteurs, pas des preuves de qualité
