@@ -29,6 +29,16 @@ JUDGES = (
 )
 
 
+def _configure_process_logs(stdout_log: Path | None, stderr_log: Path | None) -> None:
+    """Attache les deux flux à des fichiers distincts depuis le processus enfant."""
+    if stdout_log is not None:
+        stdout_log.parent.mkdir(parents=True, exist_ok=True)
+        sys.stdout = stdout_log.open("a", encoding="utf-8", buffering=1)
+    if stderr_log is not None:
+        stderr_log.parent.mkdir(parents=True, exist_ok=True)
+        sys.stderr = stderr_log.open("a", encoding="utf-8", buffering=1)
+
+
 def _canonical(value: Any) -> bytes:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
@@ -330,9 +340,12 @@ def main() -> int:
     parser.add_argument("--output-root", type=Path, default=Path("data/runs"))
     parser.add_argument("--lifecycle-output", type=Path)
     parser.add_argument("--lifecycle-delay", type=float, default=3.0)
+    parser.add_argument("--stdout-log", type=Path)
+    parser.add_argument("--stderr-log", type=Path)
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
+    _configure_process_logs(args.stdout_log, args.stderr_log)
     if args.phase == "lifecycle-smoke":
         if args.lifecycle_output is None:
             parser.error("--lifecycle-output is required for lifecycle-smoke")
