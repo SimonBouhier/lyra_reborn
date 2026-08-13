@@ -2,7 +2,7 @@
 
 **Nature :** diagnostic d'ingénierie non confirmatoire
 
-**Gel initial :** `PENDING_PROTOCOL_COMMIT`
+**Gel initial :** `69e34deab012895caf4f0b377d8622f942febb86`
 
 **Date :** 2026-08-13
 
