@@ -2,7 +2,7 @@
 
 **Frozen on**: 2026-08-13
 **Frozen by**: Simon Bouhier, avec assistance méthodologique de Codex
-**Git commit at freeze**: PENDING
+**Git commit at freeze**: 88590fcc59dc1845a4e747b7160da2f68d54afb5
 
 ## Hypothesis
 
