@@ -25,13 +25,14 @@ from eval.p7_qwen38_admission import (
     admission_cells,
     admission_jobs,
     summarize_records,
+    verify_candidate_fully_loaded_on_gpu,
     verify_candidate_identity,
 )
 from eval.p7_v7_judge import JudgeContractError, judgment_schema, validate_judgment
 from eval.p7_v9_judge import wire_judgment_schema
 
 
-PROTOCOL_COMMIT = "876d13f5cf8eac6bb863ee1205a5f172c824919d"
+PROTOCOL_COMMIT = "TO_BE_STAMPED"
 
 
 def _canonical(value: Any) -> bytes:
@@ -70,7 +71,24 @@ def runtime_manifest(base_url: str, timeout: int) -> dict[str, Any]:
         for item in tags
         if isinstance(item, dict) and isinstance(item.get("name"), str)
     }
-    return {"ollama": version, "models": {CANDIDATE_MODEL: models.get(CANDIDATE_MODEL)}}
+    loaded_items = _api_get(base_url, "/api/ps", timeout).get("models", [])
+    if not isinstance(loaded_items, list):
+        raise ValueError("Ollama /api/ps models field is not a list")
+    loaded_models = {
+        item.get("name"): {
+            "digest": item.get("digest"),
+            "size": item.get("size"),
+            "size_vram": item.get("size_vram"),
+            "context_length": item.get("context_length"),
+        }
+        for item in loaded_items
+        if isinstance(item, dict) and isinstance(item.get("name"), str)
+    }
+    return {
+        "ollama": version,
+        "models": {CANDIDATE_MODEL: models.get(CANDIDATE_MODEL)},
+        "loaded_models": {CANDIDATE_MODEL: loaded_models.get(CANDIDATE_MODEL)},
+    }
 
 
 def _acquire_lock(output_root: Path, run_id: str) -> Path:
@@ -104,6 +122,7 @@ def run(base_url: str, timeout: int, output_root: Path) -> int:
 
     runtime_before = runtime_manifest(base_url, timeout)
     verify_candidate_identity(runtime_before)
+    verify_candidate_fully_loaded_on_gpu(runtime_before)
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
     run_dir = output_root / f"p7_qwen38_admission_{stamp}"
     _acquire_lock(output_root, run_dir.name)
@@ -112,7 +131,7 @@ def run(base_url: str, timeout: int, output_root: Path) -> int:
     manifest = {
         "schema_version": "lyra.p7.qwen38-admission-run.v1",
         "run_id": run_dir.name,
-        "protocol": "docs/P7_QWEN38_ADMISSION.md",
+        "protocol": "docs/P7_QWEN38_ADMISSION_V2.md",
         "protocol_commit": PROTOCOL_COMMIT,
         "diagnostic_only": True,
         "synthetic_only": True,
@@ -242,6 +261,7 @@ def run(base_url: str, timeout: int, output_root: Path) -> int:
 
     runtime_after = runtime_manifest(base_url, timeout)
     verify_candidate_identity(runtime_after)
+    verify_candidate_fully_loaded_on_gpu(runtime_after)
     summary = {
         "schema_version": "lyra.p7.qwen38-admission-summary.v1",
         "run_id": run_dir.name,

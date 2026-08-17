@@ -12,6 +12,7 @@ from eval.p7_qwen38_admission import (
     admission_cells,
     admission_jobs,
     summarize_records,
+    verify_candidate_fully_loaded_on_gpu,
     verify_candidate_identity,
 )
 from scripts.p7_qwen38_admission import PROTOCOL_COMMIT
@@ -32,7 +33,7 @@ def _records():
 
 
 def test_matrix_is_eight_english_orientations_repeated_three_times():
-    assert PROTOCOL_COMMIT == "876d13f5cf8eac6bb863ee1205a5f172c824919d"
+    assert PROTOCOL_COMMIT == "TO_BE_STAMPED"
     cells = admission_cells()
     assert len(cells) == 8
     assert REPETITIONS == 3
@@ -66,3 +67,19 @@ def test_candidate_digest_is_pinned_exactly():
     verify_candidate_identity({"models": {CANDIDATE_MODEL: CANDIDATE_DIGEST}})
     with pytest.raises(RuntimeError, match="digest mismatch"):
         verify_candidate_identity({"models": {CANDIDATE_MODEL: "moving-tag"}})
+
+
+def test_candidate_must_be_fully_loaded_on_gpu_before_lock():
+    loaded = {
+        "loaded_models": {
+            CANDIDATE_MODEL: {
+                "digest": CANDIDATE_DIGEST,
+                "size": 17_399_745_083,
+                "size_vram": 17_399_745_083,
+            }
+        }
+    }
+    verify_candidate_fully_loaded_on_gpu(loaded)
+    loaded["loaded_models"][CANDIDATE_MODEL]["size_vram"] = 0
+    with pytest.raises(RuntimeError, match="not fully loaded on GPU"):
+        verify_candidate_fully_loaded_on_gpu(loaded)

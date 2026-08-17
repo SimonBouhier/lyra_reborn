@@ -80,6 +80,20 @@ def verify_candidate_identity(runtime: dict[str, Any]) -> None:
         )
 
 
+def verify_candidate_fully_loaded_on_gpu(runtime: dict[str, Any]) -> None:
+    observed = runtime.get("loaded_models", {}).get(CANDIDATE_MODEL)
+    if not isinstance(observed, dict):
+        raise RuntimeError("candidate must be loaded before the admission lock is acquired")
+    if observed.get("digest") != CANDIDATE_DIGEST:
+        raise RuntimeError("loaded candidate digest differs from the frozen artifact")
+    size = observed.get("size")
+    size_vram = observed.get("size_vram")
+    if not isinstance(size, int) or size <= 0 or size_vram != size:
+        raise RuntimeError(
+            f"candidate is not fully loaded on GPU: size={size}, size_vram={size_vram}"
+        )
+
+
 def summarize_records(records: list[dict[str, Any]]) -> dict[str, Any]:
     grouped: dict[tuple[str, str], list[dict[str, Any]]] = {}
     for record in records:
