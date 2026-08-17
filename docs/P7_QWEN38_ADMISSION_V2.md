@@ -2,7 +2,7 @@
 
 **Nature :** banc d'ingénierie synthétique, non confirmatoire  
 **Langue :** anglais uniquement  
-**Gel initial :** `TO_BE_STAMPED`
+**Gel initial :** `08c0de9cee2806f58c9922359a74616d0dc5cad5`
 
 ## Incorporation du protocole initial
 

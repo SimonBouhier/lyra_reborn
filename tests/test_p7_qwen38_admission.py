@@ -33,7 +33,7 @@ def _records():
 
 
 def test_matrix_is_eight_english_orientations_repeated_three_times():
-    assert PROTOCOL_COMMIT == "TO_BE_STAMPED"
+    assert PROTOCOL_COMMIT == "08c0de9cee2806f58c9922359a74616d0dc5cad5"
     cells = admission_cells()
     assert len(cells) == 8
     assert REPETITIONS == 3
