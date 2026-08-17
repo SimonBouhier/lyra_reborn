@@ -2,7 +2,7 @@
 
 **Nature :** banc d'ingénierie synthétique, non confirmatoire  
 **Langue :** anglais uniquement  
-**Gel initial :** `TO_BE_STAMPED`
+**Gel initial :** `876d13f5cf8eac6bb863ee1205a5f172c824919d`
 
 ## Objectif autorisé
 

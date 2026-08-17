@@ -14,6 +14,7 @@ from eval.p7_qwen38_admission import (
     summarize_records,
     verify_candidate_identity,
 )
+from scripts.p7_qwen38_admission import PROTOCOL_COMMIT
 
 
 def _records():
@@ -31,6 +32,7 @@ def _records():
 
 
 def test_matrix_is_eight_english_orientations_repeated_three_times():
+    assert PROTOCOL_COMMIT == "876d13f5cf8eac6bb863ee1205a5f172c824919d"
     cells = admission_cells()
     assert len(cells) == 8
     assert REPETITIONS == 3

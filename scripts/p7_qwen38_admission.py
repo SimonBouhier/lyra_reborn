@@ -31,7 +31,7 @@ from eval.p7_v7_judge import JudgeContractError, judgment_schema, validate_judgm
 from eval.p7_v9_judge import wire_judgment_schema
 
 
-PROTOCOL_COMMIT = "TO_BE_STAMPED"
+PROTOCOL_COMMIT = "876d13f5cf8eac6bb863ee1205a5f172c824919d"
 
 
 def _canonical(value: Any) -> bytes:
