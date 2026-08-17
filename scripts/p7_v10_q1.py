@@ -33,7 +33,7 @@ from eval.p7_v10_q1 import (
 from eval.p7_v7_judge import JudgeContractError
 
 
-PROTOCOL_COMMIT = "TO_BE_STAMPED"
+PROTOCOL_COMMIT = "7540912d57ba1a113e1af7f2d43cec261f0834d8"
 
 
 def _canonical(value: Any) -> bytes:

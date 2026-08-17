@@ -60,7 +60,7 @@ def _passing_records():
 
 
 def test_matrix_is_fresh_english_ascii_two_family_design():
-    assert PROTOCOL_COMMIT == "TO_BE_STAMPED"
+    assert PROTOCOL_COMMIT == "7540912d57ba1a113e1af7f2d43cec261f0834d8"
     assert len(JUDGES) == 2
     assert len({judge.family for judge in JUDGES}) == 2
     assert len(q1_fixtures()) == 3
