@@ -20,7 +20,8 @@ import os
 
 def build_ollama_payload(model: str, prompt: str, options: Dict[str, Any],
                          stream: bool = False,
-                         response_format: Any = None) -> Dict[str, Any]:
+                         response_format: Any = None,
+                         think: Optional[bool] = None) -> Dict[str, Any]:
     """Construit le payload /api/generate d'Ollama avec les options AU BON ENDROIT.
 
     C'est l'unité testable du correctif P0 : `options` est imbriqué, jamais
@@ -34,24 +35,44 @@ def build_ollama_payload(model: str, prompt: str, options: Dict[str, Any],
     }
     if response_format is not None:
         payload["format"] = response_format
+    if think is not None:
+        payload["think"] = bool(think)
     return payload
+
+
+def optional_env_bool(name: str) -> Optional[bool]:
+    """Lit un booléen optionnel sans transformer une faute en faux implicite."""
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return None
+    normalized = raw.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError(f"{name} must be one of 1/0, true/false, yes/no, on/off")
 
 
 class OllamaClient:
     """Client Ollama natif (/api/generate). `requests` importé paresseusement."""
 
     def __init__(self, model: Optional[str] = None, base_url: Optional[str] = None,
-                 timeout: int = 120):
+                 timeout: int = 120, think: Optional[bool] = None):
         self.model = model or os.getenv("LYRA_MODEL", "gpt-oss:20b")
         self.base_url = (base_url or os.getenv("OLLAMA_NATIVE_BASE",
                                                "http://127.0.0.1:11434")).rstrip("/")
         self.timeout = timeout
+        self.think = optional_env_bool("LYRA_THINK") if think is None else bool(think)
 
     def generate(self, prompt: str, options: Optional[Dict[str, Any]] = None,
                  response_format: Any = None) -> str:
         import requests  # paresseux : les tests hors-ligne n'en ont pas besoin
         payload = build_ollama_payload(
-            self.model, prompt, options or {}, response_format=response_format
+            self.model,
+            prompt,
+            options or {},
+            response_format=response_format,
+            think=self.think,
         )
         r = requests.post(f"{self.base_url}/api/generate", json=payload, timeout=self.timeout)
         r.raise_for_status()

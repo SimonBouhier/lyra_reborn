@@ -1,5 +1,7 @@
 """P0 — le correctif options{} : les params de génération sont imbriqués."""
-from core.llm import build_ollama_payload, EchoClient
+import pytest
+
+from core.llm import build_ollama_payload, EchoClient, OllamaClient, optional_env_bool
 
 
 def test_options_are_nested_not_at_root():
@@ -26,3 +28,32 @@ def test_structured_output_schema_is_at_payload_root():
                                    response_format=schema)
     assert payload["format"] == schema
     assert "format" not in payload["options"]
+
+
+def test_thinking_control_is_explicit_and_at_payload_root():
+    historical = build_ollama_payload("m", "hello", {})
+    disabled = build_ollama_payload("m", "hello", {}, think=False)
+    assert "think" not in historical
+    assert disabled["think"] is False
+    assert "think" not in disabled["options"]
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [("1", True), ("true", True), ("ON", True), ("0", False), ("false", False), ("No", False)],
+)
+def test_optional_env_bool_accepts_unambiguous_values(monkeypatch, raw, expected):
+    monkeypatch.setenv("LYRA_TEST_BOOL", raw)
+    assert optional_env_bool("LYRA_TEST_BOOL") is expected
+
+
+def test_optional_env_bool_rejects_typos(monkeypatch):
+    monkeypatch.setenv("LYRA_TEST_BOOL", "disable-ish")
+    with pytest.raises(ValueError, match="LYRA_TEST_BOOL"):
+        optional_env_bool("LYRA_TEST_BOOL")
+
+
+def test_ollama_client_reads_explicit_thinking_policy(monkeypatch):
+    monkeypatch.setenv("LYRA_THINK", "false")
+    client = OllamaClient(model="qwen3.8:27b")
+    assert client.think is False

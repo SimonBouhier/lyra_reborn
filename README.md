@@ -86,6 +86,21 @@ python scripts/demo.py       # démo hors-ligne, déterministe
 LYRA_LIVE=1 python scripts/demo.py   # avec un Ollama réel (pip install requests)
 ```
 
+Sous PowerShell, un modèle Ollama téléchargé peut être sélectionné sans
+modifier le code. Les modèles à raisonnement séparé doivent recevoir une
+politique explicite afin que Lyra consomme bien leur canal final :
+
+```powershell
+$env:LYRA_MODEL = 'qwen3.8:27b'
+$env:LYRA_THINK = 'false'
+$env:LYRA_LIVE = '1'
+.\.venv\Scripts\python.exe scripts\demo.py
+```
+
+Sans `LYRA_THINK`, le champ n'est pas envoyé et le comportement historique du
+modèle est conservé. Une valeur mal orthographiée est refusée plutôt que
+silencieusement interprétée.
+
 Le noyau (`core/`, `memory/`) est **pure stdlib**. Options : `requests` (Ollama),
 `numpy/matplotlib` (recherche).
 
