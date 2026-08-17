@@ -1,6 +1,6 @@
 # État de l'art — politique adaptative et évaluation agentique
 
-**Dernière revue : 2026-08-13**
+**Dernière revue : 2026-08-17**
 **Question locale :** une politique qui transforme des métriques textuelles bon
 marché en décisions de contrôle produit-elle de meilleures trajectoires qu'une
 politique statique, sur des cas réels tenus ?
@@ -65,6 +65,27 @@ Une préférence qui change avec l'ordre, un `TIE` ou un désaccord du panel res
 victoire.
 
 Source primaire : [Feng et al., 2025](https://arxiv.org/abs/2512.16041).
+
+Une étude par répétitions identiques observe en outre que le décodage
+déterministe réduit sans supprimer les bascules de préférence : le taux moyen
+rapporté est de 13,6 %, avec une forte hétérogénéité entre questions. Ce chiffre
+n'est pas directement transposable à nos modèles locaux, mais il invalide
+l'admission d'un juge sur un seul passage réussi. Conséquence pour Lyra : la
+qualification d'ingénierie d'un nouveau juge doit mesurer sa stabilité sur des
+répétitions prébudgétées et conserver `UNRESOLVED` lorsque les votes ne sont pas
+stables ; ces répétitions ne remplacent ni l'inversion A/B ni le panel.
+
+Source primaire : [Yagubyan, 2026](https://arxiv.org/abs/2606.13685).
+
+Enfin, les juges pairwise présentent des écarts selon la langue des réponses et
+une préférence fréquente pour l'anglais dans les comparaisons inter-langues.
+La campagne Lyra est menée en anglais. Conséquence : préqualification,
+calibration, tenu, prompts et candidats doivent tous rester en anglais ; aucun
+résultat obtenu dans une autre langue ne qualifie le juge pour cette campagne,
+et les langues ne doivent jamais être mélangées dans une paire sauf si le biais
+linguistique devient lui-même l'objet explicite d'un autre test.
+
+Source primaire : [Zhou et al., 2026](https://arxiv.org/abs/2601.13649).
 
 ### 1.4 Une grammaire de sortie ne remplace pas le contrat de validation
 
