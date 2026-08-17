@@ -1,7 +1,7 @@
 # P7 — statut de l'admission Qwen 3.8 V2
 
-**Date :** 2026-08-18  
-**Protocole gelé :** `08c0de9cee2806f58c9922359a74616d0dc5cad5`  
+**Date :** 2026-08-18
+**Protocole gelé :** `08c0de9cee2806f58c9922359a74616d0dc5cad5`
 **Statut :** `QUALIFIED_FOR_V10_DESIGN`
 
 ## Résultat
