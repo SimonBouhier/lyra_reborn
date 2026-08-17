@@ -1,6 +1,6 @@
 # État de l'art — politique adaptative et évaluation agentique
 
-**Dernière revue : 2026-08-17**
+**Dernière revue : 2026-08-18**
 **Question locale :** une politique qui transforme des métriques textuelles bon
 marché en décisions de contrôle produit-elle de meilleures trajectoires qu'une
 politique statique, sur des cas réels tenus ?
@@ -77,6 +77,28 @@ stables ; ces répétitions ne remplacent ni l'inversion A/B ni le panel.
 
 Source primaire : [Yagubyan, 2026](https://arxiv.org/abs/2606.13685).
 
+JudgeSense montre en outre que des reformulations sémantiquement équivalentes
+du prompt peuvent changer les décisions, que la taille ou la récence du modèle
+ne prédit pas sa stabilité et que les tâches pairwise restent exposées à
+l'ancrage de position. Ses templates sont volontairement minimalistes et son
+protocole fige les paramètres et les checkpoints. Conséquence pour Lyra : le
+prompt juge est un artefact expérimental à hacher et geler ; la qualification
+doit inverser A/B et ne doit pas présumer qu'un modèle plus récent est un
+meilleur instrument.
+
+Source primaire : [Bellibatlu et al., 2026](https://arxiv.org/abs/2604.23478).
+
+Les rationales produites par un modèle ne constituent pas un accès fiable à
+son mécanisme de décision. Sur des trajectoires agentiques, la réécriture du
+raisonnement affiché peut même déplacer fortement le verdict d'un juge alors
+que les actions et observations restent fixes. Conséquence pour Lyra : le
+contrat du juge ne demande pas de chaîne de pensée ni de justification libre ;
+il conserve des choix catégoriels et des références résolubles vers les
+preuves observables, qui restent l'autorité inspectable.
+
+Sources primaires : [Fayyaz et al., 2024](https://arxiv.org/abs/2407.00219),
+[Khalifa et al., 2026](https://arxiv.org/abs/2601.14691).
+
 Enfin, les juges pairwise présentent des écarts selon la langue des réponses et
 une préférence fréquente pour l'anglais dans les comparaisons inter-langues.
 La campagne Lyra est menée en anglais. Conséquence : préqualification,
@@ -133,6 +155,16 @@ observables distinctes.
 
 Source primaire : [Parikh, 2026](https://arxiv.org/abs/2607.18476).
 
+Plus généralement, un accord inter-LLM élevé peut refléter un sous-espace de
+biais partagé plutôt qu'un alignement humain. Sur des rubriques subjectives,
+le consensus ne vaut donc pas vérité terrain sans ancrage humain ou réponse
+vérifiable. Conséquence pour Lyra : le panel inter-familles réduit une
+dépendance instrumentale, mais son accord ne devient jamais une preuve
+autonome de qualité générale ; la campagne ne revendique qu'un résultat sous
+sa rubrique gelée.
+
+Source primaire : [Mukherjee et al., 2026](https://arxiv.org/abs/2606.03043).
+
 ## 2. Ce que l'audit local change
 
 ### 2.1 Les métriques Lyra sont des capteurs, pas des preuves de qualité
@@ -185,7 +217,7 @@ l'état doit être réinitialisé seulement entre les cas.
 
 La contribution éventuelle n'est pas « l'adaptive decoding ». Elle est plus
 étroite : tester si les capteurs interprétables déjà hérités de Lyra peuvent
-piloter utilement une trajectoire de décision en français, sur des fragments
+piloter utilement une trajectoire de décision en anglais, sur des fragments
 réels et hétérogènes, sans être récompensés par leurs propres proxys. Un résultat
 négatif est pleinement informatif : il indiquerait que la modulation est réelle
 mais que sa politique actuelle n'achète pas de meilleures décisions.
