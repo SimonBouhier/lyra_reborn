@@ -145,14 +145,21 @@ def test_judge_identity_is_pinned_exactly():
         verify_judge_identity({"models": {JUDGE.model: "moving-tag"}})
 
 
-def test_runner_refuses_to_run_while_any_phase_is_missing(tmp_path):
-    missing = [phase for phase in REQUIRED_PHASES if phase not in IMPLEMENTED_PHASES]
-    if not missing:
-        pytest.skip("runner chain complete - guard test becomes a live-run gate")
-    with pytest.raises(RuntimeError, match="incomplete"):
-        assert_runner_complete()
-    # run() doit refuser AVANT tout réseau et tout verrou : l'URL invalide et
-    # le répertoire vide ne doivent jamais être touchés.
-    with pytest.raises(RuntimeError, match="incomplete"):
-        run("http://invalid.invalid", 1, tmp_path / "runs")
-    assert not (tmp_path / "runs").exists()
+def test_the_complete_chain_lifts_the_guard():
+    assert set(IMPLEMENTED_PHASES) == set(REQUIRED_PHASES)
+    assert_runner_complete()  # ne lève plus : les quatre phases existent
+
+
+def test_runner_refuses_to_run_while_any_phase_is_missing(monkeypatch, tmp_path):
+    for missing in REQUIRED_PHASES:
+        monkeypatch.setattr(
+            "scripts.p7_v10.IMPLEMENTED_PHASES",
+            tuple(phase for phase in REQUIRED_PHASES if phase != missing),
+        )
+        with pytest.raises(RuntimeError, match="incomplete"):
+            assert_runner_complete()
+        # run() doit refuser AVANT tout réseau et tout verrou : l'URL invalide
+        # et le répertoire vide ne doivent jamais être touchés.
+        with pytest.raises(RuntimeError, match="incomplete"):
+            run("http://invalid.invalid", 1, tmp_path / "runs")
+        assert not (tmp_path / "runs").exists()

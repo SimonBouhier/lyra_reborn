@@ -5,6 +5,12 @@ Q0 -> calibration -> tenu -> scoreur, un verrou exclusif par phase créé après
 la preuve GPU de la phase. La garde de complétude interdit tout run vivant
 tant que la chaîne entière n'est pas implémentée : aucune phase ne peut se
 consommer contre un runner à moitié construit.
+
+Précondition opérateur : le juge doit être RÉSIDENT avant le lancement — Q0
+reconduit la précondition GPU du banc A et la vérifie sans la provoquer. Les
+phases suivantes montent et libèrent elles-mêmes leurs modèles, un à la fois.
+Un juge non chargé arrête la commande avant le moindre verrou, donc sans
+consommer un seul appel.
 """
 from __future__ import annotations
 
@@ -108,10 +114,12 @@ from eval.p7_v10_producer import (
     verify_fully_loaded_on_gpu,
     verify_identity,
 )
+from eval.p7_v10_scoring import SCOPE_NOTE, global_verdict, score_producer
 from eval.p7_v7_judge import JudgeContractError
 
-# Retirer un nom de cette liste exige d'implémenter sa phase et ses tests.
-IMPLEMENTED_PHASES = ("Q0", "CALIBRATION")
+# Chaîne complète : la garde laisse passer `run`. Retirer un nom d'ici sans
+# retirer sa phase rendrait la garde muette.
+IMPLEMENTED_PHASES = REQUIRED_PHASES
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -1297,13 +1305,108 @@ def run_heldout(
     return 0, payload
 
 
-def run_scoring(output_root: Path) -> int:
-    raise NotImplementedError(
-        "V10 scoring phase is not implemented yet - see docs/P7_V10_RUNNER_PLAN.md layer 5"
-    )
+def run_scoring(
+    output_root: Path,
+    *,
+    heldout: dict[str, Any],
+    q0_passed: bool,
+    q1_passed: bool,
+) -> tuple[int, dict[str, Any]]:
+    """Agrégation déterministe : portes C0-C12, verdicts H10, verdict global.
+
+    Seule phase sans GPU — son verrou est donc créé sur la preuve qu'elle a :
+    l'entrée scellée par le tenu. Elle rend 0 dès qu'un verdict est produit :
+    `H10_NOT_SUPPORTED_IN_V10` est un résultat, pas un échec d'exécution.
+    """
+    producers = list(heldout["producers"])
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    run_dir = output_root / f"p7_v10_scoring_{stamp}"
+    _acquire_phase_lock(output_root, "scoring", run_dir.name)
+    run_dir.mkdir(parents=True, exist_ok=False)
+
+    results = [score_producer(producer) for producer in producers]
+    verdict = global_verdict(results, q0_passed=q0_passed, q1_passed=q1_passed)
+
+    summary = {
+        "schema_version": "lyra.p7.v10-scoring-summary.v1",
+        "run_id": run_dir.name,
+        "phase": "SCORING",
+        "preregistration": PREREGISTRATION,
+        "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
+        "prerun_amendment": PRERUN_AMENDMENT,
+        "independence_note": INDEPENDENCE_NOTE,
+        "scope_note": SCOPE_NOTE,
+        "gpu_proof": None,
+        "gpu_proof_note": (
+            "phase deterministe hors GPU : son verrou repose sur l entree "
+            "scellee du jeu tenu, pas sur une residence memoire"
+        ),
+        "heldout_run_id": heldout.get("run_id"),
+        "corpus_seal_sha256": heldout.get("corpus_seal_sha256"),
+        "blind_mapping_sha256": heldout.get("blind_mapping_sha256"),
+        "static_best": heldout.get("static_best"),
+        "q0_passed": bool(q0_passed),
+        "q1_passed": bool(q1_passed),
+        "per_producer": results,
+        "global_verdict": verdict,
+        "h10": verdict["status"],
+    }
+    (run_dir / "summary.json").write_bytes(_canonical(summary))
+    print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
+    return 0, summary
+
+
+def run_lifecycle_smoke(output_dir: Path, delay_seconds: float) -> int:
+    """Smoke de cycle de vie V8 : sans Ollama, sans corpus, sans fixture Q0.
+
+    Obligatoire avant tout run vivant (prérég §Exécution). Il prouve trois
+    choses et rien d'autre : la chaîne des quatre phases est implémentée, la
+    discipline de verrou refuse bien une seconde tentative, et le processus
+    survit à son propre délai en écrivant ses deux bornes. Aucun modèle,
+    aucun cas, aucune préférence — donc aucune évidence d'évaluation.
+    """
+    if delay_seconds <= 0:
+        raise ValueError("delay_seconds must be positive")
+    output_dir.mkdir(parents=True, exist_ok=False)
+    assert_runner_complete()
+
+    probe = output_dir / "lock_probe"
+    lock = _acquire_phase_lock(probe, "smoke", "lifecycle-smoke")
+    second_attempt_refused = False
+    try:
+        _acquire_phase_lock(probe, "smoke", "lifecycle-smoke")
+    except FileExistsError:
+        second_attempt_refused = True
+
+    started = {
+        "schema_version": "lyra.p7.v10-lifecycle-smoke.v1",
+        "pid": os.getpid(),
+        "started_at_utc": datetime.now(timezone.utc).isoformat(),
+        "delay_seconds": delay_seconds,
+        "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
+        "implemented_phases": list(IMPLEMENTED_PHASES),
+        "required_phases": list(REQUIRED_PHASES),
+        "lock_path": lock.name,
+        "second_attempt_refused": second_attempt_refused,
+        "ollama_contacted": False,
+        "corpus_read": False,
+        "q0_fixtures_read": False,
+    }
+    (output_dir / "started.json").write_bytes(_canonical(started))
+    time.sleep(delay_seconds)
+    finished = {
+        "schema_version": "lyra.p7.v10-lifecycle-smoke.v1",
+        "pid": os.getpid(),
+        "finished_at_utc": datetime.now(timezone.utc).isoformat(),
+        "status": "PASS" if second_attempt_refused else "FAIL",
+    }
+    (output_dir / "finished.json").write_bytes(_canonical(finished))
+    print(json.dumps(finished, ensure_ascii=False), flush=True)
+    return 0 if second_attempt_refused else 2
 
 
 def run(base_url: str, timeout: int, output_root: Path) -> int:
+    """Commande unique : Q0 -> calibration -> tenu -> scoreur, sans reprise."""
     assert_runner_complete()
     status = run_q0(base_url, timeout, output_root)
     if status != 0:
@@ -1316,18 +1419,27 @@ def run(base_url: str, timeout: int, output_root: Path) -> int:
     )
     if status != 0:
         return status
-    return run_scoring(output_root)
+    status, _ = run_scoring(
+        output_root, heldout=heldout, q0_passed=True, q1_passed=True
+    )
+    return status
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("phase", choices=("run",))
+    parser.add_argument("phase", choices=("run", "lifecycle-smoke"))
     parser.add_argument("--base-url", default="http://127.0.0.1:11434")
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--output-root", type=Path, default=Path("data/runs"))
+    parser.add_argument("--lifecycle-output", type=Path)
+    parser.add_argument("--lifecycle-delay", type=float, default=3.0)
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
+    if args.phase == "lifecycle-smoke":
+        if args.lifecycle_output is None:
+            parser.error("--lifecycle-output is required for lifecycle-smoke")
+        return run_lifecycle_smoke(args.lifecycle_output, args.lifecycle_delay)
     return run(args.base_url.rstrip("/"), args.timeout, args.output_root)
 
 

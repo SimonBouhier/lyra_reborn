@@ -6,11 +6,19 @@ import json
 
 import pytest
 
-from eval.p7_v10 import CALL_CEILINGS, PREREG_FREEZE_COMMIT
+from eval.p7_v10 import CALL_CEILINGS, JUDGE, PREREG_FREEZE_COMMIT
 from eval.p7_v10_calibration import PRESETS
 from eval.p7_v10_corpus import calibration_cases, heldout_cases
+from eval.p7_v10_producer import load_model
 from eval.p7_v10_scoring import score_producer
-from scripts.p7_v10 import ROOT, run_calibration, run_heldout
+from scripts.p7_v10 import (
+    ROOT,
+    run,
+    run_calibration,
+    run_heldout,
+    run_lifecycle_smoke,
+    run_scoring,
+)
 from tests.p7_v10_fakes import FakeOllama, install
 
 BASE = "http://127.0.0.1:11434"
@@ -266,3 +274,84 @@ def test_heldout_refuses_a_static_best_outside_the_frozen_presets(monkeypatch, t
         run_heldout(BASE, 30, tmp_path, "adaptive")
     assert list(tmp_path.glob("*.lock")) == []
     assert fake.generate_calls == []
+
+
+# --- scoreur et cycle de vie ----------------------------------------------
+
+
+def test_scoring_aggregates_the_heldout_input_and_locks_its_phase(monkeypatch, tmp_path):
+    install(monkeypatch, FakeOllama())
+    _, heldout = run_heldout(BASE, 30, tmp_path, "creative")
+    status, summary = run_scoring(tmp_path, heldout=heldout, q0_passed=True, q1_passed=True)
+
+    # Un verdict produit vaut 0 : un H10 non soutenu est un résultat, pas un
+    # échec d'exécution.
+    assert status == 0
+    assert (tmp_path / f"p7_v10_scoring_{PREREG_FREEZE_COMMIT}.lock").exists()
+    assert summary["h10"] == summary["global_verdict"]["status"]
+    assert summary["h10"].startswith("H10_")
+    assert len(summary["per_producer"]) == 3
+    assert summary["static_best"] == "creative"
+    assert summary["corpus_seal_sha256"] == heldout["corpus_seal_sha256"]
+    assert summary["gpu_proof"] is None and summary["gpu_proof_note"]
+    # Chaque énoncé porte les deux mentions liées par l'amendement.
+    assert "juge unique" in summary["independence_note"]
+    assert "instrument gele" in summary["scope_note"]
+    for result in summary["per_producer"]:
+        assert "juge unique" in result["independence_note"]
+        assert "instrument gele" in result["scope_note"]
+
+    with pytest.raises(FileExistsError):
+        run_scoring(tmp_path, heldout=heldout, q0_passed=True, q1_passed=True)
+
+
+def test_scoring_leaves_h10_untested_when_a_global_gate_failed(monkeypatch, tmp_path):
+    install(monkeypatch, FakeOllama())
+    _, heldout = run_heldout(BASE, 30, tmp_path, "creative")
+    _, summary = run_scoring(tmp_path, heldout=heldout, q0_passed=False, q1_passed=True)
+    assert summary["h10"] == "H10_UNTESTED_IN_V10"
+    assert summary["q0_passed"] is False
+
+
+def test_lifecycle_smoke_runs_without_ollama_corpus_or_fixtures(tmp_path):
+    # Aucun monkeypatch : toute tentative de contacter Ollama échouerait.
+    status = run_lifecycle_smoke(tmp_path / "smoke", 0.01)
+    started = json.loads((tmp_path / "smoke" / "started.json").read_bytes())
+    finished = json.loads((tmp_path / "smoke" / "finished.json").read_bytes())
+
+    assert status == 0
+    assert finished["status"] == "PASS"
+    assert started["pid"] == finished["pid"]
+    assert started["implemented_phases"] == started["required_phases"]
+    assert started["second_attempt_refused"] is True
+    assert started["ollama_contacted"] is False
+    assert started["corpus_read"] is False
+    assert started["q0_fixtures_read"] is False
+    assert started["preregistration_freeze_commit"] == PREREG_FREEZE_COMMIT
+    # Le verrou de sonde ne peut pas entrer en collision avec ceux des phases.
+    probes = list((tmp_path / "smoke" / "lock_probe").glob("*.lock"))
+    assert [path.name for path in probes] == [f"p7_v10_smoke_{PREREG_FREEZE_COMMIT}.lock"]
+
+    with pytest.raises(FileExistsError):
+        run_lifecycle_smoke(tmp_path / "smoke", 0.01)
+    with pytest.raises(ValueError, match="positive"):
+        run_lifecycle_smoke(tmp_path / "other", 0)
+
+
+def test_the_single_command_stops_at_the_first_failed_gate(monkeypatch, tmp_path):
+    # Le faux juge n'a aucun marqueur à lire dans les fixtures Q0 : il répond
+    # TIE partout, donc Q0 échoue. La commande doit s'arrêter là.
+    fake = install(monkeypatch, FakeOllama())
+    load_model(BASE, JUDGE.model, 5)  # précondition opérateur : juge résident
+    assert run(BASE, 30, tmp_path) == 2
+
+    q0_dir = [path for path in tmp_path.glob("p7_v10_q0_*") if path.is_dir()][0]
+    summary = json.loads((q0_dir / "summary.json").read_bytes())
+    assert summary["status"] == "V10_ABORTED_BEFORE_CALIBRATION"
+    assert summary["h10"] == "UNTESTED"
+
+    locks = sorted(path.name for path in tmp_path.glob("*.lock"))
+    assert locks == [f"p7_v10_q0_{PREREG_FREEZE_COMMIT}.lock"]
+    assert not list(tmp_path.glob("p7_v10_calibration_*"))
+    assert not list(tmp_path.glob("p7_v10_heldout_*"))
+    assert fake.judge_call_count == 18  # Q0 seule a consommé son budget
