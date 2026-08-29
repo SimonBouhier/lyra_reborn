@@ -249,3 +249,10 @@ valides mais faux sur la résistance à l'injection
 (`docs/P7_GEMMA3_ADMISSION_STATUS.md`). Par la règle méta §2, verdict de
 programme **`PANEL_BIJUGE_CLOS`** ; Q-2 n'aura pas lieu ; le §3.5 est amendé
 et la série H se poursuit en juge unique `qwen3.8:27b`.
+
+`PREREGISTRATION_v10.md` a été gelée le même jour : H10 mot pour mot égale à
+H9, instrument juge unique sous le contrat réduit de Q-1, portes C0–C12
+transposées mécaniquement (résolution = stable après inversion et non-TIE),
+Q0 = 18 appels (fixtures V8 × contrat réduit, jamais exécuté), plafond
+2 142 appels. Ce serait la première hypothèse H du programme à atteindre la
+mesure.
