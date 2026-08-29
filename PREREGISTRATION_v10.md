@@ -3,7 +3,7 @@
 **Frozen on**: 2026-08-29
 **Frozen by**: Simon Bouhier (décision « Go pour H10 »), rédaction et
 assistance méthodologique de Claude
-**Git commit at freeze**: `TO_BE_STAMPED`
+**Git commit at freeze**: `bc8497f6bb083ff2c27632ded784e13ea264cc5d`
 
 ## Hypothesis
 
