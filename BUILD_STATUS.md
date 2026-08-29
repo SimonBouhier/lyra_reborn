@@ -62,7 +62,8 @@ des **masques transitoires de projection** du tour. Preuve :
 | ~~P3~~ | ~~`memory/`~~ | **FAIT** — voir tableau ci-dessus. Notes de périmètre : implémentation mémoire pure-stdlib (persistance JSON) ; le Strategy multi-backend NetworkX/igraph d'Uni_0_2 volontairement simplifié en **une** implémentation propre derrière la même API (charte §5 — on ajoutera un backend si un besoin de perf le prouve) ; pas d'embeddings encore (arrivent avec le pont P2/éval) | — |
 | ~~P4~~ | ~~`explore/esmm/`~~ | **FAIT** — voir tableau ci-dessus. Restes : cochaîne 5D complète (v1 = support/diversité/sources), adaptation dynamique du plan de cycles, recalibration τ_obj sur campagne large | — |
 | P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
-| P6 | `app/` | serveur FastAPI unifié | `lyra_clean_bis` (socle) — porter |
+| **P6 (acompte)** | `app/session.py` + `app/main.py` | **Premières couches :** un tour de chat traverse P0–P4 (boucle + pont P+I + nemeton borné + graphe + écologie + CBR). Porte HTTP locale (`/api/parler`, page `app/static/index.html`, CORS localhost:8766). Pas encore sessions persistantes SQLite, ni graphe REST, ni multimodèle. | plan §6 P6 DoD partiel : tour complet + smoke HTTP à assertions de contenu (`tests/test_p6_first_layers.py`, `tests/test_p6_http.py`) |
+| P6 (reste) | `app/` | persistance, graphe REST, multimodèle, auth minimale | `lyra_clean_bis` — porter plus tard |
 | P7 | `eval/` | **V6 ARRÊTÉE AVANT CALIBRATION** : Gemma lit SOURCE + traces puis répète SOURCE au lieu de vérifier/juger. Décision requise : evidence pack déterministe (recommandé) ou juge agentique plus capable | `docs/P7_V6_STATUS.md` |
 | — | `research/` | orbites FLOATLAP, métriques fractales, calibrations | `session_2/tranzit` — exploratoire |
 

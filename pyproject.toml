@@ -13,6 +13,7 @@ dependencies = []          # noyau P0/P1 : stdlib pure
 llm = ["requests>=2.31"]            # client Ollama réel
 research = ["numpy>=1.24", "matplotlib>=3.7"]  # nemeton/topologie (P2+)
 evaluation = ["pydantic==2.13.4", "requests>=2.31"]
+app = ["fastapi>=0.110", "uvicorn>=0.27", "httpx>=0.27"]
 dev = ["pytest>=7.4"]
 
 [tool.setuptools]

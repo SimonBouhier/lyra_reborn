@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parler à Lyra</title>
+  <style>
+    :root {
+      --encre: #2a2318;
+      --muet: #6d6254;
+      --carte: rgba(255, 250, 243, 0.9);
+      --ligne: rgba(42, 35, 24, 0.12);
+      --lyra: #6f52b5;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--encre);
+      font: 18px/1.55 "Segoe UI", system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse at 90% 0%, rgba(167, 139, 250, 0.28), transparent 46%),
+        linear-gradient(180deg, #f7f1e6, #e8dfd0);
+    }
+    main { max-width: 760px; margin: 0 auto; padding: 28px 22px 40px; }
+    h1 {
+      font-family: "Palatino Linotype", Palatino, Georgia, serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      margin: 0 0 6px;
+    }
+    .muet { color: var(--muet); }
+    .etat {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 14px 0 16px;
+    }
+    .etat div {
+      background: var(--carte);
+      border: 1px solid var(--ligne);
+      border-radius: 14px;
+      padding: 10px 12px;
+      text-align: center;
+    }
+    .etat strong { display: block; font-size: 1.1rem; }
+    .etat span { font-size: 0.75rem; color: var(--muet); }
+    #fil {
+      min-height: 220px;
+      max-height: 48vh;
+      overflow: auto;
+      background: var(--carte);
+      border: 1px solid var(--ligne);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .bulle { margin: 0 0 14px; }
+    .bulle .qui { font-size: 0.8rem; color: var(--muet); margin-bottom: 4px; }
+    .bulle.lyra { border-left: 3px solid var(--lyra); padding-left: 10px; }
+    .bulle .txt { white-space: pre-wrap; }
+    textarea {
+      width: 100%;
+      min-height: 90px;
+      border: 1px solid var(--ligne);
+      border-radius: 16px;
+      padding: 14px 16px;
+      font: inherit;
+      background: #fffdf8;
+    }
+    button {
+      margin-top: 10px;
+      font: inherit;
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: var(--encre);
+      color: #f7f1e6;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: wait; }
+    a { color: var(--encre); }
+    .attente { font-style: italic; color: var(--muet); }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="muet"><a href="http://127.0.0.1:8765/">← Table de travail</a></p>
+    <h1>Parler à Lyra</h1>
+    <p class="muet" id="moteur">Premières couches : le chemin, pas encore une voix.</p>
+    <div class="etat">
+      <div><strong id="rho">—</strong><span>ρ structure</span></div>
+      <div><strong id="deltar">—</strong><span>δr souffle</span></div>
+      <div><strong id="tauc">—</strong><span>τc tension</span></div>
+      <div><strong id="kappa">—</strong><span>κ courbure</span></div>
+    </div>
+    <p class="muet" id="meta">Graphe : — · Mémoire : —</p>
+    <div id="fil">
+      <p class="muet">Écris, puis Envoyer. Lyra te dira ce que le chemin a fait de tes mots — pas un bavardage. La voix d’un modèle est un autre geste, volontaire.</p>
+    </div>
+    <textarea id="parole" placeholder="Écris ici, en français…"></textarea>
+    <div>
+      <button type="button" id="envoyer" onclick="envoyer(false)">Envoyer</button>
+      <button type="button" id="voix" onclick="envoyer(true)">Demander une voix</button>
+      <span class="muet" id="echo"></span>
+    </div>
+  </main>
+  <script>
+    let session = null;
+    const fil = document.getElementById("fil");
+    const zone = document.getElementById("parole");
+    const bouton = document.getElementById("envoyer");
+    const echo = document.getElementById("echo");
+
+    function bulle(qui, texte, classe) {
+      const d = document.createElement("div");
+      d.className = "bulle " + (classe || "");
+      d.innerHTML = "<div class='qui'></div><div class='txt'></div>";
+      d.querySelector(".qui").textContent = qui;
+      d.querySelector(".txt").textContent = texte;
+      fil.appendChild(d);
+      fil.scrollTop = fil.scrollHeight;
+      return d;
+    }
+
+    function afficheEtat(data) {
+      const b = data.boutons_suivants || data.boutons || {};
+      const fmt = x => (x == null ? "—" : Number(x).toFixed(2));
+      document.getElementById("rho").textContent = fmt(b.rho);
+      document.getElementById("deltar").textContent = fmt(b.delta_r);
+      document.getElementById("tauc").textContent = fmt(b.tau_c);
+      document.getElementById("kappa").textContent = fmt(b.kappa);
+      const g = data.graphe || {};
+      const m = data.memoire || {};
+      document.getElementById("meta").textContent =
+        "Graphe : " + (g.nodes || 0) + " concepts, " + (g.edges || 0) + " liens · Mémoire : "
+        + (m.pouponniere || 0) + " actifs, " + (m.oubli || 0) + " différés, " + (m.compost || 0) + " au repos";
+      if (data.moteur) {
+        document.getElementById("moteur").textContent = "Modèle : " + data.moteur;
+      }
+    }
+
+    function detailErreur(data) {
+      if (!data) return "Lyra n’a pas répondu.";
+      if (typeof data.detail === "string") return data.detail;
+      if (Array.isArray(data.detail)) return data.detail.map(x => x.msg || x).join(" ");
+      return "Lyra n’a pas répondu.";
+    }
+
+    async function envoyer(voix) {
+      const texte = zone.value.trim();
+      if (!texte) { echo.textContent = "Écris un mot."; return; }
+      echo.textContent = "";
+      bouton.disabled = true;
+      document.getElementById("voix").disabled = true;
+      zone.value = "";
+      bulle("Toi", texte);
+      const attente = bulle("Lyra", voix ? "Une voix est demandée — j’attends le modèle…" : "Le chemin travaille.", "lyra attente");
+      try {
+        const r = await fetch("/api/parler", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texte, session, voix: !!voix })
+        });
+        const data = await r.json();
+        attente.remove();
+        if (!r.ok) {
+          bulle("Lyra", detailErreur(data), "lyra");
+          echo.textContent = "Ça n’a pas abouti.";
+          return;
+        }
+        session = data.session;
+        const parole = (data.reponse || "").replace(/^\[echo[^\]]*\]\s*/, "");
+        bulle("Lyra", parole || "(silence)", "lyra");
+        afficheEtat(data);
+      } catch (err) {
+        attente.remove();
+        bulle("Lyra", "Je n’ai pas pu joindre la porte. Rouvre la page dans un instant.", "lyra");
+      } finally {
+        bouton.disabled = false;
+        document.getElementById("voix").disabled = false;
+        zone.focus();
+      }
+    }
+
+    zone.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        envoyer(false);
+      }
+    });
+
+    fetch("/api/sante").then(r => r.json()).then(d => {
+      document.getElementById("moteur").textContent = "Modèle : " + (d.moteur || "inconnu");
+    }).catch(() => {
+      document.getElementById("moteur").textContent = "La porte ne répond pas. Double-clique « Ouvrir Lyra ».";
+    });
+  </script>
+</body>
+</html>
