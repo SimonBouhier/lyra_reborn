@@ -17,6 +17,7 @@ from scripts.p7_v10 import (
     run_calibration,
     run_heldout,
     run_lifecycle_smoke,
+    run_preflight,
     run_scoring,
 )
 from tests.p7_v10_fakes import FakeOllama, install
@@ -373,6 +374,29 @@ def test_a_judge_mounted_at_the_wrong_context_aborts_before_any_lock(monkeypatch
         run(BASE, 30, tmp_path)
     assert list(tmp_path.glob("*.lock")) == []
     assert fake.judge_call_count == 0  # aucun appel de fixture consommé
+
+
+def test_preflight_mounts_the_judge_without_lock_or_fixture_call(monkeypatch, tmp_path):
+    fake = install(monkeypatch, FakeOllama())
+    assert run_preflight(BASE, 30) == 0
+
+    # Il laisse EXACTEMENT la résidence que Q0 exige, donc `run` enchaîne.
+    assert fake.judge_call_count == 0
+    assert fake.generate_calls == []
+    assert list(tmp_path.glob("*.lock")) == []
+    judge_load = [item for item in fake.residency_calls if item["model"] == JUDGE.model]
+    assert judge_load == [{"model": JUDGE.model, "keep_alive": "30m", "num_ctx": CONTEXT_TOKENS}]
+
+    assert run(BASE, 30, tmp_path) == 2  # Q0 échoue sur le faux juge, sans remontage
+    assert fake.reloads == []
+
+
+def test_preflight_refuses_a_drifted_digest_and_loads_nothing(monkeypatch):
+    fake = install(monkeypatch, FakeOllama())
+    fake.catalog[JUDGE.model] = "0" * 64
+    with pytest.raises(RuntimeError, match="digest mismatch"):
+        run_preflight(BASE, 30)
+    assert fake.residency_calls == []
 
 
 def test_every_phase_mounts_the_judge_at_the_context_its_calls_use(monkeypatch, tmp_path):

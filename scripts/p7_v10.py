@@ -134,6 +134,10 @@ TRAJECTORY_TURNS = (1, 2, 3)
 # appels sont deja coherents, donc rien a leur imposer ici.
 JUDGE_LOAD_OPTIONS = {"num_ctx": CONTEXT_TOKENS}
 
+# Version epinglee par la prereg (Scope/Runtime). Un ecart est signale et entre
+# au manifeste ; il n est pas corrige apres verrou.
+PINNED_OLLAMA = "0.32.15"
+
 
 def assert_runner_complete() -> None:
     missing = [phase for phase in REQUIRED_PHASES if phase not in IMPLEMENTED_PHASES]
@@ -1379,6 +1383,64 @@ def run_scoring(
     return 0, summary
 
 
+def run_preflight(base_url: str, timeout: int) -> int:
+    """Monte le juge au contexte 32K et prouve sa résidence. Aucun verrou.
+
+    C'est le « chargement préalable par un smoke séparé, sans aucune fixture »
+    prévu par le protocole du banc A : il ne consomme aucun appel de fixture,
+    ne crée aucun verrou et ne participe à aucune qualification. Il utilise
+    exactement le montage des phases (`JUDGE_LOAD_OPTIONS`), donc la résidence
+    qu'il laisse est celle que Q0 vérifiera et que les appels utiliseront.
+    """
+    assert_runner_complete()
+    catalog = models_runtime(base_url, timeout, _phase_models())
+    _verify_phase_catalog(catalog)
+
+    load_model(
+        base_url,
+        JUDGE.model,
+        timeout,
+        keep_alive=BLOCK_KEEP_ALIVE,
+        options=JUDGE_LOAD_OPTIONS,
+    )
+    runtime = models_runtime(base_url, timeout, (JUDGE.model,))
+    verify_judge_identity(runtime)
+    verify_judge_gpu(runtime)
+    verify_context_length(runtime, JUDGE, CONTEXT_TOKENS)
+
+    observed_version = catalog.get("ollama")
+    report = {
+        "schema_version": "lyra.p7.v10-preflight.v1",
+        "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
+        "ollama": observed_version,
+        "ollama_pinned": PINNED_OLLAMA,
+        "ollama_matches_preregistration": observed_version == PINNED_OLLAMA,
+        "models_catalogued": catalog["models"],
+        "judge_resident": runtime["loaded_models"][JUDGE.model],
+        "keep_alive": BLOCK_KEEP_ALIVE,
+        "lock_created": False,
+        "fixture_calls": 0,
+        "ready_for_run": True,
+    }
+    print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
+    if observed_version != PINNED_OLLAMA:
+        print(
+            json.dumps(
+                {
+                    "warning": (
+                        f"Ollama {observed_version} differs from the pinned "
+                        f"{PINNED_OLLAMA}; the preregistration records the "
+                        "observed version in the manifest and forbids "
+                        "correcting any gap after a lock"
+                    )
+                },
+                ensure_ascii=False,
+            ),
+            flush=True,
+        )
+    return 0
+
+
 def run_lifecycle_smoke(output_dir: Path, delay_seconds: float) -> int:
     """Smoke de cycle de vie V8 : sans Ollama, sans corpus, sans fixture Q0.
 
@@ -1450,7 +1512,7 @@ def run(base_url: str, timeout: int, output_root: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("phase", choices=("run", "lifecycle-smoke"))
+    parser.add_argument("phase", choices=("run", "preflight", "lifecycle-smoke"))
     parser.add_argument("--base-url", default="http://127.0.0.1:11434")
     parser.add_argument("--timeout", type=int, default=600)
     parser.add_argument("--output-root", type=Path, default=Path("data/runs"))
@@ -1463,6 +1525,8 @@ def main() -> int:
         if args.lifecycle_output is None:
             parser.error("--lifecycle-output is required for lifecycle-smoke")
         return run_lifecycle_smoke(args.lifecycle_output, args.lifecycle_delay)
+    if args.phase == "preflight":
+        return run_preflight(args.base_url.rstrip("/"), args.timeout)
     return run(args.base_url.rstrip("/"), args.timeout, args.output_root)
 
 
