@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from eval.p7_v10 import CALL_CEILINGS, JUDGE, PREREG_FREEZE_COMMIT
+from eval.p7_v10 import CALL_CEILINGS, CONTEXT_TOKENS, JUDGE, PREREG_FREEZE_COMMIT
 from eval.p7_v10_calibration import PRESETS
 from eval.p7_v10_corpus import calibration_cases, heldout_cases
 from eval.p7_v10_producer import load_model
@@ -342,8 +342,10 @@ def test_the_single_command_stops_at_the_first_failed_gate(monkeypatch, tmp_path
     # Le faux juge n'a aucun marqueur à lire dans les fixtures Q0 : il répond
     # TIE partout, donc Q0 échoue. La commande doit s'arrêter là.
     fake = install(monkeypatch, FakeOllama())
-    load_model(BASE, JUDGE.model, 5)  # précondition opérateur : juge résident
+    # Précondition opérateur : juge résident AU contexte de ses appels.
+    load_model(BASE, JUDGE.model, 5, options={"num_ctx": CONTEXT_TOKENS})
     assert run(BASE, 30, tmp_path) == 2
+    assert fake.reloads == []  # aucun remontage : la preuve GPU reste valide
 
     q0_dir = [path for path in tmp_path.glob("p7_v10_q0_*") if path.is_dir()][0]
     summary = json.loads((q0_dir / "summary.json").read_bytes())
@@ -355,3 +357,39 @@ def test_the_single_command_stops_at_the_first_failed_gate(monkeypatch, tmp_path
     assert not list(tmp_path.glob("p7_v10_calibration_*"))
     assert not list(tmp_path.glob("p7_v10_heldout_*"))
     assert fake.judge_call_count == 18  # Q0 seule a consommé son budget
+
+
+def test_a_judge_mounted_at_the_wrong_context_aborts_before_any_lock(monkeypatch, tmp_path):
+    """Régression : un juge monté hors 32K serait rechargé par son 1ᵉʳ appel.
+
+    Ollama remonte le modèle dès qu'un appel demande un autre `num_ctx`. Ce
+    rechargement arriverait APRÈS le verrou et après la preuve GPU, qui ne
+    décrirait alors plus la résidence réellement utilisée. La précondition
+    « chargé au contexte 32K » doit donc couper avant le verrou.
+    """
+    fake = install(monkeypatch, FakeOllama())
+    load_model(BASE, JUDGE.model, 5)  # montage par défaut : 4096
+    with pytest.raises(RuntimeError, match="resident at context 4096"):
+        run(BASE, 30, tmp_path)
+    assert list(tmp_path.glob("*.lock")) == []
+    assert fake.judge_call_count == 0  # aucun appel de fixture consommé
+
+
+def test_every_phase_mounts_the_judge_at_the_context_its_calls_use(monkeypatch, tmp_path):
+    fake = install(monkeypatch, FakeOllama())
+    run_calibration(BASE, 30, tmp_path)
+    run_heldout(BASE, 30, tmp_path, "creative")
+
+    # Aucun remontage sur toute la campagne : montage et appels concordent.
+    assert fake.reloads == []
+    judge_loads = [
+        item for item in fake.residency_calls
+        if item["model"] == JUDGE.model and item["keep_alive"] != 0
+    ]
+    assert judge_loads and all(item["num_ctx"] == CONTEXT_TOKENS for item in judge_loads)
+    # Les producteurs ne fixent pas num_ctx : montage et appels concordent aussi.
+    producer_loads = [
+        item for item in fake.residency_calls
+        if item["model"] != JUDGE.model and item["keep_alive"] != 0
+    ]
+    assert producer_loads and all(item["num_ctx"] == 4096 for item in producer_loads)

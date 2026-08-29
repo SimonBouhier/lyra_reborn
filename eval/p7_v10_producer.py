@@ -41,6 +41,7 @@ __all__ = [
     "unload_model",
     "verify_identity",
     "verify_fully_loaded_on_gpu",
+    "verify_context_length",
 ]
 
 
@@ -243,19 +244,32 @@ def models_runtime(base_url: str, timeout: int, names: tuple[str, ...]) -> dict[
     }
 
 
-def _residency_request(base_url: str, model: str, timeout: int, keep_alive: Any) -> None:
+def _residency_request(
+    base_url: str,
+    model: str,
+    timeout: int,
+    keep_alive: Any,
+    options: dict[str, Any] | None = None,
+) -> None:
     """Charge ou décharge un modèle sans produire un seul token.
 
     Prompt vide : Ollama monte (ou libère) le modèle et ne génère rien —
     `eval_count` vaut 0. Ces requêtes sont journalisées à part et n'entrent
     dans aucun plafond d'appels de la prérég.
+
+    `options` doit porter les MÊMES paramètres de montage que les appels de la
+    phase — `num_ctx` en particulier. Un modèle monté à un autre contexte est
+    rechargé par Ollama au premier appel qui en demande un autre : la preuve
+    GPU prise avant le verrou décrirait alors une résidence qui n'existe plus.
     """
-    payload = {
+    payload: dict[str, Any] = {
         "model": model,
         "prompt": "",
         "stream": False,
         "keep_alive": keep_alive,
     }
+    if options:
+        payload["options"] = dict(options)
     response = requests.post(
         f"{base_url}/api/generate",
         data=_canonical(payload),
@@ -265,8 +279,14 @@ def _residency_request(base_url: str, model: str, timeout: int, keep_alive: Any)
     response.raise_for_status()
 
 
-def load_model(base_url: str, model: str, timeout: int, keep_alive: str = "30m") -> None:
-    _residency_request(base_url, model, timeout, keep_alive)
+def load_model(
+    base_url: str,
+    model: str,
+    timeout: int,
+    keep_alive: str = "30m",
+    options: dict[str, Any] | None = None,
+) -> None:
+    _residency_request(base_url, model, timeout, keep_alive, options)
 
 
 def unload_model(base_url: str, model: str, timeout: int) -> None:
@@ -279,6 +299,28 @@ def verify_identity(runtime: dict[str, Any], spec: ProducerSpec) -> None:
         raise RuntimeError(
             f"model digest mismatch for {spec.model}: expected {spec.digest}, "
             f"observed {observed}"
+        )
+
+
+def verify_context_length(
+    runtime: dict[str, Any], spec: ProducerSpec, expected: int
+) -> None:
+    """Le modèle doit être résident AU contexte que ses appels demanderont.
+
+    La prérég exige le juge « chargé au contexte 32K » (précondition du banc A,
+    reconduite par V10 §Q0). `verify_judge_fully_loaded_on_gpu`, gelé, ne
+    contrôle que le digest et la VRAM ; ce contrôle-ci complète la précondition
+    sans toucher au module gelé. Il ne peut qu'empêcher un run invalide.
+    """
+    observed = runtime.get("loaded_models", {}).get(spec.model)
+    if not isinstance(observed, dict):
+        raise RuntimeError(f"{spec.model} must be resident before its phase lock")
+    context = observed.get("context_length")
+    if context != expected:
+        raise RuntimeError(
+            f"{spec.model} is resident at context {context}, expected {expected}: "
+            "its first call would force a reload and void the GPU proof taken "
+            "before the lock"
         )
 
 

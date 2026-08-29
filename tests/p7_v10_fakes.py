@@ -22,6 +22,7 @@ from eval.p7_v10 import JUDGE
 from eval.p7_v10_producer import PRODUCERS
 
 NP_MARKER = re.compile(r"np=(\d+)")
+DEFAULT_CONTEXT = 4096  # contexte de montage par defaut, comme Ollama
 
 _TURN1 = "Identifie le noyau du contenu"
 _TURN2 = "Soumets l'analyse précédente"
@@ -87,6 +88,10 @@ class FakeOllama:
         self.catalog[JUDGE.model] = JUDGE.digest
         self.sizes = {name: 4_000_000_000 + index for index, name in enumerate(self.catalog)}
         self.loaded: dict[str, bool] = {}
+        # Contexte de montage par modele, comme Ollama : un appel qui demande
+        # un autre num_ctx force un rechargement.
+        self.contexts: dict[str, int] = {}
+        self.reloads: list[dict[str, Any]] = []
         self.generate_calls: list[dict[str, Any]] = []
         self.residency_calls: list[dict[str, Any]] = []
         self.producer_failures = set(producer_failures)
@@ -119,7 +124,7 @@ class FakeOllama:
                             "digest": self.catalog[name],
                             "size": self.sizes[name],
                             "size_vram": self.sizes[name],
-                            "context_length": 32768,
+                            "context_length": self.contexts.get(name, DEFAULT_CONTEXT),
                         }
                         for name in sorted(self.loaded)
                         if self.loaded[name]
@@ -143,13 +148,27 @@ class FakeOllama:
         payload = json.loads(data)
         model = payload["model"]
         prompt = payload.get("prompt", "")
+        options = payload.get("options", {})
         if prompt == "":
             keep_alive = payload.get("keep_alive")
             self.loaded[model] = keep_alive != 0
-            self.residency_calls.append({"model": model, "keep_alive": keep_alive})
+            self.contexts[model] = int(options.get("num_ctx", DEFAULT_CONTEXT))
+            self.residency_calls.append(
+                {
+                    "model": model,
+                    "keep_alive": keep_alive,
+                    "num_ctx": self.contexts[model],
+                }
+            )
             return FakeResponse(200, {"response": "", "done_reason": "load"})
         if not self.loaded.get(model):
             raise AssertionError(f"{model} generated while not resident")
+        requested = int(options.get("num_ctx", DEFAULT_CONTEXT))
+        if self.contexts.get(model) != requested:
+            # Ollama remonte le modele : la preuve GPU prise avant le verrou ne
+            # decrit plus la residence reellement utilisee.
+            self.reloads.append({"model": model, "num_ctx": requested})
+            self.contexts[model] = requested
         if model == JUDGE.model:
             return self._judge(payload, prompt)
         return self._producer(payload, prompt, model)

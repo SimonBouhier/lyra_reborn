@@ -111,6 +111,7 @@ from eval.p7_v10_producer import (
     load_model,
     models_runtime,
     unload_model,
+    verify_context_length,
     verify_fully_loaded_on_gpu,
     verify_identity,
 )
@@ -127,6 +128,11 @@ ROOT = Path(__file__).resolve().parents[1]
 PRODUCER_MAPPING = KnobMapping(num_predict_min=128, num_predict_max=768)
 BLOCK_KEEP_ALIVE = "30m"
 TRAJECTORY_TURNS = (1, 2, 3)
+
+# Le juge est monte au contexte exact de ses appels (prereg 32K). Les
+# producteurs ne fixent pas num_ctx dans leurs options : leur montage et leurs
+# appels sont deja coherents, donc rien a leur imposer ici.
+JUDGE_LOAD_OPTIONS = {"num_ctx": CONTEXT_TOKENS}
 
 
 def assert_runner_complete() -> None:
@@ -182,10 +188,15 @@ def _prove_gpu_residency(base_url: str, timeout: int) -> list[dict[str, Any]]:
     """
     proofs: list[dict[str, Any]] = []
     for spec in (*PRODUCERS, JUDGE):
-        load_model(base_url, spec.model, timeout, keep_alive=BLOCK_KEEP_ALIVE)
+        options = JUDGE_LOAD_OPTIONS if spec is JUDGE else None
+        load_model(
+            base_url, spec.model, timeout, keep_alive=BLOCK_KEEP_ALIVE, options=options
+        )
         runtime = models_runtime(base_url, timeout, (spec.model,))
         verify_identity(runtime, spec)
         verify_fully_loaded_on_gpu(runtime, spec)
+        if spec is JUDGE:
+            verify_context_length(runtime, spec, CONTEXT_TOKENS)
         proofs.append(
             {
                 "model": spec.model,
@@ -223,6 +234,10 @@ def run_q0(base_url: str, timeout: int, output_root: Path) -> int:
     runtime_before = runtime_manifest(base_url, timeout)
     verify_judge_identity(runtime_before)
     verify_judge_gpu(runtime_before)
+    # Precondition banc A reconduite par la prereg : « charge au contexte 32K ».
+    # Q0 ne provoque pas la residence, il la constate — un juge monte a un autre
+    # contexte serait recharge par le premier appel, apres le verrou.
+    verify_context_length(runtime_before, JUDGE, CONTEXT_TOKENS)
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
     run_dir = output_root / f"p7_v10_q0_{stamp}"
@@ -443,10 +458,17 @@ def _judge_block(
     transport : elle est octet-identique à celle de Q-1 et de Q0.
     """
     ordered = order_judge_calls(calls)
-    load_model(base_url, JUDGE.model, timeout, keep_alive=BLOCK_KEEP_ALIVE)
+    load_model(
+        base_url,
+        JUDGE.model,
+        timeout,
+        keep_alive=BLOCK_KEEP_ALIVE,
+        options=JUDGE_LOAD_OPTIONS,
+    )
     runtime_before = models_runtime(base_url, timeout, (JUDGE.model,))
     verify_judge_identity(runtime_before)
     verify_judge_gpu(runtime_before)
+    verify_context_length(runtime_before, JUDGE, CONTEXT_TOKENS)
     _append_jsonl(
         journal,
         {
@@ -556,6 +578,7 @@ def _judge_block(
     runtime_after = models_runtime(base_url, timeout, (JUDGE.model,))
     verify_judge_identity(runtime_after)
     verify_judge_gpu(runtime_after)
+    verify_context_length(runtime_after, JUDGE, CONTEXT_TOKENS)
     _append_jsonl(
         journal,
         {
