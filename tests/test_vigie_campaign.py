@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -265,7 +266,41 @@ def test_score_rejects_prediction_bound_to_wrong_content_hash():
         score_campaign(items, labels, predictions)
 
 
-def test_frozen_epp_sidecar_revision_is_verified():
+def test_frozen_epp_sidecar_revision_is_verified_deterministically(monkeypatch, tmp_path):
+    import scripts.vigie_campaign as campaign_module
+
+    calls = []
+
+    def fake_run(command, **kwargs):
+        calls.append((command, kwargs))
+        return campaign_module.subprocess.CompletedProcess(command, 0)
+
+    monkeypatch.setattr(campaign_module.subprocess, "run", fake_run)
+    campaign_module._verify_epp_checkout(tmp_path)
+
+    assert calls[0][0][-1] == "3a274cd^{commit}"
+    assert calls[1][0][-3:] == ["3a274cd", "--", "epp_quarantine_sidecar.py"]
+    assert all(call[1]["shell"] is False for call in calls)
+
+
+def test_frozen_epp_sidecar_revision_rejects_a_diverged_checkout(monkeypatch, tmp_path):
+    import scripts.vigie_campaign as campaign_module
+
+    statuses = iter((0, 1))
+
+    def fake_run(command, **kwargs):
+        return campaign_module.subprocess.CompletedProcess(command, next(statuses))
+
+    monkeypatch.setattr(campaign_module.subprocess, "run", fake_run)
+    with pytest.raises(CampaignError, match="differs from frozen commit 3a274cd"):
+        campaign_module._verify_epp_checkout(tmp_path)
+
+
+@pytest.mark.skipif(
+    os.environ.get("LYRA_VIGIE_CAMPAIGN_CHECKOUT_TEST") != "1",
+    reason="live EPP checkout is verified only for an explicit Vigie campaign check",
+)
+def test_live_frozen_epp_sidecar_revision_is_verified_for_campaign():
     from scripts.vigie_campaign import _verify_epp_checkout
 
     epp_root = Path(__file__).resolve().parents[2] / "EPP_Verdict"
