@@ -110,7 +110,7 @@ def _acquire_lock(output_root: Path, run_id: str) -> Path:
 
 
 def run(base_url: str, timeout: int, output_root: Path) -> int:
-    if PROTOCOL_COMMIT == "e553431451545e83c6653168c1889bc7c10eaf8f":
+    if PROTOCOL_COMMIT == "TO_BE_STAMPED":
         raise RuntimeError("admission protocol must be committed and stamped before a live run")
     cells = admission_cells()
     jobs = admission_jobs()
