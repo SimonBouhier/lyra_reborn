@@ -12,7 +12,9 @@ from eval.p7_v10_corpus import calibration_cases, heldout_cases
 from eval.p7_v10_producer import load_model
 from eval.p7_v10_scoring import score_producer
 from scripts.p7_v10 import (
+    PRODUCER_CONTEXT_TOKENS,
     ROOT,
+    completed_q0,
     run,
     run_calibration,
     run_heldout,
@@ -368,12 +370,117 @@ def test_a_judge_mounted_at_the_wrong_context_aborts_before_any_lock(monkeypatch
     décrirait alors plus la résidence réellement utilisée. La précondition
     « chargé au contexte 32K » doit donc couper avant le verrou.
     """
-    fake = install(monkeypatch, FakeOllama())
-    load_model(BASE, JUDGE.model, 5)  # montage par défaut : 4096
-    with pytest.raises(RuntimeError, match="resident at context 4096"):
+    # Serveur au defaut d'Ollama : le juge monterait a son contexte maximum.
+    fake = install(monkeypatch, FakeOllama(default_context=131072))
+    load_model(BASE, JUDGE.model, 5)
+    with pytest.raises(RuntimeError, match="resident at context 131072"):
         run(BASE, 30, tmp_path)
     assert list(tmp_path.glob("*.lock")) == []
     assert fake.judge_call_count == 0  # aucun appel de fixture consommé
+
+
+def test_a_producer_overflowing_vram_aborts_before_the_calibration_lock(monkeypatch, tmp_path):
+    """Régression du 29/08 : granite3.3 monté à 131072 pèse 27,7 Go sur 24 Go.
+
+    Ollama monte un modèle à son contexte maximum quand la requête n'en demande
+    pas ; `granite3.3:latest` déborde alors en RAM (`size_vram != size`). La
+    précondition doit couper AVANT le verrou de calibration, sans rien
+    consommer — c'est ce qui s'est produit sur la console de Simon.
+    """
+    fake = install(monkeypatch, FakeOllama(default_context=131072))
+    # Depuis l'amendement, le controle de contexte coupe des gemma3 (2e
+    # producteur), donc AVANT meme que granite ne soit monte : le diagnostic
+    # arrive plus tot et nomme la valeur attendue. Le debordement VRAM de
+    # granite lui-meme est epingle sur ses chiffres reels dans
+    # tests/test_p7_v10_producer.py.
+    with pytest.raises(RuntimeError, match="resident at context 131072, expected 32768"):
+        run_calibration(BASE, 30, tmp_path)
+
+    assert list(tmp_path.glob("*.lock")) == []
+    assert [path for path in tmp_path.glob("p7_v10_calibration_*") if path.is_dir()] == []
+    assert fake.generate_calls == []  # aucun appel producteur consommé
+    assert fake.judge_call_count == 0
+
+
+def test_the_amended_producer_context_lets_every_model_fit(monkeypatch, tmp_path):
+    install(monkeypatch, FakeOllama(default_context=PRODUCER_CONTEXT_TOKENS))
+    status, _ = run_calibration(BASE, 30, tmp_path)
+    assert status == 0
+
+    run_dir, _ = _summary(tmp_path)
+    manifest = json.loads((run_dir / "manifest.json").read_bytes())
+    assert manifest["producer_context_tokens"] == PRODUCER_CONTEXT_TOKENS == 32768
+    assert manifest["producer_context_amendment"].endswith(
+        "P7_V10_PRODUCER_CONTEXT_AMENDMENT.md"
+    )
+    # La preuve GPU consigne la résidence entière de chacun des quatre modèles.
+    proofs = {item["model"]: item["loaded"] for item in manifest["gpu_residency_proofs"]}
+    assert set(proofs) == {
+        "mistral:latest",
+        "gemma3:latest",
+        "granite3.3:latest",
+        JUDGE.model,
+    }
+    for model, loaded in proofs.items():
+        assert loaded["size"] == loaded["size_vram"]
+        expected = CONTEXT_TOKENS if model == JUDGE.model else PRODUCER_CONTEXT_TOKENS
+        assert loaded["context_length"] == expected
+
+
+def _seal_q0(tmp_path, *, status="Q0_PASSED", passed=True):
+    """Fabrique un verrou Q0 et son résumé, comme les laisserait un run réel."""
+    (tmp_path / f"p7_v10_q0_{PREREG_FREEZE_COMMIT}.lock").write_text("{}", encoding="utf-8")
+    run_dir = tmp_path / "p7_v10_q0_20260829T211254.467768Z"
+    run_dir.mkdir(parents=True)
+    (run_dir / "summary.json").write_text(
+        json.dumps(
+            {
+                "run_id": run_dir.name,
+                "status": status,
+                "passed": passed,
+                "journal_sha256": "6373f4692051162ab34884a1dc90674d74a7cb024ea1e1393bd97ac7a5d60a4a",
+            }
+        ),
+        encoding="utf-8",
+    )
+    return run_dir
+
+
+def test_a_passed_q0_is_reused_and_never_replayed(monkeypatch, tmp_path):
+    fake = install(monkeypatch, FakeOllama(default_context=PRODUCER_CONTEXT_TOKENS))
+    q0_dir = _seal_q0(tmp_path)
+    assert completed_q0(tmp_path)["run_id"] == q0_dir.name
+
+    assert run(BASE, 30, tmp_path) == 0  # chaîne complète jusqu'au verdict
+
+    # Q0 n'a pas été rejouée : ses 18 appels ne réapparaissent pas, et son
+    # répertoire de run est resté exactement tel quel.
+    assert not (q0_dir / "journal.jsonl").exists()
+    assert len([p for p in tmp_path.glob("p7_v10_q0_*") if p.is_dir()]) == 1
+    assert fake.judge_call_count == 432 + 360  # calibration + tenu, pas Q0
+
+    # La provenance de Q0 est inscrite au manifeste de la calibration.
+    run_dir, _ = _summary(tmp_path)
+    provenance = json.loads((run_dir / "manifest.json").read_bytes())["q0_provenance"]
+    assert provenance["run_id"] == q0_dir.name
+    assert provenance["status"] == "Q0_PASSED"
+    assert provenance["reused_from_earlier_command"] is True
+
+    # Les trois phases restantes ont bien posé leur verrou, une fois chacune.
+    locks = sorted(path.name.split("_")[2] for path in tmp_path.glob("*.lock"))
+    assert locks == ["calibration", "heldout", "q0", "scoring"]
+
+
+def test_a_consumed_q0_that_did_not_pass_refuses_a_second_attempt(monkeypatch, tmp_path):
+    fake = install(monkeypatch, FakeOllama(default_context=PRODUCER_CONTEXT_TOKENS))
+    _seal_q0(tmp_path, status="V10_ABORTED_BEFORE_CALIBRATION", passed=False)
+
+    with pytest.raises(RuntimeError, match="consumed and did not clear its gate"):
+        completed_q0(tmp_path)
+    with pytest.raises(RuntimeError, match="consumed and did not clear its gate"):
+        run(BASE, 30, tmp_path)
+    assert fake.judge_call_count == 0
+    assert not [p for p in tmp_path.glob("p7_v10_calibration_*")]
 
 
 def test_preflight_mounts_the_judge_without_lock_or_fixture_call(monkeypatch, tmp_path):
@@ -384,11 +491,24 @@ def test_preflight_mounts_the_judge_without_lock_or_fixture_call(monkeypatch, tm
     assert fake.judge_call_count == 0
     assert fake.generate_calls == []
     assert list(tmp_path.glob("*.lock")) == []
-    judge_load = [item for item in fake.residency_calls if item["model"] == JUDGE.model]
-    assert judge_load == [{"model": JUDGE.model, "keep_alive": "30m", "num_ctx": CONTEXT_TOKENS}]
+    # Le preflight repete la preuve GPU des phases : les quatre modeles ont ete
+    # montes entiers, puis le juge est laisse resident pour Q0.
+    judge_loads = [
+        item for item in fake.residency_calls
+        if item["model"] == JUDGE.model and item["keep_alive"] != 0
+    ]
+    assert judge_loads and all(item["num_ctx"] == CONTEXT_TOKENS for item in judge_loads)
+    assert fake.loaded[JUDGE.model] is True
 
     assert run(BASE, 30, tmp_path) == 2  # Q0 échoue sur le faux juge, sans remontage
     assert fake.reloads == []
+
+
+def test_preflight_catches_a_server_left_at_the_default_context(monkeypatch):
+    fake = install(monkeypatch, FakeOllama(default_context=131072))
+    with pytest.raises(RuntimeError, match="resident at context 131072, expected 32768"):
+        run_preflight(BASE, 30)
+    assert fake.generate_calls == []  # aucun appel de fixture
 
 
 def test_preflight_refuses_a_drifted_digest_and_loads_nothing(monkeypatch):
@@ -411,9 +531,11 @@ def test_every_phase_mounts_the_judge_at_the_context_its_calls_use(monkeypatch, 
         if item["model"] == JUDGE.model and item["keep_alive"] != 0
     ]
     assert judge_loads and all(item["num_ctx"] == CONTEXT_TOKENS for item in judge_loads)
-    # Les producteurs ne fixent pas num_ctx : montage et appels concordent aussi.
+    # Les producteurs ne fixent pas num_ctx : leur fenetre vient du serveur,
+    # plafonnee par l'amendement, et doit valoir exactement PRODUCER_CONTEXT_TOKENS.
     producer_loads = [
         item for item in fake.residency_calls
         if item["model"] != JUDGE.model and item["keep_alive"] != 0
     ]
-    assert producer_loads and all(item["num_ctx"] == 4096 for item in producer_loads)
+    assert producer_loads
+    assert all(item["num_ctx"] == PRODUCER_CONTEXT_TOKENS for item in producer_loads)

@@ -130,13 +130,22 @@ BLOCK_KEEP_ALIVE = "30m"
 TRAJECTORY_TURNS = (1, 2, 3)
 
 # Le juge est monte au contexte exact de ses appels (prereg 32K). Les
-# producteurs ne fixent pas num_ctx dans leurs options : leur montage et leurs
-# appels sont deja coherents, donc rien a leur imposer ici.
+# producteurs ne fixent aucun num_ctx dans leurs requetes : leur fenetre est
+# celle du serveur, contrainte par OLLAMA_CONTEXT_LENGTH et verifiee ci-dessous
+# (voir PRODUCER_CONTEXT_TOKENS et son amendement).
 JUDGE_LOAD_OPTIONS = {"num_ctx": CONTEXT_TOKENS}
 
 # Version epinglee par la prereg (Scope/Runtime). Un ecart est signale et entre
 # au manifeste ; il n est pas corrige apres verrou.
 PINNED_OLLAMA = "0.32.15"
+
+# Contexte de montage des producteurs, fixe par
+# docs/P7_V10_PRODUCER_CONTEXT_AMENDMENT.md : 32768 est le contexte maximum de
+# mistral:latest, donc la seule valeur que les quatre modeles acceptent tous.
+# Il est impose au serveur (OLLAMA_CONTEXT_LENGTH), jamais dans les requetes :
+# les payloads producteurs restent ceux du design gele, sans num_ctx.
+PRODUCER_CONTEXT_TOKENS = 32768
+PRODUCER_CONTEXT_AMENDMENT = "docs/P7_V10_PRODUCER_CONTEXT_AMENDMENT.md"
 
 
 def assert_runner_complete() -> None:
@@ -199,8 +208,9 @@ def _prove_gpu_residency(base_url: str, timeout: int) -> list[dict[str, Any]]:
         runtime = models_runtime(base_url, timeout, (spec.model,))
         verify_identity(runtime, spec)
         verify_fully_loaded_on_gpu(runtime, spec)
-        if spec is JUDGE:
-            verify_context_length(runtime, spec, CONTEXT_TOKENS)
+        verify_context_length(
+            runtime, spec, CONTEXT_TOKENS if spec is JUDGE else PRODUCER_CONTEXT_TOKENS
+        )
         proofs.append(
             {
                 "model": spec.model,
@@ -598,7 +608,10 @@ def _judge_block(
 
 
 def run_calibration(
-    base_url: str, timeout: int, output_root: Path
+    base_url: str,
+    timeout: int,
+    output_root: Path,
+    q0_provenance: dict[str, Any] | None = None,
 ) -> tuple[int, dict[str, Any]]:
     """Calibration V8 incorporée : 4 presets par cas, 6 paires, porte Q1.
 
@@ -671,6 +684,9 @@ def run_calibration(
             "num_predict_min": PRODUCER_MAPPING.num_predict_min,
             "num_predict_max": PRODUCER_MAPPING.num_predict_max,
         },
+        "producer_context_tokens": PRODUCER_CONTEXT_TOKENS,
+        "producer_context_amendment": PRODUCER_CONTEXT_AMENDMENT,
+        "q0_provenance": q0_provenance,
         "corpus_seal_sha256": corpus_seal["seal_sha256"],
         "blind_mapping_sha256": mapping_seal["seal_sha256"],
         "sealed_at_utc": sealed_at,
@@ -696,6 +712,7 @@ def run_calibration(
         block_runtime = models_runtime(base_url, timeout, (spec.model,))
         verify_identity(block_runtime, spec)
         verify_fully_loaded_on_gpu(block_runtime, spec)
+        verify_context_length(block_runtime, spec, PRODUCER_CONTEXT_TOKENS)
         _append_jsonl(
             journal,
             {
@@ -1072,6 +1089,8 @@ def run_heldout(
             "num_predict_min": PRODUCER_MAPPING.num_predict_min,
             "num_predict_max": PRODUCER_MAPPING.num_predict_max,
         },
+        "producer_context_tokens": PRODUCER_CONTEXT_TOKENS,
+        "producer_context_amendment": PRODUCER_CONTEXT_AMENDMENT,
         "corpus_seal_sha256": corpus_seal["seal_sha256"],
         "blind_mapping_sha256": mapping_seal["seal_sha256"],
         "sealed_at_utc": sealed_at.isoformat(),
@@ -1102,6 +1121,7 @@ def run_heldout(
         block_runtime = models_runtime(base_url, timeout, (spec.model,))
         verify_identity(block_runtime, spec)
         verify_fully_loaded_on_gpu(block_runtime, spec)
+        verify_context_length(block_runtime, spec, PRODUCER_CONTEXT_TOKENS)
         _append_jsonl(
             journal,
             {
@@ -1396,6 +1416,12 @@ def run_preflight(base_url: str, timeout: int) -> int:
     catalog = models_runtime(base_url, timeout, _phase_models())
     _verify_phase_catalog(catalog)
 
+    # Répétition générale de la preuve GPU des phases : chacun des quatre
+    # modèles doit tenir entier en VRAM au contexte qui lui est spécifié. Un
+    # serveur mal réglé (producteurs au contexte maximum) est ainsi détecté
+    # ici, et non au milieu du run.
+    residency = _prove_gpu_residency(base_url, timeout)
+
     load_model(
         base_url,
         JUDGE.model,
@@ -1416,6 +1442,9 @@ def run_preflight(base_url: str, timeout: int) -> int:
         "ollama_pinned": PINNED_OLLAMA,
         "ollama_matches_preregistration": observed_version == PINNED_OLLAMA,
         "models_catalogued": catalog["models"],
+        "producer_context_tokens": PRODUCER_CONTEXT_TOKENS,
+        "producer_context_amendment": PRODUCER_CONTEXT_AMENDMENT,
+        "gpu_residency_proofs": residency,
         "judge_resident": runtime["loaded_models"][JUDGE.model],
         "keep_alive": BLOCK_KEEP_ALIVE,
         "lock_created": False,
@@ -1490,13 +1519,65 @@ def run_lifecycle_smoke(output_dir: Path, delay_seconds: float) -> int:
     return 0 if second_attempt_refused else 2
 
 
+def completed_q0(output_root: Path) -> dict[str, Any] | None:
+    """Résultat d'une Q0 déjà close sous ce gel, ou None si elle n'a pas eu lieu.
+
+    Règle de `docs/P7_V10_PRODUCER_CONTEXT_AMENDMENT.md` §4 : un verrou Q0 sans
+    résumé passant est une phase consommée qui n'a pas franchi sa porte — la
+    commande doit refuser, pas rejouer. Un verrou avec `Q0_PASSED` autorise à
+    reprendre le résultat sans réexécuter les dix-huit appels.
+    """
+    lock = output_root / f"p7_v10_q0_{PREREG_FREEZE_COMMIT}.lock"
+    if not lock.exists():
+        return None
+    for run_dir in sorted(output_root.glob("p7_v10_q0_*")):
+        summary_path = run_dir / "summary.json"
+        if not run_dir.is_dir() or not summary_path.exists():
+            continue
+        summary = json.loads(summary_path.read_bytes())
+        if summary.get("status") == "Q0_PASSED" and summary.get("passed") is True:
+            return summary
+    raise RuntimeError(
+        "a Q0 phase lock exists under this freeze without a passing summary: "
+        "the phase was consumed and did not clear its gate; the freeze forbids "
+        "a second attempt (PREREGISTRATION_v10.md, Execution)"
+    )
+
+
 def run(base_url: str, timeout: int, output_root: Path) -> int:
-    """Commande unique : Q0 -> calibration -> tenu -> scoreur, sans reprise."""
+    """Commande unique : Q0 -> calibration -> tenu -> scoreur, sans reprise.
+
+    Aucune phase n'est exécutée deux fois. Une Q0 déjà close et passée sous ce
+    gel est reprise, jamais rejouée ; sa preuve reste son propre run.
+    """
     assert_runner_complete()
-    status = run_q0(base_url, timeout, output_root)
-    if status != 0:
-        return status
-    status, calibration = run_calibration(base_url, timeout, output_root)
+    previous_q0 = completed_q0(output_root)
+    reused = previous_q0 is not None
+    if not reused:
+        status = run_q0(base_url, timeout, output_root)
+        if status != 0:
+            return status
+        previous_q0 = completed_q0(output_root)
+        if previous_q0 is None:
+            raise RuntimeError("Q0 reported success without leaving a passing summary")
+    q0_provenance = {
+        "run_id": previous_q0["run_id"],
+        "status": previous_q0["status"],
+        "journal_sha256": previous_q0["journal_sha256"],
+        "reused_from_earlier_command": reused,
+    }
+    if reused:
+        print(
+            json.dumps(
+                {"phase": "Q0", "reused": True, **q0_provenance,
+                 "amendment": PRODUCER_CONTEXT_AMENDMENT},
+                ensure_ascii=False,
+            ),
+            flush=True,
+        )
+    status, calibration = run_calibration(
+        base_url, timeout, output_root, q0_provenance=q0_provenance
+    )
     if status != 0:
         return status
     status, heldout = run_heldout(

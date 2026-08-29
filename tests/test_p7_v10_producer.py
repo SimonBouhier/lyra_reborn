@@ -14,6 +14,7 @@ from eval.p7_v10_producer import (
     load_model,
     models_runtime,
     unload_model,
+    verify_context_length,
     verify_fully_loaded_on_gpu,
     verify_identity,
 )
@@ -153,6 +154,31 @@ def test_gpu_verification_mirrors_the_frozen_judge_precondition():
             verify_fully_loaded_on_gpu(broken, spec)
         with pytest.raises(RuntimeError):
             verify_judge_fully_loaded_on_gpu(broken, spec)
+
+
+def test_the_observed_granite_overflow_is_refused():
+    """Chiffres reels de la console du 29/08 : granite3.3 monte a 131072.
+
+    27,70 Go au total dont 22,77 Go seulement en VRAM sur une carte de 24 Go :
+    la trajectoire aurait tourne sur un modele partiellement en RAM, aux
+    latences inexploitables pour C7.
+    """
+    spec = PRODUCERS[2]
+    assert spec.model == "granite3.3:latest"
+    overflowed = {
+        "loaded_models": {
+            spec.model: {
+                "digest": spec.digest,
+                "size": 27698082609,
+                "size_vram": 22765916651,
+                "context_length": 131072,
+            }
+        }
+    }
+    with pytest.raises(RuntimeError, match="not fully loaded on GPU"):
+        verify_fully_loaded_on_gpu(overflowed, spec)
+    with pytest.raises(RuntimeError, match="resident at context 131072"):
+        verify_context_length(overflowed, spec, 32768)
 
 
 def test_identity_verification_pins_the_digest():

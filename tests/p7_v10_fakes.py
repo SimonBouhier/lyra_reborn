@@ -22,7 +22,30 @@ from eval.p7_v10 import JUDGE
 from eval.p7_v10_producer import PRODUCERS
 
 NP_MARKER = re.compile(r"np=(\d+)")
-DEFAULT_CONTEXT = 4096  # contexte de montage par defaut, comme Ollama
+# Ollama 0.32 monte un modele a son contexte maximum quand la requete n en
+# demande pas ; OLLAMA_CONTEXT_LENGTH plafonne ce defaut. Le faux serveur
+# reproduit ce comportement et l occupation VRAM qui en decoule.
+VRAM_BUDGET = 24_000_000_000
+MODEL_MAX_CONTEXT = {
+    "mistral:latest": 32768,
+    "gemma3:latest": 131072,
+    "granite3.3:latest": 131072,
+    "qwen3.8:27b": 262144,
+}
+# poids + cout du cache par token, cales sur les tailles reellement observees
+# (granite3.3 a 131072 pese 27,70 Go dont 22,77 Go seulement en VRAM).
+MODEL_WEIGHTS = {
+    "mistral:latest": 4_400_000_000,
+    "gemma3:latest": 3_300_000_000,
+    "granite3.3:latest": 4_900_000_000,
+    "qwen3.8:27b": 16_300_000_000,
+}
+MODEL_KV_PER_TOKEN = {
+    "mistral:latest": 131_072,
+    "gemma3:latest": 131_072,
+    "granite3.3:latest": 174_000,
+    "qwen3.8:27b": 33_600,
+}
 
 _TURN1 = "Identifie le noyau du contenu"
 _TURN2 = "Soumets l'analyse précédente"
@@ -82,11 +105,14 @@ class FakeOllama:
         producer_failures: tuple[str, ...] = (),
         judge_failures: tuple[int, ...] = (),
         judge_preference: str | None = None,
+        default_context: int = 32768,
     ):
         self.version = version
+        # Simule OLLAMA_CONTEXT_LENGTH : plafond applique au contexte maximum
+        # de chaque modele quand la requete ne demande pas de num_ctx.
+        self.default_context = default_context
         self.catalog = {spec.model: spec.digest for spec in PRODUCERS}
         self.catalog[JUDGE.model] = JUDGE.digest
-        self.sizes = {name: 4_000_000_000 + index for index, name in enumerate(self.catalog)}
         self.loaded: dict[str, bool] = {}
         # Contexte de montage par modele, comme Ollama : un appel qui demande
         # un autre num_ctx force un rechargement.
@@ -122,9 +148,9 @@ class FakeOllama:
                         {
                             "name": name,
                             "digest": self.catalog[name],
-                            "size": self.sizes[name],
-                            "size_vram": self.sizes[name],
-                            "context_length": self.contexts.get(name, DEFAULT_CONTEXT),
+                            "size": self._size(name),
+                            "size_vram": min(self._size(name), VRAM_BUDGET),
+                            "context_length": self._context(name),
                         }
                         for name in sorted(self.loaded)
                         if self.loaded[name]
@@ -132,6 +158,16 @@ class FakeOllama:
                 },
             )
         raise AssertionError(f"unexpected GET {url}")
+
+    def _context(self, name: str) -> int:
+        if name in self.contexts:
+            return self.contexts[name]
+        return min(MODEL_MAX_CONTEXT.get(name, 32768), self.default_context)
+
+    def _size(self, name: str) -> int:
+        return MODEL_WEIGHTS.get(name, 4_000_000_000) + MODEL_KV_PER_TOKEN.get(
+            name, 100_000
+        ) * self._context(name)
 
     # --- génération --------------------------------------------------------
     def post(
@@ -152,7 +188,10 @@ class FakeOllama:
         if prompt == "":
             keep_alive = payload.get("keep_alive")
             self.loaded[model] = keep_alive != 0
-            self.contexts[model] = int(options.get("num_ctx", DEFAULT_CONTEXT))
+            self.contexts[model] = int(
+                options.get("num_ctx")
+                or min(MODEL_MAX_CONTEXT.get(model, 32768), self.default_context)
+            )
             self.residency_calls.append(
                 {
                     "model": model,
@@ -163,7 +202,10 @@ class FakeOllama:
             return FakeResponse(200, {"response": "", "done_reason": "load"})
         if not self.loaded.get(model):
             raise AssertionError(f"{model} generated while not resident")
-        requested = int(options.get("num_ctx", DEFAULT_CONTEXT))
+        requested = int(
+            options.get("num_ctx")
+            or min(MODEL_MAX_CONTEXT.get(model, 32768), self.default_context)
+        )
         if self.contexts.get(model) != requested:
             # Ollama remonte le modele : la preuve GPU prise avant le verrou ne
             # decrit plus la residence reellement utilisee.
