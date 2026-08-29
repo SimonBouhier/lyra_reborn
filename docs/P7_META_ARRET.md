@@ -3,7 +3,7 @@
 **Nature :** règle de gouvernance du programme d'évaluation, pré-enregistrée —
 aucune mesure, aucune donnée
 
-**Gel initial :** `TO_BE_STAMPED`
+**Gel initial :** `89d22f9b2fa36f3331d855a4288cf06dea888a95`
 
 ## Contexte
 
