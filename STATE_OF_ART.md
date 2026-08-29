@@ -221,3 +221,18 @@ piloter utilement une trajectoire de décision en anglais, sur des fragments
 réels et hétérogènes, sans être récompensés par leurs propres proxys. Un résultat
 négatif est pleinement informatif : il indiquerait que la modulation est réelle
 mais que sa politique actuelle n'achète pas de meilleures décisions.
+
+## 5. Règle méta d'arrêt du programme de qualification (2026-08-29)
+
+Huit campagnes (V3→V10) se sont arrêtées avant toute mesure confirmatoire :
+la couche d'évaluation consommait le programme sans critère d'arrêt propre.
+`docs/P7_META_ARRET.md` (gelé) borne désormais le design bi-juge du §3.5 à
+**deux bancs restants** — admission de `gemma3:27b`, puis Q-2 de
+qualification du panel Qwen 3.8 + gemma3 sous le contrat réduit de Q-1
+inchangé — sans substitution, sans retouche de contrat, sans seconde
+tentative. La bascule est pré-écrite : si aucun panel n'est qualifié à
+l'issue, verdict `PANEL_BIJUGE_CLOS` (résultat négatif d'instrumentation,
+publiable) et poursuite de la série H en **juge unique Qwen 3.8**, avec
+auto-cohérence (répétitions, inversion), vérifications déterministes
+séparées et affaiblissement d'indépendance documenté sur chaque verdict.
+Le §3.5 ne sera amendé qu'au moment de la bascule, pas avant.
