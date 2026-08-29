@@ -32,7 +32,7 @@ from eval.p7_v7_judge import JudgeContractError, judgment_schema, validate_judgm
 from eval.p7_v9_judge import wire_judgment_schema
 
 
-PROTOCOL_COMMIT = "TO_BE_STAMPED"
+PROTOCOL_COMMIT = "e553431451545e83c6653168c1889bc7c10eaf8f"
 META_RULE_COMMIT = "89d22f9b2fa36f3331d855a4288cf06dea888a95"
 
 
@@ -110,7 +110,7 @@ def _acquire_lock(output_root: Path, run_id: str) -> Path:
 
 
 def run(base_url: str, timeout: int, output_root: Path) -> int:
-    if PROTOCOL_COMMIT == "TO_BE_STAMPED":
+    if PROTOCOL_COMMIT == "e553431451545e83c6653168c1889bc7c10eaf8f":
         raise RuntimeError("admission protocol must be committed and stamped before a live run")
     cells = admission_cells()
     jobs = admission_jobs()

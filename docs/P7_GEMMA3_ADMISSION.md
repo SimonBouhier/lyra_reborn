@@ -2,7 +2,7 @@
 
 **Nature :** banc d'ingénierie synthétique, non confirmatoire
 **Langue :** anglais uniquement
-**Gel initial :** `TO_BE_STAMPED`
+**Gel initial :** `e553431451545e83c6653168c1889bc7c10eaf8f`
 
 ## Place dans la règle méta
 
