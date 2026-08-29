@@ -216,10 +216,20 @@ class FakeOllama:
 
     @staticmethod
     def _preference(pack: dict[str, Any]) -> str:
+        """Préfère le candidat au plus grand `num_predict` observé.
+
+        Le marqueur est cherché sur les trois tours : au jeu tenu le premier
+        tour est commun aux deux candidats, donc seuls les tours 2 et 3 les
+        distinguent.
+        """
         markers = []
         for candidate in pack["candidates"]:
-            found = NP_MARKER.search(candidate["turns"][0]["output"])
-            markers.append(int(found.group(1)) if found else 0)
+            found = [
+                int(match.group(1))
+                for turn in candidate["turns"]
+                for match in NP_MARKER.finditer(turn["output"])
+            ]
+            markers.append(max(found) if found else 0)
         if markers[0] == markers[1]:
             return "TIE"
         return "A" if markers[0] > markers[1] else "B"

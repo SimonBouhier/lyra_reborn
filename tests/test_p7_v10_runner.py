@@ -1,14 +1,16 @@
 """Offline checks for the V10 campaign executors, driven by a fake Ollama."""
 from __future__ import annotations
 
+from collections import Counter
 import json
 
 import pytest
 
 from eval.p7_v10 import CALL_CEILINGS, PREREG_FREEZE_COMMIT
 from eval.p7_v10_calibration import PRESETS
-from eval.p7_v10_corpus import calibration_cases
-from scripts.p7_v10 import ROOT, run_calibration
+from eval.p7_v10_corpus import calibration_cases, heldout_cases
+from eval.p7_v10_scoring import score_producer
+from scripts.p7_v10 import ROOT, run_calibration, run_heldout
 from tests.p7_v10_fakes import FakeOllama, install
 
 BASE = "http://127.0.0.1:11434"
@@ -158,3 +160,109 @@ def test_a_position_following_judge_resolves_nothing_and_fails_q1(monkeypatch, t
     # Le round-robin reste complet : c'est l'instrument qui échoue, pas le run.
     assert summary["round_robin_complete"] is True
     assert summary["judge_calls"] == 432
+
+
+# --- jeu tenu -------------------------------------------------------------
+#
+# Le faux juge préfère le candidat au plus grand `num_predict` : ces tests
+# prouvent que la chaîne transporte, attribue, dé-aveugle et assemble
+# correctement. Ils ne mesurent RIEN de H10 — aucune de ces sorties n'est une
+# évidence d'évaluation.
+
+
+def _heldout_dir(run_root):
+    directories = [path for path in run_root.glob("p7_v10_heldout_*") if path.is_dir()]
+    assert len(directories) == 1
+    return directories[0]
+
+
+def test_heldout_runs_the_frozen_design_and_feeds_the_scorer(monkeypatch, tmp_path):
+    install(monkeypatch, FakeOllama())
+    status, payload = run_heldout(BASE, 30, tmp_path, "creative")
+    run_dir = _heldout_dir(tmp_path)
+    summary = json.loads((run_dir / "summary.json").read_bytes())
+
+    assert status == 0
+    assert summary["status"] == "HELDOUT_COMPLETE"
+    assert summary["h10"] == "UNTESTED"  # aucun verdict hors du scoreur
+    assert summary["producer_calls"] == CALL_CEILINGS["heldout_producer"] == 900
+    assert summary["judge_calls"] == CALL_CEILINGS["heldout_judge"] == 360
+    assert summary["complete_pairs"] == summary["judged_pairs"] == 180
+    assert summary["sealed_before_common_t1"] is True
+
+    assert [item["producer"] for item in payload["producers"]] == [
+        "mistral:latest",
+        "gemma3:latest",
+        "granite3.3:latest",
+    ]
+    for producer in payload["producers"]:
+        assert len(producer["pairs"]) == 60
+        orders = Counter(pair["order"] for pair in producer["pairs"])
+        assert orders == {"ABBA": 30, "BAAB": 30}
+        assert all(pair["producer_calls"] == 5 for pair in producer["pairs"])
+        assert all(pair["common_t1_identical"] for pair in producer["pairs"])
+        # Le scoreur gelé accepte l'entrée telle quelle, sans adaptation.
+        result = score_producer(producer)
+        assert result["W"] + result["L"] + result["U"] == 60
+        assert result["gates"]["C0"] and result["gates"]["C1"] and result["gates"]["C10"]
+
+
+def test_heldout_seals_the_arm_mapping_apart_and_keeps_packs_blind(monkeypatch, tmp_path):
+    install(monkeypatch, FakeOllama())
+    run_heldout(BASE, 30, tmp_path, "creative")
+    run_dir = _heldout_dir(tmp_path)
+
+    manifest = json.loads((run_dir / "manifest.json").read_bytes())
+    mapping = json.loads((run_dir / "blind_mapping.json").read_bytes())
+    assert manifest["blind_mapping_sha256"] == mapping["seal_sha256"]
+    assert mapping["count"] == 180
+    assert {row["candidate_a"] for row in mapping["entries"]} == {"ADAPTIVE", "STATIC_BEST"}
+    assert manifest["static_best"] == "creative"
+
+    # C9 : rien de ce mapping ne doit atteindre le juge.
+    for request in sorted(run_dir.glob("calls/*.request.json")):
+        payload = json.loads(request.read_bytes())
+        pack = payload["prompt"].split("<EVIDENCE_PACK_JSON>\n", 1)[1]
+        assert "ADAPTIVE" not in pack and "STATIC_BEST" not in pack
+        for spec in ("mistral:latest", "gemma3:latest", "granite3.3:latest"):
+            assert spec not in pack
+
+    journal = (run_dir / "journal.jsonl").read_text(encoding="utf-8")
+    for case in heldout_cases(ROOT)[:5]:
+        assert case.source_text.strip()[:60] not in journal
+
+
+def test_heldout_refuses_a_second_attempt_under_the_same_freeze(monkeypatch, tmp_path):
+    install(monkeypatch, FakeOllama())
+    assert run_heldout(BASE, 30, tmp_path, "creative")[0] == 0
+    assert (tmp_path / f"p7_v10_heldout_{PREREG_FREEZE_COMMIT}.lock").exists()
+    with pytest.raises(FileExistsError):
+        run_heldout(BASE, 30, tmp_path, "creative")
+
+
+def test_invalid_judge_answers_stay_invalid_in_a_full_denominator(monkeypatch, tmp_path):
+    install(monkeypatch, FakeOllama(judge_failures=tuple(range(1, 361))))
+    status, payload = run_heldout(BASE, 30, tmp_path, "creative")
+    summary = json.loads((_heldout_dir(tmp_path) / "summary.json").read_bytes())
+
+    assert status == 0  # la phase se termine : le verdict appartient au scoreur
+    assert summary["judge_calls"] == 360  # aucune relance, aucune réparation
+    for producer in payload["producers"]:
+        assert all(
+            pair["judge"]["forward"]["arm"] == "INVALID"
+            and pair["judge"]["reverse"]["arm"] == "INVALID"
+            for pair in producer["pairs"]
+        )
+        result = score_producer(producer)
+        # C12 garde son dénominateur : 2 x 60 paires jugées, 0 réponse valide.
+        assert result["gates"]["C12"] is False
+        assert (result["W"], result["L"], result["U"]) == (0, 0, 60)
+        assert result["verdict"] == "H10_INCONCLUSIVE_FOR_MODEL"
+
+
+def test_heldout_refuses_a_static_best_outside_the_frozen_presets(monkeypatch, tmp_path):
+    fake = install(monkeypatch, FakeOllama())
+    with pytest.raises(RuntimeError, match="frozen preset"):
+        run_heldout(BASE, 30, tmp_path, "adaptive")
+    assert list(tmp_path.glob("*.lock")) == []
+    assert fake.generate_calls == []

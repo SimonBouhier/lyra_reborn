@@ -9,6 +9,7 @@ consommer contre un runner à moitié construit.
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -29,10 +30,15 @@ from eval.p7_evidence import (
 )
 from eval.p7_judge_backend import OllamaJudgeBackend, canonical_payload_bytes
 from eval.p7_trajectory import (
+    ARM_ADAPTIVE,
+    ARM_STATIC,
+    ORDER_ABBA,
+    ORDER_BAAB,
     _finish_trace,
     _make_loop,
     _prompt,
     _trace_turn,
+    run_policy_pair,
 )
 from eval.p7_v10 import (
     CALL_CEILINGS,
@@ -66,7 +72,12 @@ from eval.p7_v10_calibration import (
     select_static_best,
     trajectory_seed,
 )
-from eval.p7_v10_corpus import CORPUS_SEED, calibration_cases, seal_manifest
+from eval.p7_v10_corpus import (
+    CORPUS_SEED,
+    calibration_cases,
+    heldout_cases,
+    seal_manifest,
+)
 from eval.p7_v10_execution import (
     POLICY_IDENTIFIERS,
     JudgeCall,
@@ -78,6 +89,15 @@ from eval.p7_v10_execution import (
     pack_integrity,
     pair_position,
     seal_blind_mapping,
+)
+from eval.p7_v10_heldout import (
+    HELDOUT_CASES,
+    PRODUCER_CALLS_PER_CASE,
+    assign_execution_orders,
+    attribute_pair_calls,
+    first_arm,
+    pair_record,
+    producer_scoring_input,
 )
 from eval.p7_v10_producer import (
     PRODUCERS,
@@ -920,10 +940,361 @@ def run_calibration(
     return (0 if q1_passed else 2), summary
 
 
-def run_heldout(base_url: str, timeout: int, output_root: Path, static_best: str) -> int:
-    raise NotImplementedError(
-        "V10 held-out phase is not implemented yet - see docs/P7_V10_RUNNER_PLAN.md layer 4"
+def run_heldout(
+    base_url: str, timeout: int, output_root: Path, static_best: str
+) -> tuple[int, dict[str, Any]]:
+    """Jeu tenu : 60 cas x 3 producteurs, paire ADAPTIVE / STATIC_BEST par cas.
+
+    Le manifeste des 60 cas est scellé AVANT le premier COMMON T1 (C0) ; le
+    contre-balancement 30 ABBA / 30 BAAB et la position A/B viennent des
+    formules déterministes de `eval.p7_v10_heldout`, salées par producteur et
+    journalisées. Cette phase ne rend aucun verdict : elle assemble l'entrée du
+    scoreur, qui seul agrège (prérég §Estimateurs).
+    """
+    if static_best not in PRESETS:
+        raise RuntimeError(f"STATIC_BEST must be a frozen preset, got {static_best!r}")
+    cases = heldout_cases(ROOT)
+    if len(cases) != HELDOUT_CASES:
+        raise RuntimeError(f"the held-out set must hold {HELDOUT_CASES} sealed cases")
+    corpus_seal = seal_manifest(cases, phase="heldout")
+    static_knobs = preset_knobs(static_best)
+
+    orders = {
+        spec.model: assign_execution_orders(
+            [case.case_id for case in cases], spec.digest
+        )
+        for spec in PRODUCERS
+    }
+    arms = {
+        spec.model: {case.case_id: first_arm(case.case_id, spec.digest) for case in cases}
+        for spec in PRODUCERS
+    }
+    half = HELDOUT_CASES // 2
+    for spec in PRODUCERS:
+        counts = Counter(orders[spec.model].values())
+        if counts[ORDER_ABBA] != half or counts[ORDER_BAAB] != half:
+            raise RuntimeError(
+                f"counterbalancing is not {half}/{half} for {spec.model}: {dict(counts)}"
+            )
+
+    def comparison_id(model: str, case_id: str) -> str:
+        return f"{model}|{case_id}"
+
+    mapping_seal = seal_blind_mapping(
+        (
+            {
+                "comparison_id": comparison_id(spec.model, case.case_id),
+                "candidate_a": arms[spec.model][case.case_id],
+                "candidate_b": (
+                    ARM_STATIC
+                    if arms[spec.model][case.case_id] == ARM_ADAPTIVE
+                    else ARM_ADAPTIVE
+                ),
+            }
+            for spec in PRODUCERS
+            for case in cases
+        ),
+        phase="heldout",
     )
+
+    planned_producer_calls = len(cases) * PRODUCER_CALLS_PER_CASE * len(PRODUCERS)
+    planned_judge_calls = len(cases) * len(PRODUCERS) * 2
+    if planned_producer_calls > CALL_CEILINGS["heldout_producer"]:
+        raise RuntimeError("held-out producer plan exceeds the frozen ceiling")
+    if planned_judge_calls > CALL_CEILINGS["heldout_judge"]:
+        raise RuntimeError("held-out judge plan exceeds the frozen ceiling")
+
+    runtime_before = models_runtime(base_url, timeout, _phase_models())
+    _verify_phase_catalog(runtime_before)
+    gpu_proofs = _prove_gpu_residency(base_url, timeout)
+
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
+    run_dir = output_root / f"p7_v10_heldout_{stamp}"
+    _acquire_phase_lock(output_root, "heldout", run_dir.name)
+    (run_dir / "calls").mkdir(parents=True, exist_ok=False)
+    journal = run_dir / "journal.jsonl"
+    (run_dir / "corpus_seal.json").write_bytes(_canonical(corpus_seal))
+    (run_dir / "blind_mapping.json").write_bytes(_canonical(mapping_seal))
+    sealed_at = datetime.now(timezone.utc)
+
+    manifest = {
+        "schema_version": "lyra.p7.v10-heldout-run.v1",
+        "run_id": run_dir.name,
+        "phase": "HELDOUT",
+        "preregistration": PREREGISTRATION,
+        "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
+        "prerun_amendment": PRERUN_AMENDMENT,
+        "independence_note": INDEPENDENCE_NOTE,
+        "seed": CORPUS_SEED,
+        "static_best": static_best,
+        "static_best_knobs": static_knobs.as_dict(),
+        "judge": {"model": JUDGE.model, "digest": JUDGE.digest},
+        "producers": [
+            {"model": spec.model, "digest": spec.digest, "family": spec.family}
+            for spec in PRODUCERS
+        ],
+        "knob_mapping": {
+            "num_predict_min": PRODUCER_MAPPING.num_predict_min,
+            "num_predict_max": PRODUCER_MAPPING.num_predict_max,
+        },
+        "corpus_seal_sha256": corpus_seal["seal_sha256"],
+        "blind_mapping_sha256": mapping_seal["seal_sha256"],
+        "sealed_at_utc": sealed_at.isoformat(),
+        "execution_orders": orders,
+        "calls_planned": {
+            "producer": planned_producer_calls,
+            "judge": planned_judge_calls,
+        },
+        "call_ceilings": CALL_CEILINGS,
+        "content_handling": (
+            "journal sans contenu (comptes et hashes) ; les payloads de requete "
+            "et de reponse sont conserves sous calls/ comme preuve d appel"
+        ),
+        "runtime_before": runtime_before,
+        "gpu_residency_proofs": gpu_proofs,
+    }
+    (run_dir / "manifest.json").write_bytes(_canonical(manifest))
+
+    records: dict[str, dict[str, dict[str, Any]]] = {spec.model: {} for spec in PRODUCERS}
+    judge_calls: list[JudgeCall] = []
+    mappings: dict[str, dict[str, str]] = {}
+    producer_calls_emitted = 0
+    first_common_t1_at: datetime | None = None
+
+    for spec in PRODUCERS:
+        forbidden = (*POLICY_IDENTIFIERS, spec.model)
+        load_model(base_url, spec.model, timeout, keep_alive=BLOCK_KEEP_ALIVE)
+        block_runtime = models_runtime(base_url, timeout, (spec.model,))
+        verify_identity(block_runtime, spec)
+        verify_fully_loaded_on_gpu(block_runtime, spec)
+        _append_jsonl(
+            journal,
+            {
+                "event": "producer_block_started",
+                "run_id": run_dir.name,
+                "phase": "HELDOUT",
+                "producer": spec.model,
+                "runtime": block_runtime,
+            },
+        )
+        for case in cases:
+            if first_common_t1_at is None:
+                first_common_t1_at = datetime.now(timezone.utc)
+            client = OllamaProducerClient(base_url, spec.model, timeout)
+            pair = run_policy_pair(
+                case,
+                llm_factory=lambda client=client: client,
+                model_digest=spec.digest,
+                static_best=static_knobs,
+                global_seed=CORPUS_SEED,
+                mapping=PRODUCER_MAPPING,
+                execution_order=orders[spec.model][case.case_id],
+            )
+            producer_calls_emitted += len(client.calls)
+            attributed = attribute_pair_calls(client.calls, pair)
+            identifier = comparison_id(spec.model, case.case_id)
+            leading = arms[spec.model][case.case_id]
+            trailing = ARM_STATIC if leading == ARM_ADAPTIVE else ARM_ADAPTIVE
+            mappings[identifier] = {"A": leading, "B": trailing}
+
+            judged = False
+            pack_error = None
+            blindness = {"ok": False}
+            integrity = {"ok": False}
+            if pair.adaptive.complete and pair.static.complete:
+                traces = {ARM_ADAPTIVE: pair.adaptive, ARM_STATIC: pair.static}
+                try:
+                    forward = build_evidence_pack(
+                        case.source_text,
+                        candidate_material(traces[leading]),
+                        candidate_material(traces[trailing]),
+                    )
+                    reverse = invert_evidence_pack(forward)
+                except (ValueError, TypeError) as exc:
+                    pack_error = f"{type(exc).__name__}: {exc}"
+                else:
+                    integrity = pack_integrity(forward)
+                    blindness = pack_blindness(forward, forbidden=forbidden)
+                    judged = True
+                    for orientation, pack in (("forward", forward), ("reverse", reverse)):
+                        judge_calls.append(
+                            JudgeCall(
+                                comparison_id=identifier,
+                                orientation=orientation,
+                                pack=pack,
+                                pack_sha256=pack_sha256(pack),
+                                context={
+                                    "producer": spec.model,
+                                    "case_id": case.case_id,
+                                    "source": case.source_name,
+                                },
+                            )
+                        )
+
+            record = pair_record(
+                case=case,
+                pair=pair,
+                attributed=attributed,
+                judged=judged,
+                judge={
+                    "forward": {"valid": False, "arm": "INVALID"},
+                    "reverse": {"valid": False, "arm": "INVALID"},
+                }
+                if judged
+                else None,
+                pack_blind_ok=blindness["ok"],
+                pack_integrity_ok=integrity["ok"],
+                pack_error=pack_error,
+            )
+            records[spec.model][case.case_id] = record
+            for call in client.calls:
+                _append_jsonl(
+                    journal,
+                    {
+                        "event": "producer_call",
+                        "run_id": run_dir.name,
+                        "phase": "HELDOUT",
+                        "producer": spec.model,
+                        "case_id": case.case_id,
+                        "source": case.source_name,
+                        **call.as_record(),
+                    },
+                )
+            _append_jsonl(
+                journal,
+                {
+                    "event": "pair_finished",
+                    "run_id": run_dir.name,
+                    "phase": "HELDOUT",
+                    "producer": spec.model,
+                    "comparison_id": identifier,
+                    **{key: value for key, value in record.items() if key != "judge"},
+                },
+            )
+            print(
+                json.dumps(
+                    {
+                        "phase": "HELDOUT",
+                        "producer": spec.model,
+                        "case": case.case_id,
+                        "order": pair.execution_order,
+                        "complete": record["complete"],
+                        "producer_calls": producer_calls_emitted,
+                        "of": planned_producer_calls,
+                    },
+                    ensure_ascii=False,
+                ),
+                flush=True,
+            )
+        after = models_runtime(base_url, timeout, (spec.model,))
+        verify_identity(after, spec)
+        _append_jsonl(
+            journal,
+            {
+                "event": "producer_block_finished",
+                "run_id": run_dir.name,
+                "phase": "HELDOUT",
+                "producer": spec.model,
+                "runtime": after,
+            },
+        )
+        unload_model(base_url, spec.model, timeout)
+
+    if producer_calls_emitted > CALL_CEILINGS["heldout_producer"]:
+        raise RuntimeError("held-out exceeded the frozen producer call ceiling")
+    if len(judge_calls) > CALL_CEILINGS["heldout_judge"]:
+        raise RuntimeError("held-out exceeded the frozen judge call ceiling")
+
+    verdicts = _judge_block(
+        base_url=base_url,
+        timeout=timeout,
+        run_dir=run_dir,
+        journal=journal,
+        phase="HELDOUT",
+        calls=judge_calls,
+    )
+
+    for spec in PRODUCERS:
+        for case in cases:
+            record = records[spec.model][case.case_id]
+            if not record["judged"]:
+                continue
+            identifier = comparison_id(spec.model, case.case_id)
+            mapping = mappings[identifier]
+            answers = {}
+            for orientation in ("forward", "reverse"):
+                answer = verdicts.get((identifier, orientation))
+                answers[orientation] = {
+                    "valid": bool(answer and answer["valid"]),
+                    "arm": deblind(answer["preference"], orientation, mapping)
+                    if answer
+                    else "INVALID",
+                }
+            record["judge"] = answers
+            _append_jsonl(
+                journal,
+                {
+                    "event": "pair_judged",
+                    "run_id": run_dir.name,
+                    "phase": "HELDOUT",
+                    "producer": spec.model,
+                    "comparison_id": identifier,
+                    "judge": answers,
+                },
+            )
+
+    sealed_before_common_t1 = bool(
+        first_common_t1_at is not None and sealed_at < first_common_t1_at
+    )
+    payload = {
+        "schema_version": "lyra.p7.v10-heldout-scoring-input.v1",
+        "run_id": run_dir.name,
+        "static_best": static_best,
+        "corpus_seal_sha256": corpus_seal["seal_sha256"],
+        "blind_mapping_sha256": mapping_seal["seal_sha256"],
+        "sealed_before_common_t1": sealed_before_common_t1,
+        "producers": [
+            producer_scoring_input(
+                producer=spec.model,
+                seal=corpus_seal,
+                sealed_before_common_t1=sealed_before_common_t1,
+                pairs=[records[spec.model][case.case_id] for case in cases],
+            )
+            for spec in PRODUCERS
+        ],
+    }
+    (run_dir / "scoring_input.json").write_bytes(_canonical(payload))
+
+    summary = {
+        "schema_version": "lyra.p7.v10-heldout-summary.v1",
+        "run_id": run_dir.name,
+        "phase": "HELDOUT",
+        "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
+        "independence_note": INDEPENDENCE_NOTE,
+        "h10": "UNTESTED",
+        "static_best": static_best,
+        "producer_calls": producer_calls_emitted,
+        "judge_calls": len(judge_calls),
+        "pairs": sum(len(records[spec.model]) for spec in PRODUCERS),
+        "complete_pairs": sum(
+            1
+            for spec in PRODUCERS
+            for record in records[spec.model].values()
+            if record["complete"]
+        ),
+        "judged_pairs": sum(
+            1
+            for spec in PRODUCERS
+            for record in records[spec.model].values()
+            if record["judged"]
+        ),
+        "sealed_before_common_t1": sealed_before_common_t1,
+        "status": "HELDOUT_COMPLETE",
+        "journal_sha256": _sha(journal.read_bytes()),
+    }
+    (run_dir / "summary.json").write_bytes(_canonical(summary))
+    print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
+    return 0, payload
 
 
 def run_scoring(output_root: Path) -> int:
@@ -940,7 +1311,9 @@ def run(base_url: str, timeout: int, output_root: Path) -> int:
     status, calibration = run_calibration(base_url, timeout, output_root)
     if status != 0:
         return status
-    status = run_heldout(base_url, timeout, output_root, calibration["static_best"])
+    status, heldout = run_heldout(
+        base_url, timeout, output_root, calibration["static_best"]
+    )
     if status != 0:
         return status
     return run_scoring(output_root)
