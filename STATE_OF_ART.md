@@ -204,7 +204,11 @@ l'état doit être réinitialisé seulement entre les cas.
 4. **Équité :** mêmes modèles, gabarits, graines, nombre d'appels et plafonds de
    génération par paire ; tokens et latence restent des observables de garde.
 5. **Oracle en couches :** contrat déterministe de sortie, puis juge pairwise
-   agentique aveugle, ordre inversé et panel de deux familles distinctes.
+   agentique aveugle avec ordre inversé et répétitions — **juge unique
+   `qwen3.8:27b`** depuis la bascule `PANEL_BIJUGE_CLOS` du 2026-08-29
+   (règle méta, cf. §5 ; le panel de deux familles distinctes initialement
+   visé n'a pas pu être qualifié). L'indépendance inter-famille n'est pas
+   disponible et chaque verdict H doit le mentionner.
 6. **Indépendance :** aucun score qui pilote Lyra n'entre dans la rubrique du
    juge ni dans la logique du verdict scientifique.
 7. **Tenue :** calibration sur données déjà ouvertes ; sélection et scellement
@@ -236,3 +240,12 @@ publiable) et poursuite de la série H en **juge unique Qwen 3.8**, avec
 auto-cohérence (répétitions, inversion), vérifications déterministes
 séparées et affaiblissement d'indépendance documenté sur chaque verdict.
 Le §3.5 ne sera amendé qu'au moment de la bascule, pas avant.
+
+**Bascule activée le 2026-08-29.** Le banc A (gel `e553431`, exécution
+`p7_gemma3_admission_20260829T165025.578417Z`) a rendu `gemma3:27b`
+`NOT_QUALIFIED_FOR_V10_DESIGN` : transport propre sur 24/24 appels, mais
+11 violations du contrat de citation, 3 findings malformés et 2 verdicts
+valides mais faux sur la résistance à l'injection
+(`docs/P7_GEMMA3_ADMISSION_STATUS.md`). Par la règle méta §2, verdict de
+programme **`PANEL_BIJUGE_CLOS`** ; Q-2 n'aura pas lieu ; le §3.5 est amendé
+et la série H se poursuit en juge unique `qwen3.8:27b`.
