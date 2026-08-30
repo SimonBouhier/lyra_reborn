@@ -1,24 +1,12 @@
-# Pre-Registration v11 — BROUILLON, NON GELÉ
+# Pre-Registration v11
 
-> **Ce document n'est pas une préinscription tant que Simon Bouhier ne l'a pas
-> gelé.** Tant qu'il porte ce bandeau et le nom `_DRAFT`, il n'engage rien et
-> aucun run ne peut s'y référer.
->
-> **Décisions prises le 2026-08-30 :** réemploi du jeu tenu intact — *légitime* ;
-> pas de désactivation permanente des mises à jour — *la contrainte est bornée à
-> la fenêtre de campagne* ; runner — *reparamétrage, pas duplication*.
-> **Reste ouvert : [DÉCISION 1]** (version à épingler, à constater au dernier
-> moment) et **[DÉCISION 2]** (report des mises à jour le temps du run, ou
-> acceptation explicite du risque de perdre le jeu tenu).
->
-> Ordre du gel : trancher les deux points restants → constater la version
-> réellement servie → renseigner §Runtime → renommer en
-> `PREREGISTRATION_v11.md` → committer → estampiller → reparamétrer le runner
-> sur le commit de gel → lancer.
+**Frozen on**: 2026-08-30
+**Frozen by**: Simon Bouhier (décisions du 2026-08-30), rédaction et
+assistance méthodologique de Claude
+**Git commit at freeze**: TO_BE_STAMPED
 
-**Frozen on**: TO_BE_FROZEN
-**Frozen by**: Simon Bouhier
-**Git commit at freeze**: TO_BE_FROZEN
+**Prédécesseur** : V10, arrêtée après Q0 sur dérive du runtime —
+`docs/P7_V10_STATUS.md`, `H10 UNTESTED`.
 
 ## Hypothesis
 
@@ -94,8 +82,14 @@ porte la mention « juge unique — indépendance inter-famille non disponible �
 
 ### Runtime — le seul changement de fond
 
-Python 3.14.7, Pydantic 2.13.4, Ollama **[DÉCISION 1 : version à constater au
-gel, `0.33.2` observée le 2026-08-30]**.
+Python 3.14.7, Pydantic 2.13.4, Ollama **0.33.2**.
+
+Version constatée sur le serveur de la campagne au moment même du gel, et non
+lue sur une observation antérieure : `/api/version` répond `0.33.2` sur un
+serveur lancé à la main depuis le binaire épinglé
+`%LOCALAPPDATA%\Programs\Ollama\ollama.exe serve`, sans application de zone de
+notification. Les quatre digests gelés y sont conformes et aucun modèle n'est
+résident au départ.
 
 Trois exigences nouvelles, qui répondent aux deux incidents de V10 :
 
@@ -118,14 +112,21 @@ Trois exigences nouvelles, qui répondent aux deux incidents de V10 :
    de notification — qui est l'agent de mise à jour — restant fermée. Elle est
    rouverte à la fin du run et les mises à jour reprennent leur cours.
 
-   **[DÉCISION 2 : valider ce report d'une soirée, ou assumer explicitement le
-   risque décrit ci-dessous.]** Une mise à jour survenant pendant le jeu tenu,
-   après son verrou, **consommerait les 60 cas tenus sans produire de
-   verdict** — c'est le seul actif du dispositif qui ne se remplace pas. La
-   détection (§3) empêche des données invalides ; elle n'empêche pas la perte
-   de la phase. L'assiduité de l'opérateur ne couvre pas ce risque : la mise à
-   jour du 2026-08-30 est tombée à 00 h 24, et toute campagne de cette durée
-   traverse nécessairement des heures sans surveillance.
+   **Tranché le 2026-08-30 : le report est retenu**, et il était en vigueur au
+   moment du gel — le serveur de la campagne tourne déjà dans cette
+   configuration, vérifiée : `ollama serve` seul, aucun agent de mise à jour
+   en vie.
+
+   Motif : une mise à jour survenant pendant le jeu tenu, après son verrou,
+   **consommerait les 60 cas tenus sans produire de verdict** — le seul actif
+   du dispositif qui ne se remplace pas. La détection (§3) empêche des données
+   invalides ; elle n'empêche pas la perte de la phase. L'assiduité de
+   l'opérateur ne couvre pas ce risque : la mise à jour du 2026-08-30 est
+   tombée à 00 h 24, et une campagne de cette durée traverse nécessairement
+   des heures sans surveillance.
+
+   La contrainte est levée à la fin des mesures ; les mises à jour reprennent
+   alors leur cours normal.
 3. **La version est vérifiée, pas constatée.** Tout écart entre la version
    servie et la version gelée arrête la phase **avant** son verrou, et est
    revérifié autour de chaque bloc producteur et du bloc juge. Une mise à jour
