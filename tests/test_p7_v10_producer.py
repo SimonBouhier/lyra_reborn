@@ -7,7 +7,7 @@ import pytest
 
 from core.knobs import Knobs, KnobMapping
 from core.loop import LyraLoop
-from eval.p7_v10 import JUDGE
+from eval.p7_v11 import JUDGE
 from eval.p7_v10_producer import (
     PRODUCERS,
     OllamaProducerClient,

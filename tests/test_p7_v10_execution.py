@@ -15,7 +15,7 @@ from eval.p7_evidence import (
     pack_sha256,
 )
 from eval.p7_trajectory import ARM_ADAPTIVE, ARM_STATIC, EvaluationCase, PolicyTrace, TraceTurn
-from eval.p7_v10 import JUDGE, resolve_single_judge_pair
+from eval.p7_v11 import JUDGE, resolve_single_judge_pair
 from eval.p7_v10_execution import (
     POLICY_IDENTIFIERS,
     JudgeCall,

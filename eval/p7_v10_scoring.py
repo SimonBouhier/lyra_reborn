@@ -21,7 +21,7 @@ from statistics import median
 from typing import Any, Iterable, Mapping
 
 from agency.tools.vigie.campaign import nearest_rank, wilson_interval
-from eval.p7_v10 import INDEPENDENCE_NOTE
+from eval.p7_v11 import INDEPENDENCE_NOTE
 
 __all__ = [
     "SCOPE_NOTE",

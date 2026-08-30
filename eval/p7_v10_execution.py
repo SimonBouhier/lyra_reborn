@@ -12,7 +12,7 @@ les règles que la calibration et le jeu tenu appliquent à l'identique :
 - le scellement du mapping candidat -> politique, hashé avant tout jugement.
 
 Les règles de résolution restent celles des modules gelés : la calibration
-passe par `eval.p7_v10.resolve_single_judge_pair` (espace `A`/`B` de la paire
+passe par `eval.p7_v11.resolve_single_judge_pair` (espace `A`/`B` de la paire
 lexicale), le tenu par `eval.p7_v10_scoring.arm_outcome` (espace des bras).
 Aucune troisième copie de la règle n'est écrite ici.
 """
@@ -31,7 +31,7 @@ from eval.p7_evidence import (
     sha256_bytes,
 )
 from eval.p7_trajectory import ARM_ADAPTIVE, ARM_STATIC, PolicyTrace
-from eval.p7_v10 import JUDGE
+from eval.p7_v11 import JUDGE
 from eval.p7_v7_q0 import GLOBAL_SEED
 
 __all__ = [
@@ -59,7 +59,7 @@ def judge_call_sort_key(pack_sha256: str, orientation: str) -> str:
     """`sha256(seed || "judge_order" || judge_digest || pack_sha256 || orientation)`.
 
     Formule gelée de la prérég v10 §Instrument.4. Q0 y ajoute la répétition
-    (`eval.p7_v10._q0_sort_key`) ; calibration et tenu n'en ont pas.
+    (`eval.p7_v11._q0_sort_key`) ; calibration et tenu n'en ont pas.
     """
     if orientation not in ORIENTATIONS:
         raise ValueError(f"unknown orientation: {orientation}")
@@ -202,7 +202,7 @@ def seal_blind_mapping(
     if len({row["comparison_id"] for row in rows}) != len(rows):
         raise ValueError("blind mapping comparison identifiers must be unique")
     payload = {
-        "schema_version": "lyra.p7.v10-blind-mapping.v1",
+        "schema_version": "lyra.p7.v11-blind-mapping.v1",
         "phase": phase,
         "count": len(rows),
         "entries": rows,

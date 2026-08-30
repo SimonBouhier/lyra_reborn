@@ -1,4 +1,4 @@
-"""Faux Ollama déterministe pour les vérifications hors-ligne du runner V10.
+"""Faux Ollama déterministe pour les vérifications hors-ligne du runner V11.
 
 Ce n'est PAS un générateur crédible et ne prétend produire aucune évidence
 d'évaluation : il rend des sorties fonction des options reçues, exactement
@@ -18,11 +18,11 @@ from typing import Any
 
 import requests
 
-from eval.p7_v10 import JUDGE
+from eval.p7_v11 import JUDGE
 from eval.p7_v10_producer import PRODUCERS
 
 NP_MARKER = re.compile(r"np=(\d+)")
-# Ollama 0.32 monte un modele a son contexte maximum quand la requete n en
+# Ollama monte un modele a son contexte maximum quand la requete n en
 # demande pas ; OLLAMA_CONTEXT_LENGTH plafonne ce defaut. Le faux serveur
 # reproduit ce comportement et l occupation VRAM qui en decoule.
 VRAM_BUDGET = 24_000_000_000
@@ -101,7 +101,7 @@ class FakeOllama:
     def __init__(
         self,
         *,
-        version: str = "0.32.15",
+        version: str = "0.33.2",
         producer_failures: tuple[str, ...] = (),
         judge_failures: tuple[int, ...] = (),
         judge_preference: str | None = None,

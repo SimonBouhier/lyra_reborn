@@ -317,7 +317,7 @@ def verify_runtime_version(runtime: dict[str, Any], expected: str) -> None:
         raise RuntimeError(
             f"Ollama version drift: expected {expected}, observed {observed}; "
             "the frozen runtime qualified the judge and cannot change mid-campaign "
-            "(PREREGISTRATION_v10.md, Scope/Runtime)"
+            "(preregistration, Scope/Runtime)"
         )
 
 

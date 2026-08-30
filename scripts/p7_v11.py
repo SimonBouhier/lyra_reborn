@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Commande unique de la campagne V10 (PREREGISTRATION_v10.md, gel bc8497f).
+"""Commande unique de la campagne V11 (PREREGISTRATION_v11.md).
 
 Q0 -> calibration -> tenu -> scoreur, un verrou exclusif par phase créé après
 la preuve GPU de la phase. La garde de complétude interdit tout run vivant
@@ -46,7 +46,7 @@ from eval.p7_trajectory import (
     _trace_turn,
     run_policy_pair,
 )
-from eval.p7_v10 import (
+from eval.p7_v11 import (
     CALL_CEILINGS,
     CONTEXT_TOKENS,
     INDEPENDENCE_NOTE,
@@ -136,9 +136,10 @@ TRAJECTORY_TURNS = (1, 2, 3)
 # (voir PRODUCER_CONTEXT_TOKENS et son amendement).
 JUDGE_LOAD_OPTIONS = {"num_ctx": CONTEXT_TOKENS}
 
-# Version epinglee par la prereg (Scope/Runtime). Un ecart est signale et entre
-# au manifeste ; il n est pas corrige apres verrou.
-PINNED_OLLAMA = "0.32.15"
+# Version epinglee par la prereg V11 (Scope/Runtime), constatee au gel sur le
+# serveur lance a la main. Un ecart arrete la phase AVANT son verrou et est
+# reverifie autour de chaque bloc : V10 est morte de cette derive.
+PINNED_OLLAMA = "0.33.2"
 
 # Contexte de montage des producteurs, fixe par
 # docs/P7_V10_PRODUCER_CONTEXT_AMENDMENT.md : 32768 est le contexte maximum de
@@ -147,6 +148,21 @@ PINNED_OLLAMA = "0.32.15"
 # les payloads producteurs restent ceux du design gele, sans num_ctx.
 PRODUCER_CONTEXT_TOKENS = 32768
 PRODUCER_CONTEXT_AMENDMENT = "docs/P7_V10_PRODUCER_CONTEXT_AMENDMENT.md"
+
+
+def assert_freeze_stamped() -> None:
+    """Interdit tout run tant que le commit de gel n'est pas estampillé.
+
+    Le gel produit un commit ; son empreinte doit être inscrite dans le noyau
+    avant qu'un seul appel ne soit émis, sinon les verrous, les manifestes et
+    les journaux référenceraient une préinscription non identifiable. Patron
+    du banc A (`scripts/p7_gemma3_admission.py`).
+    """
+    if PREREG_FREEZE_COMMIT == "TO_BE_STAMPED":
+        raise RuntimeError(
+            "PREREGISTRATION_v11.md must be committed and its freeze commit "
+            "stamped into eval/p7_v11.py before any live run"
+        )
 
 
 def assert_runner_complete() -> None:
@@ -226,9 +242,9 @@ def _prove_gpu_residency(base_url: str, timeout: int) -> list[dict[str, Any]]:
 
 def _acquire_phase_lock(output_root: Path, phase_slug: str, run_id: str) -> Path:
     output_root.mkdir(parents=True, exist_ok=True)
-    lock_path = output_root / f"p7_v10_{phase_slug}_{PREREG_FREEZE_COMMIT}.lock"
+    lock_path = output_root / f"p7_v11_{phase_slug}_{PREREG_FREEZE_COMMIT}.lock"
     payload = {
-        "schema_version": "lyra.p7.v10-phase-lock.v1",
+        "schema_version": "lyra.p7.v11-phase-lock.v1",
         "phase": phase_slug,
         "preregistration": PREREGISTRATION,
         "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
@@ -257,13 +273,13 @@ def run_q0(base_url: str, timeout: int, output_root: Path) -> int:
     verify_context_length(runtime_before, JUDGE, CONTEXT_TOKENS)
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
-    run_dir = output_root / f"p7_v10_q0_{stamp}"
+    run_dir = output_root / f"p7_v11_q0_{stamp}"
     _acquire_phase_lock(output_root, "q0", run_dir.name)
     (run_dir / "calls").mkdir(parents=True, exist_ok=False)
     journal = run_dir / "journal.jsonl"
 
     manifest = {
-        "schema_version": "lyra.p7.v10-q0-run.v1",
+        "schema_version": "lyra.p7.v11-q0-run.v1",
         "run_id": run_dir.name,
         "phase": "Q0",
         "synthetic_only": True,
@@ -409,7 +425,7 @@ def run_q0(base_url: str, timeout: int, output_root: Path) -> int:
     verify_judge_gpu(runtime_after)
     evaluation = evaluate_q0_records(records)
     summary = {
-        "schema_version": "lyra.p7.v10-q0-summary.v1",
+        "schema_version": "lyra.p7.v11-q0-summary.v1",
         "run_id": run_dir.name,
         "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
         "independence_note": INDEPENDENCE_NOTE,
@@ -472,7 +488,7 @@ def _judge_block(
 ) -> dict[tuple[str, str], dict[str, Any]]:
     """Bloc juge unique : ordre gelé, requêtes sans historique, digest encadré.
 
-    La requête est fabriquée par `eval.p7_v10.judge_request`, seule autorité du
+    La requête est fabriquée par `eval.p7_v11.judge_request`, seule autorité du
     transport : elle est octet-identique à celle de Q-1 et de Q0.
     """
     ordered = order_judge_calls(calls)
@@ -663,7 +679,7 @@ def run_calibration(
     gpu_proofs = _prove_gpu_residency(base_url, timeout)
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
-    run_dir = output_root / f"p7_v10_calibration_{stamp}"
+    run_dir = output_root / f"p7_v11_calibration_{stamp}"
     _acquire_phase_lock(output_root, "calibration", run_dir.name)
     (run_dir / "calls").mkdir(parents=True, exist_ok=False)
     journal = run_dir / "journal.jsonl"
@@ -672,7 +688,7 @@ def run_calibration(
     sealed_at = datetime.now(timezone.utc).isoformat()
 
     manifest = {
-        "schema_version": "lyra.p7.v10-calibration-run.v1",
+        "schema_version": "lyra.p7.v11-calibration-run.v1",
         "run_id": run_dir.name,
         "phase": "CALIBRATION",
         "preregistration": PREREGISTRATION,
@@ -973,7 +989,7 @@ def run_calibration(
     q1_passed = bool(gate["passed"] and round_robin_complete)
 
     summary = {
-        "schema_version": "lyra.p7.v10-calibration-summary.v1",
+        "schema_version": "lyra.p7.v11-calibration-summary.v1",
         "run_id": run_dir.name,
         "phase": "CALIBRATION",
         "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
@@ -1069,7 +1085,7 @@ def run_heldout(
     gpu_proofs = _prove_gpu_residency(base_url, timeout)
 
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
-    run_dir = output_root / f"p7_v10_heldout_{stamp}"
+    run_dir = output_root / f"p7_v11_heldout_{stamp}"
     _acquire_phase_lock(output_root, "heldout", run_dir.name)
     (run_dir / "calls").mkdir(parents=True, exist_ok=False)
     journal = run_dir / "journal.jsonl"
@@ -1078,7 +1094,7 @@ def run_heldout(
     sealed_at = datetime.now(timezone.utc)
 
     manifest = {
-        "schema_version": "lyra.p7.v10-heldout-run.v1",
+        "schema_version": "lyra.p7.v11-heldout-run.v1",
         "run_id": run_dir.name,
         "phase": "HELDOUT",
         "preregistration": PREREGISTRATION,
@@ -1312,7 +1328,7 @@ def run_heldout(
         first_common_t1_at is not None and sealed_at < first_common_t1_at
     )
     payload = {
-        "schema_version": "lyra.p7.v10-heldout-scoring-input.v1",
+        "schema_version": "lyra.p7.v11-heldout-scoring-input.v1",
         "run_id": run_dir.name,
         "static_best": static_best,
         "corpus_seal_sha256": corpus_seal["seal_sha256"],
@@ -1331,7 +1347,7 @@ def run_heldout(
     (run_dir / "scoring_input.json").write_bytes(_canonical(payload))
 
     summary = {
-        "schema_version": "lyra.p7.v10-heldout-summary.v1",
+        "schema_version": "lyra.p7.v11-heldout-summary.v1",
         "run_id": run_dir.name,
         "phase": "HELDOUT",
         "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
@@ -1377,7 +1393,7 @@ def run_scoring(
     """
     producers = list(heldout["producers"])
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
-    run_dir = output_root / f"p7_v10_scoring_{stamp}"
+    run_dir = output_root / f"p7_v11_scoring_{stamp}"
     _acquire_phase_lock(output_root, "scoring", run_dir.name)
     run_dir.mkdir(parents=True, exist_ok=False)
 
@@ -1385,7 +1401,7 @@ def run_scoring(
     verdict = global_verdict(results, q0_passed=q0_passed, q1_passed=q1_passed)
 
     summary = {
-        "schema_version": "lyra.p7.v10-scoring-summary.v1",
+        "schema_version": "lyra.p7.v11-scoring-summary.v1",
         "run_id": run_dir.name,
         "phase": "SCORING",
         "preregistration": PREREGISTRATION,
@@ -1423,6 +1439,7 @@ def run_preflight(base_url: str, timeout: int) -> int:
     qu'il laisse est celle que Q0 vérifiera et que les appels utiliseront.
     """
     assert_runner_complete()
+    assert_freeze_stamped()
     catalog = models_runtime(base_url, timeout, _phase_models())
     _verify_phase_catalog(catalog)
 
@@ -1446,7 +1463,7 @@ def run_preflight(base_url: str, timeout: int) -> int:
 
     observed_version = catalog.get("ollama")
     report = {
-        "schema_version": "lyra.p7.v10-preflight.v1",
+        "schema_version": "lyra.p7.v11-preflight.v1",
         "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
         "ollama": observed_version,
         "ollama_pinned": PINNED_OLLAMA,
@@ -1478,6 +1495,7 @@ def run_lifecycle_smoke(output_dir: Path, delay_seconds: float) -> int:
         raise ValueError("delay_seconds must be positive")
     output_dir.mkdir(parents=True, exist_ok=False)
     assert_runner_complete()
+    stamped = PREREG_FREEZE_COMMIT != "TO_BE_STAMPED"
 
     probe = output_dir / "lock_probe"
     lock = _acquire_phase_lock(probe, "smoke", "lifecycle-smoke")
@@ -1488,7 +1506,7 @@ def run_lifecycle_smoke(output_dir: Path, delay_seconds: float) -> int:
         second_attempt_refused = True
 
     started = {
-        "schema_version": "lyra.p7.v10-lifecycle-smoke.v1",
+        "schema_version": "lyra.p7.v11-lifecycle-smoke.v1",
         "pid": os.getpid(),
         "started_at_utc": datetime.now(timezone.utc).isoformat(),
         "delay_seconds": delay_seconds,
@@ -1496,6 +1514,7 @@ def run_lifecycle_smoke(output_dir: Path, delay_seconds: float) -> int:
         "implemented_phases": list(IMPLEMENTED_PHASES),
         "required_phases": list(REQUIRED_PHASES),
         "lock_path": lock.name,
+        "freeze_stamped": stamped,
         "second_attempt_refused": second_attempt_refused,
         "ollama_contacted": False,
         "corpus_read": False,
@@ -1504,7 +1523,7 @@ def run_lifecycle_smoke(output_dir: Path, delay_seconds: float) -> int:
     (output_dir / "started.json").write_bytes(_canonical(started))
     time.sleep(delay_seconds)
     finished = {
-        "schema_version": "lyra.p7.v10-lifecycle-smoke.v1",
+        "schema_version": "lyra.p7.v11-lifecycle-smoke.v1",
         "pid": os.getpid(),
         "finished_at_utc": datetime.now(timezone.utc).isoformat(),
         "status": "PASS" if second_attempt_refused else "FAIL",
@@ -1522,10 +1541,10 @@ def completed_q0(output_root: Path) -> dict[str, Any] | None:
     commande doit refuser, pas rejouer. Un verrou avec `Q0_PASSED` autorise à
     reprendre le résultat sans réexécuter les dix-huit appels.
     """
-    lock = output_root / f"p7_v10_q0_{PREREG_FREEZE_COMMIT}.lock"
+    lock = output_root / f"p7_v11_q0_{PREREG_FREEZE_COMMIT}.lock"
     if not lock.exists():
         return None
-    for run_dir in sorted(output_root.glob("p7_v10_q0_*")):
+    for run_dir in sorted(output_root.glob("p7_v11_q0_*")):
         summary_path = run_dir / "summary.json"
         if not run_dir.is_dir() or not summary_path.exists():
             continue
@@ -1546,6 +1565,7 @@ def run(base_url: str, timeout: int, output_root: Path) -> int:
     gel est reprise, jamais rejouée ; sa preuve reste son propre run.
     """
     assert_runner_complete()
+    assert_freeze_stamped()
     previous_q0 = completed_q0(output_root)
     reused = previous_q0 is not None
     if not reused:

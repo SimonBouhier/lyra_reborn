@@ -1,8 +1,10 @@
-"""Noyau pur de la campagne V10 — juge unique sous contrat réduit.
+"""Noyau pur de la campagne V11 — juge unique sous contrat réduit.
 
-Toutes les constantes reproduisent `PREREGISTRATION_v10.md` (gel bc8497f) ;
+Toutes les constantes reproduisent `PREREGISTRATION_v11.md` ; le design est
+celui de V10/V8 incorporé, seul le runtime change (V10 arrêtée sur dérive
+d'Ollama, cf. docs/P7_V10_STATUS.md).
 les briques gelées (contrat réduit, fixtures Q0, packs) sont consommées sans
-modification. Aucune E/S ici : le runner `scripts/p7_v10.py` orchestre.
+modification. Aucune E/S ici : le runner `scripts/p7_v11.py` orchestre.
 """
 from __future__ import annotations
 
@@ -25,6 +27,8 @@ __all__ = [
     "PREREGISTRATION",
     "PREREG_FREEZE_COMMIT",
     "PRERUN_AMENDMENT",
+    "PRODUCER_CONTEXT_AMENDMENT",
+    "PREDECESSOR_STATUS",
     "INDEPENDENCE_NOTE",
     "JUDGE",
     "MAX_TOKENS",
@@ -45,9 +49,16 @@ __all__ = [
     "validate_compact_judgment",
 ]
 
-PREREGISTRATION = "PREREGISTRATION_v10.md"
-PREREG_FREEZE_COMMIT = "bc8497f6bb083ff2c27632ded784e13ea264cc5d"
+PREREGISTRATION = "PREREGISTRATION_v11.md"
+
+# Renseigné par le commit d'estampille, jamais à la main avant le gel : la
+# garde de `scripts/p7_v11.py` refuse tout run tant que ce littéral est présent.
+PREREG_FREEZE_COMMIT = "TO_BE_STAMPED"
+
+# Amendements incorporés au gel V11 (prérég §Incorporation).
 PRERUN_AMENDMENT = "docs/P7_V10_PRERUN_AMENDMENT.md"
+PRODUCER_CONTEXT_AMENDMENT = "docs/P7_V10_PRODUCER_CONTEXT_AMENDMENT.md"
+PREDECESSOR_STATUS = "docs/P7_V10_STATUS.md"
 INDEPENDENCE_NOTE = "juge unique - independance inter-famille non disponible"
 
 # Le juge unique est l'artefact qwen3.8 gelé par Q-1, référencé sans copie.

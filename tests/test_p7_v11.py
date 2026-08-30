@@ -6,12 +6,12 @@ import json
 import pytest
 
 from eval.p7_judge_backend import OllamaJudgeBackend, canonical_payload_bytes
-from eval.p7_v10 import (
+from eval.p7_v11 import (
     CALL_CEILINGS,
     CONTEXT_TOKENS,
     JUDGE,
     MAX_TOKENS,
-    PREREG_FREEZE_COMMIT,
+    PREREGISTRATION,
     Q0_EXPECTED_CALLS,
     Q0_REPETITIONS,
     REQUIRED_PHASES,
@@ -24,7 +24,7 @@ from eval.p7_v10 import (
     resolve_single_judge_pair,
     verify_judge_identity,
 )
-from scripts.p7_v10 import IMPLEMENTED_PHASES, assert_runner_complete, run
+from scripts.p7_v11 import IMPLEMENTED_PHASES, assert_runner_complete, run
 
 
 def _perfect_records():
@@ -48,7 +48,7 @@ def _perfect_records():
 
 
 def test_constants_match_frozen_preregistration():
-    assert PREREG_FREEZE_COMMIT == "bc8497f6bb083ff2c27632ded784e13ea264cc5d"
+    assert PREREGISTRATION == "PREREGISTRATION_v11.md"
     assert JUDGE.model == "qwen3.8:27b"
     assert JUDGE.digest == (
         "22130167c4c20e20c7b71454612966ca8e8171e9b3cc8ab6ce8aa6cbfec79643"
@@ -153,7 +153,7 @@ def test_the_complete_chain_lifts_the_guard():
 def test_runner_refuses_to_run_while_any_phase_is_missing(monkeypatch, tmp_path):
     for missing in REQUIRED_PHASES:
         monkeypatch.setattr(
-            "scripts.p7_v10.IMPLEMENTED_PHASES",
+            "scripts.p7_v11.IMPLEMENTED_PHASES",
             tuple(phase for phase in REQUIRED_PHASES if phase != missing),
         )
         with pytest.raises(RuntimeError, match="incomplete"):

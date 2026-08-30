@@ -6,12 +6,12 @@ import json
 
 import pytest
 
-from eval.p7_v10 import CALL_CEILINGS, CONTEXT_TOKENS, JUDGE, PREREG_FREEZE_COMMIT
+from eval.p7_v11 import CALL_CEILINGS, CONTEXT_TOKENS, JUDGE
 from eval.p7_v10_calibration import PRESETS
 from eval.p7_v10_corpus import calibration_cases, heldout_cases
 from eval.p7_v10_producer import load_model
 from eval.p7_v10_scoring import score_producer
-from scripts.p7_v10 import (
+from scripts.p7_v11 import (
     PRODUCER_CONTEXT_TOKENS,
     ROOT,
     completed_q0,
@@ -26,9 +26,18 @@ from tests.p7_v10_fakes import FakeOllama, install
 
 BASE = "http://127.0.0.1:11434"
 
+# Gel simulé : ces tests exercent le runner, pas la garde d'estampille, qui a
+# son propre test ci-dessous.
+STAMP = "0" * 40
+
+
+@pytest.fixture(autouse=True)
+def _stamped(monkeypatch):
+    monkeypatch.setattr("scripts.p7_v11.PREREG_FREEZE_COMMIT", STAMP)
+
 
 def _summary(run_root):
-    directories = [path for path in run_root.glob("p7_v10_calibration_*") if path.is_dir()]
+    directories = [path for path in run_root.glob("p7_v11_calibration_*") if path.is_dir()]
     assert len(directories) == 1
     return directories[0], json.loads((directories[0] / "summary.json").read_bytes())
 
@@ -116,7 +125,7 @@ def test_calibration_journal_carries_counts_and_hashes_but_no_content(monkeypatc
 def test_calibration_refuses_a_second_attempt_under_the_same_freeze(monkeypatch, tmp_path):
     install(monkeypatch, FakeOllama())
     assert run_calibration(BASE, 30, tmp_path)[0] == 0
-    lock = tmp_path / f"p7_v10_calibration_{PREREG_FREEZE_COMMIT}.lock"
+    lock = tmp_path / f"p7_v11_calibration_{STAMP}.lock"
     assert lock.exists()
     with pytest.raises(FileExistsError):
         run_calibration(BASE, 30, tmp_path)
@@ -128,7 +137,7 @@ def test_a_digest_drift_aborts_before_the_phase_lock(monkeypatch, tmp_path):
     with pytest.raises(RuntimeError, match="digest mismatch"):
         run_calibration(BASE, 30, tmp_path)
     assert list(tmp_path.glob("*.lock")) == []
-    assert list(tmp_path.glob("p7_v10_calibration_*")) == []
+    assert list(tmp_path.glob("p7_v11_calibration_*")) == []
     assert fake.generate_calls == []  # aucun budget consommé
 
 
@@ -182,7 +191,7 @@ def test_a_position_following_judge_resolves_nothing_and_fails_q1(monkeypatch, t
 
 
 def _heldout_dir(run_root):
-    directories = [path for path in run_root.glob("p7_v10_heldout_*") if path.is_dir()]
+    directories = [path for path in run_root.glob("p7_v11_heldout_*") if path.is_dir()]
     assert len(directories) == 1
     return directories[0]
 
@@ -246,7 +255,7 @@ def test_heldout_seals_the_arm_mapping_apart_and_keeps_packs_blind(monkeypatch, 
 def test_heldout_refuses_a_second_attempt_under_the_same_freeze(monkeypatch, tmp_path):
     install(monkeypatch, FakeOllama())
     assert run_heldout(BASE, 30, tmp_path, "creative")[0] == 0
-    assert (tmp_path / f"p7_v10_heldout_{PREREG_FREEZE_COMMIT}.lock").exists()
+    assert (tmp_path / f"p7_v11_heldout_{STAMP}.lock").exists()
     with pytest.raises(FileExistsError):
         run_heldout(BASE, 30, tmp_path, "creative")
 
@@ -290,7 +299,7 @@ def test_scoring_aggregates_the_heldout_input_and_locks_its_phase(monkeypatch, t
     # Un verdict produit vaut 0 : un H10 non soutenu est un résultat, pas un
     # échec d'exécution.
     assert status == 0
-    assert (tmp_path / f"p7_v10_scoring_{PREREG_FREEZE_COMMIT}.lock").exists()
+    assert (tmp_path / f"p7_v11_scoring_{STAMP}.lock").exists()
     assert summary["h10"] == summary["global_verdict"]["status"]
     assert summary["h10"].startswith("H10_")
     assert len(summary["per_producer"]) == 3
@@ -330,10 +339,10 @@ def test_lifecycle_smoke_runs_without_ollama_corpus_or_fixtures(tmp_path):
     assert started["ollama_contacted"] is False
     assert started["corpus_read"] is False
     assert started["q0_fixtures_read"] is False
-    assert started["preregistration_freeze_commit"] == PREREG_FREEZE_COMMIT
+    assert started["preregistration_freeze_commit"] == STAMP
     # Le verrou de sonde ne peut pas entrer en collision avec ceux des phases.
     probes = list((tmp_path / "smoke" / "lock_probe").glob("*.lock"))
-    assert [path.name for path in probes] == [f"p7_v10_smoke_{PREREG_FREEZE_COMMIT}.lock"]
+    assert [path.name for path in probes] == [f"p7_v11_smoke_{STAMP}.lock"]
 
     with pytest.raises(FileExistsError):
         run_lifecycle_smoke(tmp_path / "smoke", 0.01)
@@ -350,15 +359,15 @@ def test_the_single_command_stops_at_the_first_failed_gate(monkeypatch, tmp_path
     assert run(BASE, 30, tmp_path) == 2
     assert fake.reloads == []  # aucun remontage : la preuve GPU reste valide
 
-    q0_dir = [path for path in tmp_path.glob("p7_v10_q0_*") if path.is_dir()][0]
+    q0_dir = [path for path in tmp_path.glob("p7_v11_q0_*") if path.is_dir()][0]
     summary = json.loads((q0_dir / "summary.json").read_bytes())
     assert summary["status"] == "V10_ABORTED_BEFORE_CALIBRATION"
     assert summary["h10"] == "UNTESTED"
 
     locks = sorted(path.name for path in tmp_path.glob("*.lock"))
-    assert locks == [f"p7_v10_q0_{PREREG_FREEZE_COMMIT}.lock"]
-    assert not list(tmp_path.glob("p7_v10_calibration_*"))
-    assert not list(tmp_path.glob("p7_v10_heldout_*"))
+    assert locks == [f"p7_v11_q0_{STAMP}.lock"]
+    assert not list(tmp_path.glob("p7_v11_calibration_*"))
+    assert not list(tmp_path.glob("p7_v11_heldout_*"))
     assert fake.judge_call_count == 18  # Q0 seule a consommé son budget
 
 
@@ -397,7 +406,7 @@ def test_a_producer_overflowing_vram_aborts_before_the_calibration_lock(monkeypa
         run_calibration(BASE, 30, tmp_path)
 
     assert list(tmp_path.glob("*.lock")) == []
-    assert [path for path in tmp_path.glob("p7_v10_calibration_*") if path.is_dir()] == []
+    assert [path for path in tmp_path.glob("p7_v11_calibration_*") if path.is_dir()] == []
     assert fake.generate_calls == []  # aucun appel producteur consommé
     assert fake.judge_call_count == 0
 
@@ -429,8 +438,8 @@ def test_the_amended_producer_context_lets_every_model_fit(monkeypatch, tmp_path
 
 def _seal_q0(tmp_path, *, status="Q0_PASSED", passed=True):
     """Fabrique un verrou Q0 et son résumé, comme les laisserait un run réel."""
-    (tmp_path / f"p7_v10_q0_{PREREG_FREEZE_COMMIT}.lock").write_text("{}", encoding="utf-8")
-    run_dir = tmp_path / "p7_v10_q0_20260829T211254.467768Z"
+    (tmp_path / f"p7_v11_q0_{STAMP}.lock").write_text("{}", encoding="utf-8")
+    run_dir = tmp_path / "p7_v11_q0_20260829T211254.467768Z"
     run_dir.mkdir(parents=True)
     (run_dir / "summary.json").write_text(
         json.dumps(
@@ -456,7 +465,7 @@ def test_a_passed_q0_is_reused_and_never_replayed(monkeypatch, tmp_path):
     # Q0 n'a pas été rejouée : ses 18 appels ne réapparaissent pas, et son
     # répertoire de run est resté exactement tel quel.
     assert not (q0_dir / "journal.jsonl").exists()
-    assert len([p for p in tmp_path.glob("p7_v10_q0_*") if p.is_dir()]) == 1
+    assert len([p for p in tmp_path.glob("p7_v11_q0_*") if p.is_dir()]) == 1
     assert fake.judge_call_count == 432 + 360  # calibration + tenu, pas Q0
 
     # La provenance de Q0 est inscrite au manifeste de la calibration.
@@ -480,7 +489,7 @@ def test_a_consumed_q0_that_did_not_pass_refuses_a_second_attempt(monkeypatch, t
     with pytest.raises(RuntimeError, match="consumed and did not clear its gate"):
         run(BASE, 30, tmp_path)
     assert fake.judge_call_count == 0
-    assert not [p for p in tmp_path.glob("p7_v10_calibration_*")]
+    assert not [p for p in tmp_path.glob("p7_v11_calibration_*")]
 
 
 def test_preflight_mounts_the_judge_without_lock_or_fixture_call(monkeypatch, tmp_path):
@@ -504,20 +513,34 @@ def test_preflight_mounts_the_judge_without_lock_or_fixture_call(monkeypatch, tm
     assert fake.reloads == []
 
 
+def test_the_runner_refuses_to_run_before_the_freeze_is_stamped(monkeypatch, tmp_path):
+    """Le gel produit un commit ; son empreinte doit être inscrite avant tout appel."""
+    monkeypatch.setattr("scripts.p7_v11.PREREG_FREEZE_COMMIT", "TO_BE_STAMPED")
+    fake = install(monkeypatch, FakeOllama())
+    for phase in (lambda: run(BASE, 30, tmp_path), lambda: run_preflight(BASE, 30)):
+        with pytest.raises(RuntimeError, match="stamped into eval/p7_v11.py"):
+            phase()
+    assert list(tmp_path.glob("*.lock")) == []
+    assert fake.residency_calls == [] and fake.judge_call_count == 0
+
+
 def test_a_runtime_version_drift_aborts_every_phase_before_its_lock(monkeypatch, tmp_path):
     """Régression du 30/08 : Ollama s'est mis à jour tout seul entre Q0 et la calibration.
+
+    C'est ce qui a tué V10. Le contrôle est désormais posé avant chaque verrou
+    et autour de chaque bloc.
 
     Le runtime est celui qui a qualifié le juge ; il ne peut pas changer en
     cours de campagne. Le contrôle est posé avant chaque verrou et autour de
     chaque bloc, donc une mise à jour survenue même en pleine phase est vue.
     """
-    fake = install(monkeypatch, FakeOllama(version="0.33.2"))
+    fake = install(monkeypatch, FakeOllama(version="0.34.0"))
     for phase in (
         lambda: run_calibration(BASE, 30, tmp_path),
         lambda: run_heldout(BASE, 30, tmp_path, "creative"),
         lambda: run_preflight(BASE, 30),
     ):
-        with pytest.raises(RuntimeError, match="Ollama version drift: expected 0.32.15"):
+        with pytest.raises(RuntimeError, match="Ollama version drift: expected 0.33.2"):
             phase()
     assert list(tmp_path.glob("*.lock")) == []
     assert fake.generate_calls == []
