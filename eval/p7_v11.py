@@ -53,7 +53,7 @@ PREREGISTRATION = "PREREGISTRATION_v11.md"
 
 # Renseigné par le commit d'estampille, jamais à la main avant le gel : la
 # garde de `scripts/p7_v11.py` refuse tout run tant que ce littéral est présent.
-PREREG_FREEZE_COMMIT = "TO_BE_STAMPED"
+PREREG_FREEZE_COMMIT = "4005f82d080755fbf98552ef5730a45307b3a3e5"
 
 # Amendements incorporés au gel V11 (prérég §Incorporation).
 PRERUN_AMENDMENT = "docs/P7_V10_PRERUN_AMENDMENT.md"

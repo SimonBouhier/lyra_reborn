@@ -3,7 +3,7 @@
 **Frozen on**: 2026-08-30
 **Frozen by**: Simon Bouhier (décisions du 2026-08-30), rédaction et
 assistance méthodologique de Claude
-**Git commit at freeze**: TO_BE_STAMPED
+**Git commit at freeze**: `4005f82d080755fbf98552ef5730a45307b3a3e5`
 
 **Prédécesseur** : V10, arrêtée après Q0 sur dérive du runtime —
 `docs/P7_V10_STATUS.md`, `H10 UNTESTED`.
