@@ -42,6 +42,7 @@ __all__ = [
     "verify_identity",
     "verify_fully_loaded_on_gpu",
     "verify_context_length",
+    "verify_runtime_version",
 ]
 
 
@@ -299,6 +300,24 @@ def verify_identity(runtime: dict[str, Any], spec: ProducerSpec) -> None:
         raise RuntimeError(
             f"model digest mismatch for {spec.model}: expected {spec.digest}, "
             f"observed {observed}"
+        )
+
+
+def verify_runtime_version(runtime: dict[str, Any], expected: str) -> None:
+    """La version d'Ollama épinglée par la prérég, contrôlée avant chaque verrou.
+
+    Le runtime est « observé aux bancs » et entre au manifeste ; un écart ne se
+    corrige pas après verrou. Encore faut-il le détecter : une mise à jour
+    automatique survenue entre deux phases — ou pire, pendant une phase —
+    ferait mesurer la campagne sur un moteur qui n'est pas celui qui a qualifié
+    le juge. Ce contrôle ne peut qu'empêcher un run invalide.
+    """
+    observed = runtime.get("ollama")
+    if observed != expected:
+        raise RuntimeError(
+            f"Ollama version drift: expected {expected}, observed {observed}; "
+            "the frozen runtime qualified the judge and cannot change mid-campaign "
+            "(PREREGISTRATION_v10.md, Scope/Runtime)"
         )
 
 

@@ -114,6 +114,7 @@ from eval.p7_v10_producer import (
     verify_context_length,
     verify_fully_loaded_on_gpu,
     verify_identity,
+    verify_runtime_version,
 )
 from eval.p7_v10_scoring import SCOPE_NOTE, global_verdict, score_producer
 from eval.p7_v7_judge import JudgeContractError
@@ -185,6 +186,7 @@ def _phase_models() -> tuple[str, ...]:
 
 
 def _verify_phase_catalog(runtime: dict[str, Any]) -> None:
+    verify_runtime_version(runtime, PINNED_OLLAMA)
     for spec in PRODUCERS:
         verify_identity(runtime, spec)
     verify_judge_identity(runtime)
@@ -246,6 +248,7 @@ def run_q0(base_url: str, timeout: int, output_root: Path) -> int:
     q0_preflight()
 
     runtime_before = runtime_manifest(base_url, timeout)
+    verify_runtime_version(runtime_before, PINNED_OLLAMA)
     verify_judge_identity(runtime_before)
     verify_judge_gpu(runtime_before)
     # Precondition banc A reconduite par la prereg : « charge au contexte 32K ».
@@ -401,6 +404,7 @@ def run_q0(base_url: str, timeout: int, output_root: Path) -> int:
         )
 
     runtime_after = runtime_manifest(base_url, timeout)
+    verify_runtime_version(runtime_after, PINNED_OLLAMA)
     verify_judge_identity(runtime_after)
     verify_judge_gpu(runtime_after)
     evaluation = evaluate_q0_records(records)
@@ -480,6 +484,7 @@ def _judge_block(
         options=JUDGE_LOAD_OPTIONS,
     )
     runtime_before = models_runtime(base_url, timeout, (JUDGE.model,))
+    verify_runtime_version(runtime_before, PINNED_OLLAMA)
     verify_judge_identity(runtime_before)
     verify_judge_gpu(runtime_before)
     verify_context_length(runtime_before, JUDGE, CONTEXT_TOKENS)
@@ -590,6 +595,7 @@ def _judge_block(
         )
 
     runtime_after = models_runtime(base_url, timeout, (JUDGE.model,))
+    verify_runtime_version(runtime_after, PINNED_OLLAMA)
     verify_judge_identity(runtime_after)
     verify_judge_gpu(runtime_after)
     verify_context_length(runtime_after, JUDGE, CONTEXT_TOKENS)
@@ -710,6 +716,7 @@ def run_calibration(
     for spec in PRODUCERS:
         load_model(base_url, spec.model, timeout, keep_alive=BLOCK_KEEP_ALIVE)
         block_runtime = models_runtime(base_url, timeout, (spec.model,))
+        verify_runtime_version(block_runtime, PINNED_OLLAMA)
         verify_identity(block_runtime, spec)
         verify_fully_loaded_on_gpu(block_runtime, spec)
         verify_context_length(block_runtime, spec, PRODUCER_CONTEXT_TOKENS)
@@ -789,6 +796,7 @@ def run_calibration(
                     flush=True,
                 )
         after = models_runtime(base_url, timeout, (spec.model,))
+        verify_runtime_version(after, PINNED_OLLAMA)
         verify_identity(after, spec)
         _append_jsonl(
             journal,
@@ -1119,6 +1127,7 @@ def run_heldout(
         forbidden = (*POLICY_IDENTIFIERS, spec.model)
         load_model(base_url, spec.model, timeout, keep_alive=BLOCK_KEEP_ALIVE)
         block_runtime = models_runtime(base_url, timeout, (spec.model,))
+        verify_runtime_version(block_runtime, PINNED_OLLAMA)
         verify_identity(block_runtime, spec)
         verify_fully_loaded_on_gpu(block_runtime, spec)
         verify_context_length(block_runtime, spec, PRODUCER_CONTEXT_TOKENS)
@@ -1242,6 +1251,7 @@ def run_heldout(
                 flush=True,
             )
         after = models_runtime(base_url, timeout, (spec.model,))
+        verify_runtime_version(after, PINNED_OLLAMA)
         verify_identity(after, spec)
         _append_jsonl(
             journal,
@@ -1452,21 +1462,6 @@ def run_preflight(base_url: str, timeout: int) -> int:
         "ready_for_run": True,
     }
     print(json.dumps(report, ensure_ascii=False, indent=2), flush=True)
-    if observed_version != PINNED_OLLAMA:
-        print(
-            json.dumps(
-                {
-                    "warning": (
-                        f"Ollama {observed_version} differs from the pinned "
-                        f"{PINNED_OLLAMA}; the preregistration records the "
-                        "observed version in the manifest and forbids "
-                        "correcting any gap after a lock"
-                    )
-                },
-                ensure_ascii=False,
-            ),
-            flush=True,
-        )
     return 0
 
 

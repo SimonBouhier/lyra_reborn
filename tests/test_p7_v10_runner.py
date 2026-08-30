@@ -504,6 +504,26 @@ def test_preflight_mounts_the_judge_without_lock_or_fixture_call(monkeypatch, tm
     assert fake.reloads == []
 
 
+def test_a_runtime_version_drift_aborts_every_phase_before_its_lock(monkeypatch, tmp_path):
+    """Régression du 30/08 : Ollama s'est mis à jour tout seul entre Q0 et la calibration.
+
+    Le runtime est celui qui a qualifié le juge ; il ne peut pas changer en
+    cours de campagne. Le contrôle est posé avant chaque verrou et autour de
+    chaque bloc, donc une mise à jour survenue même en pleine phase est vue.
+    """
+    fake = install(monkeypatch, FakeOllama(version="0.33.2"))
+    for phase in (
+        lambda: run_calibration(BASE, 30, tmp_path),
+        lambda: run_heldout(BASE, 30, tmp_path, "creative"),
+        lambda: run_preflight(BASE, 30),
+    ):
+        with pytest.raises(RuntimeError, match="Ollama version drift: expected 0.32.15"):
+            phase()
+    assert list(tmp_path.glob("*.lock")) == []
+    assert fake.generate_calls == []
+    assert fake.judge_call_count == 0
+
+
 def test_preflight_catches_a_server_left_at_the_default_context(monkeypatch):
     fake = install(monkeypatch, FakeOllama(default_context=131072))
     with pytest.raises(RuntimeError, match="resident at context 131072, expected 32768"):
