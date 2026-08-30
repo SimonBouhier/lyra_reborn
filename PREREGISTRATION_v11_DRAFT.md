@@ -2,10 +2,19 @@
 
 > **Ce document n'est pas une préinscription tant que Simon Bouhier ne l'a pas
 > gelé.** Tant qu'il porte ce bandeau et le nom `_DRAFT`, il n'engage rien et
-> aucun run ne peut s'y référer. Le gel consiste à : trancher les quatre points
-> marqués **[DÉCISION]**, neutraliser la mise à jour automatique d'Ollama,
-> constater la version réellement servie, renommer le fichier en
-> `PREREGISTRATION_v11.md`, committer, puis estampiller le commit de gel.
+> aucun run ne peut s'y référer.
+>
+> **Décisions prises le 2026-08-30 :** réemploi du jeu tenu intact — *légitime* ;
+> pas de désactivation permanente des mises à jour — *la contrainte est bornée à
+> la fenêtre de campagne* ; runner — *reparamétrage, pas duplication*.
+> **Reste ouvert : [DÉCISION 1]** (version à épingler, à constater au dernier
+> moment) et **[DÉCISION 2]** (report des mises à jour le temps du run, ou
+> acceptation explicite du risque de perdre le jeu tenu).
+>
+> Ordre du gel : trancher les deux points restants → constater la version
+> réellement servie → renseigner §Runtime → renommer en
+> `PREREGISTRATION_v11.md` → committer → estampiller → reparamétrer le runner
+> sur le commit de gel → lancer.
 
 **Frozen on**: TO_BE_FROZEN
 **Frozen by**: Simon Bouhier
@@ -96,11 +105,27 @@ Trois exigences nouvelles, qui répondent aux deux incidents de V10 :
    arbitraire : contexte maximum de `mistral:latest`, donc la seule que les
    quatre modèles acceptent tous, et celle du juge. Marge 9,3× sur le pire cas
    des 72 prompts (~3 500 tokens) : aucune troncature possible.
-2. **Le runtime est tenu, pas seulement épinglé.** La mise à jour automatique
-   d'Ollama est neutralisée **avant** le gel et le reste pendant toute la
-   campagne : le serveur est lancé à la main depuis le binaire épinglé
-   (`ollama serve`), sans l'application de la zone de notification, qui est
-   l'agent de mise à jour. **[DÉCISION 2 : valider ce mode d'exécution.]**
+2. **Le runtime est tenu pendant la fenêtre de campagne — et seulement là.**
+   Position de Simon Bouhier, 2026-08-30 : la mise à jour automatique n'est
+   **pas** désactivée comme politique permanente. Suivre le rythme de l'amont
+   est nécessaire, sous peine d'incompatibilités rédhibitoires ; une version
+   qui bouge entre deux campagnes est normale, et V12 épinglera simplement la
+   version courante d'alors.
+
+   La contrainte porte donc sur la **durée d'une campagne** (~8 à 14 h), pas
+   sur la machine. Pendant cette fenêtre seulement, le serveur est lancé à la
+   main depuis le binaire épinglé (`ollama serve`), l'application de la zone
+   de notification — qui est l'agent de mise à jour — restant fermée. Elle est
+   rouverte à la fin du run et les mises à jour reprennent leur cours.
+
+   **[DÉCISION 2 : valider ce report d'une soirée, ou assumer explicitement le
+   risque décrit ci-dessous.]** Une mise à jour survenant pendant le jeu tenu,
+   après son verrou, **consommerait les 60 cas tenus sans produire de
+   verdict** — c'est le seul actif du dispositif qui ne se remplace pas. La
+   détection (§3) empêche des données invalides ; elle n'empêche pas la perte
+   de la phase. L'assiduité de l'opérateur ne couvre pas ce risque : la mise à
+   jour du 2026-08-30 est tombée à 00 h 24, et toute campagne de cette durée
+   traverse nécessairement des heures sans surveillance.
 3. **La version est vérifiée, pas constatée.** Tout écart entre la version
    servie et la version gelée arrête la phase **avant** son verrou, et est
    revérifié autour de chaque bloc producteur et du bloc juge. Une mise à jour
@@ -115,14 +140,18 @@ Corpus, hash, seed, sélection, segmentation, calibration de 12 cas, tenu de
 60 cas, trajectoires, cinq appels producteur par cas complet,
 contre-balancement 30/30 par producteur : ceux de V8.
 
-**[DÉCISION 3 — réemploi du jeu tenu.]** V10 n'a lu ni généré aucun cas : les
-12 cas de calibration n'ont jamais été ouverts et les 60 cas tenus sont
-intacts. V11 les reprend donc à l'identique, ce qui est la condition pour que
-le design reste le même. La clause V8 « une version successeure utilise un
-nouveau jeu tenu » visait un successeur formulant une hypothèse *distincte*
-après avoir consommé son jeu tenu ; ici l'hypothèse est identique et rien n'a
-été consommé. **À confirmer explicitement au gel** — c'est le point le plus
-discutable de cette préinscription.
+**Réemploi du jeu tenu — TRANCHÉ le 2026-08-30 par Simon Bouhier : légitime.**
+V10 n'a lu ni généré aucun cas : les 12 cas de calibration n'ont jamais été
+ouverts et les 60 cas tenus sont intacts. V11 les reprend à l'identique, ce
+qui est la condition pour que le design reste le même.
+
+La clause V8 « une version successeure utilise un nouveau jeu tenu » visait un
+successeur formulant une hypothèse *distincte* après avoir **consommé** son
+jeu tenu. Ici l'hypothèse est identique au mot près et rien n'a été consommé :
+la clause est sans objet. L'arrêt de V10 est un contretemps d'exploitation, pas
+un résultat sur les données ; aucune information tirée du jeu tenu n'a pu
+influencer quoi que ce soit, puisqu'aucun cas tenu n'a jamais été lu par un
+humain ni soumis à un modèle.
 
 Plafonds inchangés : 18 appels juge Q0 ; 432 producteur et 432 juge en
 calibration ; 900 producteur et 360 juge sur le principal — **2 142 appels**.
@@ -130,9 +159,19 @@ Contrôles opérationnels, pas des quotas.
 
 ### Exécution
 
-Commande unique `scripts/p7_v10.py run` **[DÉCISION 4 : renommer en
-`p7_v11.py` ou reparamétrer le runner existant sur le gel V11 ; le harnais
-lui-même est inchangé et déjà testé]** : Q0 → calibration → tenu → scoreur.
+Commande unique `scripts/p7_v11.py run` : Q0 → calibration → tenu → scoreur.
+
+**Reparamétrage, pas duplication** (tranché le 2026-08-30). Le harnais est
+inchangé et déjà testé ; le dupliquer pour un changement de runtime créerait
+1 500 lignes jumelles vouées à diverger. `scripts/p7_v10.py` est donc déplacé
+en `scripts/p7_v11.py` (`git mv`, l'historique suit), et les seules constantes
+d'identité de campagne sont mises à jour : préinscription, commit de gel,
+version d'Ollama, amendements incorporés. Les modules `eval/p7_v10_*` gardent
+leur nom : ils portent le design **V8 incorporé** — corpus, calibration,
+scoreur, tenu — et non des choix propres à V10 ; les renommer à chaque version
+serait du bruit sans valeur scientifique. La preuve de V10 reste lisible dans
+l'historique git et dans les manifestes de ses runs, qui portent chacun leur
+propre commit de gel.
 Un verrou exclusif par phase, créé après la preuve GPU de sa phase.
 Interrompre après un verrou invalide la phase ; aucune reprise, aucune
 seconde tentative sous ce gel.
