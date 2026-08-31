@@ -48,7 +48,9 @@ from eval.p7_trajectory import (
 )
 from eval.p7_v11 import (
     CALL_CEILINGS,
+    CAMPAIGN,
     CONTEXT_TOKENS,
+    HYPOTHESIS,
     INDEPENDENCE_NOTE,
     JUDGE,
     MAX_TOKENS,
@@ -429,7 +431,7 @@ def run_q0(base_url: str, timeout: int, output_root: Path) -> int:
         "run_id": run_dir.name,
         "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
         "independence_note": INDEPENDENCE_NOTE,
-        "h10": "UNTESTED",
+        HYPOTHESIS.lower(): "UNTESTED",
         **evaluation,
         "runtime_after": runtime_after,
         "journal_sha256": _sha(journal.read_bytes()),
@@ -994,7 +996,7 @@ def run_calibration(
         "phase": "CALIBRATION",
         "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
         "independence_note": INDEPENDENCE_NOTE,
-        "h10": "UNTESTED",
+        HYPOTHESIS.lower(): "UNTESTED",
         "producer_calls": producer_calls_emitted,
         "judge_calls": len(judge_calls),
         "comparisons": len(outcomes),
@@ -1008,7 +1010,7 @@ def run_calibration(
         "round_robin_complete": round_robin_complete,
         "q1_passed": q1_passed,
         "static_best": selection["winner"] if q1_passed else None,
-        "status": "Q1_PASSED" if q1_passed else "V10_ABORTED_BEFORE_HELDOUT",
+        "status": "Q1_PASSED" if q1_passed else f"{CAMPAIGN}_ABORTED_BEFORE_HELDOUT",
         "journal_sha256": _sha(journal.read_bytes()),
     }
     (run_dir / "summary.json").write_bytes(_canonical(summary))
@@ -1352,7 +1354,7 @@ def run_heldout(
         "phase": "HELDOUT",
         "preregistration_freeze_commit": PREREG_FREEZE_COMMIT,
         "independence_note": INDEPENDENCE_NOTE,
-        "h10": "UNTESTED",
+        HYPOTHESIS.lower(): "UNTESTED",
         "static_best": static_best,
         "producer_calls": producer_calls_emitted,
         "judge_calls": len(judge_calls),
@@ -1389,7 +1391,7 @@ def run_scoring(
 
     Seule phase sans GPU — son verrou est donc créé sur la preuve qu'elle a :
     l'entrée scellée par le tenu. Elle rend 0 dès qu'un verdict est produit :
-    `H10_NOT_SUPPORTED_IN_V10` est un résultat, pas un échec d'exécution.
+    un verdict non soutenu est un résultat, pas un échec d'exécution.
     """
     producers = list(heldout["producers"])
     stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S.%fZ")
@@ -1422,7 +1424,7 @@ def run_scoring(
         "q1_passed": bool(q1_passed),
         "per_producer": results,
         "global_verdict": verdict,
-        "h10": verdict["status"],
+        HYPOTHESIS.lower(): verdict["status"],
     }
     (run_dir / "summary.json").write_bytes(_canonical(summary))
     print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)

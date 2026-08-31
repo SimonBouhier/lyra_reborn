@@ -66,7 +66,7 @@ def test_arm_outcome_follows_the_frozen_resolution_rule():
 
 def test_perfect_producer_is_supported_with_exact_counters():
     result = score_producer(_producer())
-    assert result["verdict"] == "H10_SUPPORTED_FOR_MODEL"
+    assert result["verdict"] == "H11_SUPPORTED_FOR_MODEL"
     assert (result["W"], result["L"], result["U"]) == (45, 15, 0)
     assert result["win_rate"] == 0.75
     assert result["wilson_low_95"] > 0.50
@@ -80,7 +80,7 @@ def test_effect_gate_requires_wilson_low_and_net_advantage():
     # 34 W / 26 L : Wilson bas < 0,50 -> C5 échoue, tout le reste passe.
     result = score_producer(_producer(adaptive_wins=34))
     assert result["gates"]["C5"] is False
-    assert result["verdict"] == "H10_NOT_SUPPORTED_FOR_MODEL"
+    assert result["verdict"] == "H11_NOT_SUPPORTED_FOR_MODEL"
 
     # 33 W / 27 L : NA = 0,10 tout juste, mais Wilson bas < 0,50.
     result = score_producer(_producer(adaptive_wins=33))
@@ -90,7 +90,7 @@ def test_effect_gate_requires_wilson_low_and_net_advantage():
     # 41 W / 19 L : Wilson bas > 0,50 et NA > 0,10 -> soutenu.
     result = score_producer(_producer(adaptive_wins=41))
     assert result["gates"]["C5"] is True
-    assert result["verdict"] == "H10_SUPPORTED_FOR_MODEL"
+    assert result["verdict"] == "H11_SUPPORTED_FOR_MODEL"
 
 
 def test_structural_failure_dominates_and_gives_inconclusive():
@@ -99,7 +99,7 @@ def test_structural_failure_dominates_and_gives_inconclusive():
     data["pairs"][1]["option_changed_t2_or_t3"] = False  # affaiblit C2 sans la casser
     result = score_producer(data)
     assert result["gates"]["C11"] is False
-    assert result["verdict"] == "H10_INCONCLUSIVE_FOR_MODEL"
+    assert result["verdict"] == "H11_INCONCLUSIVE_FOR_MODEL"
 
 
 def test_operational_failure_gives_not_supported_even_if_judge_undecided():
@@ -113,7 +113,7 @@ def test_operational_failure_gives_not_supported_even_if_judge_undecided():
     assert result["gates"]["C3"] is False
     # V8 : l'échec opérationnel prime « même si le panel est ensuite trop
     # indécis pour mesurer la qualité ».
-    assert result["verdict"] == "H10_NOT_SUPPORTED_FOR_MODEL"
+    assert result["verdict"] == "H11_NOT_SUPPORTED_FOR_MODEL"
 
 
 def test_judge_gates_failure_after_clean_operations_gives_inconclusive():
@@ -124,7 +124,7 @@ def test_judge_gates_failure_after_clean_operations_gives_inconclusive():
     result = score_producer(data)
     assert result["gates"]["C4"] is False
     assert result["gates"]["C3"] is True
-    assert result["verdict"] == "H10_INCONCLUSIVE_FOR_MODEL"
+    assert result["verdict"] == "H11_INCONCLUSIVE_FOR_MODEL"
 
 
 def test_c8_gap_and_c10_counterbalance():
@@ -154,24 +154,24 @@ def test_global_verdict_thresholds_and_untested_guard():
         q0_passed=True,
         q1_passed=True,
     )
-    assert verdict["status"] == "H10_SUPPORTED_IN_V10"
+    assert verdict["status"] == "H11_SUPPORTED_IN_V11"
 
     verdict = global_verdict(
         [not_supported, not_supported | {"producer": "x"}, supported],
         q0_passed=True,
         q1_passed=True,
     )
-    assert verdict["status"] == "H10_NOT_SUPPORTED_IN_V10"
+    assert verdict["status"] == "H11_NOT_SUPPORTED_IN_V11"
 
-    inconclusive = dict(supported, verdict="H10_INCONCLUSIVE_FOR_MODEL")
+    inconclusive = dict(supported, verdict="H11_INCONCLUSIVE_FOR_MODEL")
     verdict = global_verdict(
         [supported, inconclusive | {"producer": "y"}, not_supported],
         q0_passed=True,
         q1_passed=True,
     )
-    assert verdict["status"] == "H10_INCONCLUSIVE_IN_V10"
+    assert verdict["status"] == "H11_INCONCLUSIVE_IN_V11"
 
     verdict = global_verdict([], q0_passed=False, q1_passed=True)
-    assert verdict["status"] == "H10_UNTESTED_IN_V10"
+    assert verdict["status"] == "H11_UNTESTED_IN_V11"
     with pytest.raises(ValueError):
         global_verdict([supported], q0_passed=True, q1_passed=True)

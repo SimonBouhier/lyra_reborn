@@ -41,34 +41,54 @@ L'échec est un résultat de mesure, pas une défaillance instrumentale.
 Il manquait **une comparaison**. Le §« Ce que la porte a préservé » explique
 pourquoi la franchir aurait été pire que l'échouer.
 
-## Résultat 1 — la stabilité du juge est indiscernable du hasard
+## Résultat 1 — le juge lit le contenu, faiblement, sous un fort biais de position
 
-C'est le résultat principal de la campagne.
+> **Corrigé le 2026-08-31.** La première rédaction de cette section concluait
+> que la stabilité du juge était « indiscernable du hasard » (p = 0,48). Cette
+> conclusion était **fausse** : elle supposait un plancher de hasard à 50 % au
+> lieu de le dériver des marginales observées. Correction détaillée en fin de
+> document ; les chiffres ci-dessous sont les corrigés.
 
-Chaque paire est jugée deux fois, candidats intervertis. Un juge qui répond au
-contenu donne deux fois la même réponse ; un juge dont la réponse ne dépend pas
-du contenu voit ses deux réponses coïncider **une fois sur deux par
-construction**. Le hasard n'est donc pas à 0 % : il est à **50 %**.
+Chaque paire est jugée deux fois, candidats intervertis. Les préférences brutes
+du juge, sur les 146 appels, ne sont pas symétriques :
 
 ```
-stabilité observée        40/73 = 54,8 %
-intervalle de confiance   [43,4 % – 65,7 %]   ← contient 50 %
-p bilatéral vs hasard     0,48
-seuil de discernabilité   ≥ 45/73 = 61,6 %    (observé : 40)
+A       96/146 = 65,8 %      <- fort biais de position
+B       40/146 = 27,4 %
+TIE     10/146 =  6,8 %
+INVALID  0/146 =  0,0 %
 ```
 
-Par producteur : `mistral` 19/35 (54 %), `gemma3` 8/12 (67 %),
-`granite3.3` 13/26 (50 %). Les trois intervalles contiennent 50 %.
+Sous l'hypothèse nulle « la réponse ne dépend pas du contenu », l'accord entre
+les deux orientations après dé-inversion vaut `2ab + t²`, soit **36,5 %** — et
+non 50 %. Les 50 % correspondent au cas particulier `a = b = 0,5`, `t = 0` :
+c'est le *maximum* de cette expression, pas le plancher général.
 
-**Aucun TIE, aucun INVALID sur 73 comparaisons jugées.** Les 33
-non-résolutions viennent toutes du juge qui inverse sa préférence quand on
-échange les candidats — pas d'une indécision assumée ni d'un défaut de format.
+```
+accord observé            po = 54,8 %   (40/73)
+accord attendu au hasard  pe = 36,5 %
+kappa de Cohen                 0,288    IC95 [0,108 – 0,468]
+p unilatéral vs pe = 36,5 %    0,0011
+```
 
-On ne peut donc pas rejeter l'hypothèse que, sur ce matériau, le juge répond
-sans lien avec le contenu. Ce n'est pas un jugement sur le modèle : le même
-juge a fait 18/18 sur les fixtures Q0 et 24/24 à son admission v2. C'est un
-constat sur la **résolution de l'instrument** quand les deux candidats sont
-deux sorties du même petit modèle sur le même texte.
+**Le juge lit donc bien le contenu.** L'accord corrigé du hasard est
+significatif mais faible — « fair » sur l'échelle de Landis-Koch. Ce qui absorbe
+son signal n'est pas l'absence de discrimination, c'est un **biais de position
+massif** : il répond « A » dans deux tiers des cas quelle que soit la paire.
+
+Le TIE n'est pas absent : le juge s'abstient 10 fois sur 146. Sur les 33
+comparaisons non stables, **23 sont de vraies bascules de position et 10 sont
+des abstentions partielles** — une orientation tranche, l'autre dit TIE.
+
+Par producteur : `mistral` 19/35, `gemma3` 8/12, `granite3.3` 13/26.
+
+**Ce que la correction ne change pas :** la porte C4 du jeu tenu exige 75 % de
+stabilité **brute**, et la stabilité brute observée reste 54,8 %. La conclusion
+sur ce qu'aurait donné le jeu tenu est inchangée.
+
+**Ce qu'elle change :** le diagnostic. « Instrument sans résolution » devient
+« instrument à signal réel mais faible, noyé par un biais de position ». Le
+premier est une impasse ; le second est un défaut connu et adressable.
 
 ## Résultat 2 — erreur méthodologique : le seuil est posé sur le plancher du hasard
 
@@ -79,17 +99,23 @@ bi-juge vers le juge unique, en conservant les seuils « inchangés ». Le seuil
 de résolution de 50 % a bien été conservé — mais **le plancher du hasard, lui,
 a bougé**.
 
-Sous pur hasard, sans TIE :
+Le plancher du hasard dépend de la **structure** de la règle de résolution, et
+il a changé sans que le seuil bouge :
 
 | design | condition de résolution | plancher du hasard | seuil | marge |
 |---|---|---|---|---|
-| V8 — panel de 2 juges | les deux stables **et** d'accord | 0,5 × 0,5 × 0,5 = **12,5 %** | 50 % | ×4 |
-| V10/V11 — juge unique | stable après inversion | **50 %** | 50 % | **×1** |
+| V8 — panel de 2 juges | les deux stables **et** d'accord | ≈ **12,5 %** | 50 % | ×4 |
+| V10/V11 — juge unique | stable après inversion | **≤ 50 %**, maximum atteint pour un juge symétrique sans TIE | 50 % | **≥ ×1** |
 
-En V8, exiger 50 % de résolution plaçait la barre à quatre fois le bruit. En
-juge unique, la même valeur numérique place la barre **exactement sur le
-bruit** : une campagne peut franchir Q1 tout en étant statistiquement
-indiscernable du hasard.
+Le seuil de 50 % a été recopié de V8 sans être redérivé. Sous juge unique, `2ab + t²`
+ne peut jamais dépasser 50 % : la barre a donc été placée **sur la borne
+supérieure du bruit**. Un juge parfaitement symétrique aurait eu une marge
+strictement nulle. Le juge réel, fortement biaisé (`a` = 65,8 %), a un plancher
+plus bas — 36,5 % — donc une marge non nulle, mais **par accident de son
+biais**, pas par construction du seuil.
+
+C'est ce qui rend le défaut structurel : la marge de la porte dépendait d'une
+propriété du juge que personne n'avait mesurée ni bornée avant de geler.
 
 Le défaut est né au gel V10 et a été reconduit tel quel au gel V11. Ni la
 rédaction des préinscriptions, ni la construction du scoreur, ni la relecture
@@ -162,9 +188,10 @@ grandeur mesurée sur 73 comparaisons.
 
 - H11 dans V11 : `UNTESTED` ;
 - la calibration comme sélecteur de politique : elle sélectionne un budget ;
-- le design juge-unique en comparaison par paires **tel qu'instancié** — sa
-  stabilité est indiscernable du hasard sur du matériau réel, et aucun réglage
-  de budget producteur ne corrige cela.
+- le design juge-unique en comparaison par paires **tel qu'instancié** — non
+  parce qu'il serait sans signal, mais parce que son biais de position absorbe
+  ce signal : 54,8 % de stabilité brute contre 75 % exigés par C4, et aucun
+  réglage de budget producteur ne corrige cela.
 
 **Survit :**
 
@@ -205,3 +232,34 @@ politiques comparées. Les constats portent sur l'**instrument** et sur la
 résultat négatif n'établit pas l'absence d'effet : il établit l'absence de
 preuve d'un effet *selon cet instrument gelé*, lequel s'avère ici sans
 résolution démontrable sur le matériau visé.
+
+## Correction du 2026-08-31
+
+Quatre erreurs de la première rédaction, relevées par Simon Bouhier à la
+relecture. Consignées ici plutôt que corrigées en silence.
+
+1. **« Zéro TIE » était faux.** Le comptage ne retenait que les comparaisons
+   TIE des *deux* côtés (0 cas) et présentait ce 0 comme l'absence totale de
+   TIE. Le juge s'abstient en réalité 10 fois sur 146 appels, et 10
+   comparaisons portent un TIE sur une seule orientation.
+2. **Les 33 non-résolutions n'étaient pas toutes des bascules de position.**
+   23 le sont ; 10 sont des abstentions partielles, de nature différente.
+3. **Le plancher du hasard était supposé, pas dérivé.** 50 % ne vaut que si le
+   juge est symétrique et n'abstient jamais. Avec ses marginales réelles, le
+   plancher est à 36,5 %, et la conclusion s'inverse : p passe de 0,48 à
+   0,0011. **C'est exactement le défaut D1 documenté plus haut, reproduit dans
+   l'analyse de D1 elle-même.**
+4. **Les logprobs ne sont pas disponibles pour le juge.** La vérification
+   initiale avait été faite sur `gemma3:latest`, qui renvoie la séquence
+   complète. Sur `qwen3.8:27b`, `/api/generate` ne renvoie **qu'une seule
+   entrée** de logprobs quelles que soient les options — avec ou sans
+   `format=json`, avec ou sans `think:false`, pour des générations de 7, 13 ou
+   64 tokens. Hypothèse non vérifiée : les deux modèles n'empruntent pas le
+   même moteur d'inférence dans Ollama, l'architecture `qwen35` n'étant pas
+   chargeable par llama.cpp upstream. La voie de diagnostic « rejouer les packs
+   existants avec logprobs » n'existe donc pas sur ce juge.
+
+Résidus de nommage relevés au même moment, dans le code et non dans ce
+document : 12 littéraux `H10_…` dans les verdicts du scoreur et 2 littéraux
+`V10_ABORTED_…` dans les statuts. Une campagne V11 étiquetait donc ses propres
+verdicts avec le numéro de la précédente.

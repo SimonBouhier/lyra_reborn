@@ -25,6 +25,8 @@ from eval.p7_v7_q0 import GLOBAL_SEED, Q0Orientation, fixture_orientations, q0_f
 
 __all__ = [
     "PREREGISTRATION",
+    "HYPOTHESIS",
+    "CAMPAIGN",
     "PREREG_FREEZE_COMMIT",
     "PRERUN_AMENDMENT",
     "PRODUCER_CONTEXT_AMENDMENT",
@@ -50,6 +52,12 @@ __all__ = [
 ]
 
 PREREGISTRATION = "PREREGISTRATION_v11.md"
+
+# Identite de l'hypothese et de la campagne. Les verdicts et les statuts sont
+# construits a partir d'elles : V11 a emis des verdicts etiquetes H10 parce que
+# ces chaines etaient ecrites en dur dans le scoreur (corrige le 2026-08-31).
+HYPOTHESIS = "H11"
+CAMPAIGN = "V11"
 
 # Renseigné par le commit d'estampille, jamais à la main avant le gel : la
 # garde de `scripts/p7_v11.py` refuse tout run tant que ce littéral est présent.
@@ -195,7 +203,7 @@ def evaluate_q0_records(records: list[dict[str, Any]]) -> dict[str, Any]:
         "cell_results": cell_results,
         "fixture_logical_invariance": fixture_invariance,
         "passed": passed,
-        "status": "Q0_PASSED" if passed else "V10_ABORTED_BEFORE_CALIBRATION",
+        "status": "Q0_PASSED" if passed else f"{CAMPAIGN}_ABORTED_BEFORE_CALIBRATION",
     }
 
 

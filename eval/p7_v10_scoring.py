@@ -21,7 +21,7 @@ from statistics import median
 from typing import Any, Iterable, Mapping
 
 from agency.tools.vigie.campaign import nearest_rank, wilson_interval
-from eval.p7_v11 import INDEPENDENCE_NOTE
+from eval.p7_v11 import CAMPAIGN, HYPOTHESIS, INDEPENDENCE_NOTE
 
 __all__ = [
     "SCOPE_NOTE",
@@ -224,15 +224,15 @@ def score_producer(data: Mapping[str, Any]) -> dict[str, Any]:
 
     # Verdict par producteur — ordre gelé V8.
     if not all(gates[name] for name in STRUCTURAL_GATES):
-        verdict = "H10_INCONCLUSIVE_FOR_MODEL"
+        verdict = f"{HYPOTHESIS}_INCONCLUSIVE_FOR_MODEL"
     elif not all(gates[name] for name in OPERATIONAL_GATES):
-        verdict = "H10_NOT_SUPPORTED_FOR_MODEL"
+        verdict = f"{HYPOTHESIS}_NOT_SUPPORTED_FOR_MODEL"
     elif not all(gates[name] for name in JUDGE_GATES):
-        verdict = "H10_INCONCLUSIVE_FOR_MODEL"
+        verdict = f"{HYPOTHESIS}_INCONCLUSIVE_FOR_MODEL"
     elif gates[EFFECT_GATE]:
-        verdict = "H10_SUPPORTED_FOR_MODEL"
+        verdict = f"{HYPOTHESIS}_SUPPORTED_FOR_MODEL"
     else:
-        verdict = "H10_NOT_SUPPORTED_FOR_MODEL"
+        verdict = f"{HYPOTHESIS}_NOT_SUPPORTED_FOR_MODEL"
 
     return {
         "producer": data["producer"],
@@ -272,22 +272,22 @@ def global_verdict(
     des portes globales préalables — leur échec laisse H10 UNTESTED."""
     results = list(producer_results)
     if not q0_passed or not q1_passed:
-        status = "H10_UNTESTED_IN_V10"
+        status = f"{HYPOTHESIS}_UNTESTED_IN_{CAMPAIGN}"
     else:
         if len(results) != 3:
             raise ValueError("the frozen design evaluates exactly three producers")
         supported = sum(
-            1 for item in results if item["verdict"] == "H10_SUPPORTED_FOR_MODEL"
+            1 for item in results if item["verdict"] == f"{HYPOTHESIS}_SUPPORTED_FOR_MODEL"
         )
         not_supported = sum(
-            1 for item in results if item["verdict"] == "H10_NOT_SUPPORTED_FOR_MODEL"
+            1 for item in results if item["verdict"] == f"{HYPOTHESIS}_NOT_SUPPORTED_FOR_MODEL"
         )
         if supported >= 2:
-            status = "H10_SUPPORTED_IN_V10"
+            status = f"{HYPOTHESIS}_SUPPORTED_IN_{CAMPAIGN}"
         elif not_supported >= 2:
-            status = "H10_NOT_SUPPORTED_IN_V10"
+            status = f"{HYPOTHESIS}_NOT_SUPPORTED_IN_{CAMPAIGN}"
         else:
-            status = "H10_INCONCLUSIVE_IN_V10"
+            status = f"{HYPOTHESIS}_INCONCLUSIVE_IN_{CAMPAIGN}"
     return {
         "status": status,
         "q0_passed": bool(q0_passed),

@@ -155,7 +155,7 @@ def test_pair_record_matches_the_scorer_schema(monkeypatch):
     result = score_producer(data)
     assert result["W"] == 60 and result["L"] == 0 and result["U"] == 0
     assert result["gates"]["C0"] is True and result["gates"]["C10"] is True
-    assert result["verdict"] == "H10_SUPPORTED_FOR_MODEL"
+    assert result["verdict"] == "H11_SUPPORTED_FOR_MODEL"
 
 
 def test_a_failed_producer_marks_both_arms_and_never_widens_the_c8_gap(monkeypatch):

@@ -6,7 +6,7 @@ import json
 
 import pytest
 
-from eval.p7_v11 import CALL_CEILINGS, CONTEXT_TOKENS, JUDGE
+from eval.p7_v11 import CALL_CEILINGS, CONTEXT_TOKENS, HYPOTHESIS, JUDGE
 from eval.p7_v10_calibration import PRESETS
 from eval.p7_v10_corpus import calibration_cases, heldout_cases
 from eval.p7_v10_producer import load_model
@@ -48,7 +48,7 @@ def test_calibration_runs_the_frozen_matrix_and_selects_a_static_best(monkeypatc
 
     assert status == 0
     assert summary["status"] == "Q1_PASSED"
-    assert summary["h10"] == "UNTESTED"
+    assert summary[HYPOTHESIS.lower()] == "UNTESTED"
 
     # Matrice gelée : 12 cas x 4 presets x 3 tours x 3 producteurs = 432 ;
     # 72 comparaisons x 3 producteurs x 2 orientations = 432.
@@ -171,7 +171,7 @@ def test_a_position_following_judge_resolves_nothing_and_fails_q1(monkeypatch, t
     status, summary = run_calibration(BASE, 30, tmp_path)
 
     assert status == 2
-    assert summary["status"] == "V10_ABORTED_BEFORE_HELDOUT"
+    assert summary["status"] == "V11_ABORTED_BEFORE_HELDOUT"
     assert summary["static_best"] is None
     assert summary["q1"]["resolved_comparisons"] == 0
     assert summary["q1"]["resolution_rate"] == 0.0
@@ -204,7 +204,7 @@ def test_heldout_runs_the_frozen_design_and_feeds_the_scorer(monkeypatch, tmp_pa
 
     assert status == 0
     assert summary["status"] == "HELDOUT_COMPLETE"
-    assert summary["h10"] == "UNTESTED"  # aucun verdict hors du scoreur
+    assert summary[HYPOTHESIS.lower()] == "UNTESTED"  # aucun verdict hors du scoreur
     assert summary["producer_calls"] == CALL_CEILINGS["heldout_producer"] == 900
     assert summary["judge_calls"] == CALL_CEILINGS["heldout_judge"] == 360
     assert summary["complete_pairs"] == summary["judged_pairs"] == 180
@@ -277,7 +277,7 @@ def test_invalid_judge_answers_stay_invalid_in_a_full_denominator(monkeypatch, t
         # C12 garde son dénominateur : 2 x 60 paires jugées, 0 réponse valide.
         assert result["gates"]["C12"] is False
         assert (result["W"], result["L"], result["U"]) == (0, 0, 60)
-        assert result["verdict"] == "H10_INCONCLUSIVE_FOR_MODEL"
+        assert result["verdict"] == "H11_INCONCLUSIVE_FOR_MODEL"
 
 
 def test_heldout_refuses_a_static_best_outside_the_frozen_presets(monkeypatch, tmp_path):
@@ -300,8 +300,8 @@ def test_scoring_aggregates_the_heldout_input_and_locks_its_phase(monkeypatch, t
     # échec d'exécution.
     assert status == 0
     assert (tmp_path / f"p7_v11_scoring_{STAMP}.lock").exists()
-    assert summary["h10"] == summary["global_verdict"]["status"]
-    assert summary["h10"].startswith("H10_")
+    assert summary[HYPOTHESIS.lower()] == summary["global_verdict"]["status"]
+    assert summary[HYPOTHESIS.lower()].startswith("H11_")
     assert len(summary["per_producer"]) == 3
     assert summary["static_best"] == "creative"
     assert summary["corpus_seal_sha256"] == heldout["corpus_seal_sha256"]
@@ -321,7 +321,7 @@ def test_scoring_leaves_h10_untested_when_a_global_gate_failed(monkeypatch, tmp_
     install(monkeypatch, FakeOllama())
     _, heldout = run_heldout(BASE, 30, tmp_path, "creative")
     _, summary = run_scoring(tmp_path, heldout=heldout, q0_passed=False, q1_passed=True)
-    assert summary["h10"] == "H10_UNTESTED_IN_V10"
+    assert summary[HYPOTHESIS.lower()] == "H11_UNTESTED_IN_V11"
     assert summary["q0_passed"] is False
 
 
@@ -361,8 +361,8 @@ def test_the_single_command_stops_at_the_first_failed_gate(monkeypatch, tmp_path
 
     q0_dir = [path for path in tmp_path.glob("p7_v11_q0_*") if path.is_dir()][0]
     summary = json.loads((q0_dir / "summary.json").read_bytes())
-    assert summary["status"] == "V10_ABORTED_BEFORE_CALIBRATION"
-    assert summary["h10"] == "UNTESTED"
+    assert summary["status"] == "V11_ABORTED_BEFORE_CALIBRATION"
+    assert summary[HYPOTHESIS.lower()] == "UNTESTED"
 
     locks = sorted(path.name for path in tmp_path.glob("*.lock"))
     assert locks == [f"p7_v11_q0_{STAMP}.lock"]
@@ -482,7 +482,7 @@ def test_a_passed_q0_is_reused_and_never_replayed(monkeypatch, tmp_path):
 
 def test_a_consumed_q0_that_did_not_pass_refuses_a_second_attempt(monkeypatch, tmp_path):
     fake = install(monkeypatch, FakeOllama(default_context=PRODUCER_CONTEXT_TOKENS))
-    _seal_q0(tmp_path, status="V10_ABORTED_BEFORE_CALIBRATION", passed=False)
+    _seal_q0(tmp_path, status="V11_ABORTED_BEFORE_CALIBRATION", passed=False)
 
     with pytest.raises(RuntimeError, match="consumed and did not clear its gate"):
         completed_q0(tmp_path)

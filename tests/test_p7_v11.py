@@ -104,7 +104,7 @@ def test_q0_evaluation_passes_only_a_perfect_matrix():
         "observed_preference": flipped,
         "observed_logical": logical_preference(flipped, q0_jobs()[0].orientation.mapping),
     }
-    assert evaluate_q0_records(wrong)["status"] == "V10_ABORTED_BEFORE_CALIBRATION"
+    assert evaluate_q0_records(wrong)["status"] == "V11_ABORTED_BEFORE_CALIBRATION"
 
     invalid = _perfect_records()
     invalid[5] = {
