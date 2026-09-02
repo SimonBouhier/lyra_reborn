@@ -5,7 +5,7 @@ garde-fous (hystérésis / réfractaire) de core/control/guards.py.
 """
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import Any, Dict, List
 import time
 
 from core.knobs import Knobs
@@ -52,3 +52,58 @@ class CognitiveState:
         self.history.append(Turn(prompt=prompt, output=output, metrics=dict(metrics)))
         if len(self.history) > 50:
             self.history.pop(0)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """État durable minimal ; l'horloge de test n'est jamais persistée."""
+        return {
+            "knobs": self.knobs.as_dict(),
+            "last_update_ms": self.last_update_ms,
+            "history": [
+                {
+                    "prompt": turn.prompt,
+                    "output": turn.output,
+                    "metrics": dict(turn.metrics),
+                }
+                for turn in self.history
+            ],
+            "last_prompt_keywords": list(self.last_prompt_keywords),
+            "last_topic_signature": list(self.last_topic_signature),
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "CognitiveState":
+        try:
+            history_data = data["history"]
+            if not isinstance(history_data, list) or len(history_data) > 50:
+                raise ValueError("historique invalide ou non borné")
+            history = []
+            for row in history_data:
+                if not isinstance(row, dict):
+                    raise ValueError("tour d'historique invalide")
+                prompt = row["prompt"]
+                output = row["output"]
+                metrics = row["metrics"]
+                if not isinstance(prompt, str) or not isinstance(output, str):
+                    raise ValueError("texte d'historique invalide")
+                if not isinstance(metrics, dict):
+                    raise ValueError("métriques d'historique invalides")
+                history.append(Turn(prompt=prompt, output=output, metrics=dict(metrics)))
+            keywords = data["last_prompt_keywords"]
+            signature = data["last_topic_signature"]
+            if not isinstance(keywords, list) or not all(
+                isinstance(value, str) for value in keywords
+            ):
+                raise ValueError("mots-clés invalides")
+            if not isinstance(signature, list) or not all(
+                isinstance(value, str) for value in signature
+            ):
+                raise ValueError("signature de sujet invalide")
+            return cls(
+                knobs=Knobs.from_dict(data["knobs"]),
+                last_update_ms=int(data["last_update_ms"]),
+                history=history,
+                last_prompt_keywords=list(keywords),
+                last_topic_signature=list(signature),
+            )
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"état cognitif invalide : {exc}") from exc

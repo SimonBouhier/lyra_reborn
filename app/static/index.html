@@ -102,11 +102,18 @@
     <div>
       <button type="button" id="envoyer" onclick="envoyer(false)">Envoyer</button>
       <button type="button" id="voix" onclick="envoyer(true)">Demander une voix</button>
+      <button type="button" id="nouvelle-session" onclick="nouvelleSession()">Nouvelle session</button>
       <span class="muet" id="echo"></span>
     </div>
   </main>
   <script>
+    const cleSession = "lyra.session.v1";
     let session = null;
+    try {
+      session = window.localStorage.getItem(cleSession);
+    } catch (err) {
+      session = null;
+    }
     const fil = document.getElementById("fil");
     const zone = document.getElementById("parole");
     const bouton = document.getElementById("envoyer");
@@ -147,6 +154,57 @@
       return "Lyra n’a pas répondu.";
     }
 
+    function memoriseSession(id) {
+      session = id;
+      try {
+        window.localStorage.setItem(cleSession, id);
+      } catch (err) {
+        echo.textContent = "Session active, mais le navigateur ne peut pas mémoriser son identifiant.";
+      }
+    }
+
+    function oublieSessionLocale() {
+      session = null;
+      try {
+        window.localStorage.removeItem(cleSession);
+      } catch (err) {
+        echo.textContent = "Le navigateur ne peut pas oublier l’identifiant local.";
+      }
+    }
+
+    function nouvelleSession() {
+      oublieSessionLocale();
+      fil.replaceChildren();
+      bulle("Lyra", "Nouvelle session locale. La précédente reste conservée.", "lyra");
+      for (const id of ["rho", "deltar", "tauc", "kappa"]) {
+        document.getElementById(id).textContent = "—";
+      }
+      document.getElementById("meta").textContent = "Graphe : — · Mémoire : —";
+      echo.textContent = "";
+      zone.focus();
+    }
+
+    async function reprendreSession() {
+      if (!session) return;
+      try {
+        const r = await fetch("/api/session/" + encodeURIComponent(session));
+        const data = await r.json();
+        if (r.status === 404) {
+          oublieSessionLocale();
+          echo.textContent = "L’ancienne session n’existe plus dans ce registre.";
+          return;
+        }
+        if (!r.ok) {
+          echo.textContent = detailErreur(data);
+          return;
+        }
+        afficheEtat(data);
+        echo.textContent = "Session reprise · " + (data.tours || 0) + " tour(s).";
+      } catch (err) {
+        echo.textContent = "La reprise attend que la porte soit disponible.";
+      }
+    }
+
     async function envoyer(voix) {
       const texte = zone.value.trim();
       if (!texte) { echo.textContent = "Écris un mot."; return; }
@@ -169,7 +227,7 @@
           echo.textContent = "Ça n’a pas abouti.";
           return;
         }
-        session = data.session;
+        memoriseSession(data.session);
         const parole = (data.reponse || "").replace(/^\[echo[^\]]*\]\s*/, "");
         bulle("Lyra", parole || "(silence)", "lyra");
         afficheEtat(data);
@@ -190,11 +248,18 @@
       }
     });
 
-    fetch("/api/sante").then(r => r.json()).then(d => {
-      document.getElementById("moteur").textContent = "Modèle : " + (d.moteur || "inconnu");
-    }).catch(() => {
-      document.getElementById("moteur").textContent = "La porte ne répond pas. Double-clique « Ouvrir Lyra ».";
-    });
+    async function initialiser() {
+      try {
+        const r = await fetch("/api/sante");
+        const data = await r.json();
+        document.getElementById("moteur").textContent = "Modèle : " + (data.moteur || "inconnu");
+      } catch (err) {
+        document.getElementById("moteur").textContent = "La porte ne répond pas. Double-clique « Ouvrir Lyra ».";
+      }
+      await reprendreSession();
+    }
+
+    initialiser();
   </script>
 </body>
 </html>

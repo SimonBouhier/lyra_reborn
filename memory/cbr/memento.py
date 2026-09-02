@@ -67,6 +67,54 @@ class Memento:
         scored.sort(key=lambda x: x[1], reverse=True)
         return scored[:k]
 
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "order": list(self.order),
+            "cases": [
+                {
+                    "id": case.id,
+                    "features": dict(case.features),
+                    "outcome": dict(case.outcome),
+                }
+                for case in sorted(self._cases.values(), key=lambda item: item.id)
+            ],
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Memento":
+        try:
+            order = data["order"]
+            rows = data["cases"]
+            if not isinstance(order, list) or not all(
+                isinstance(value, str) for value in order
+            ):
+                raise ValueError("ordre de features invalide")
+            if not isinstance(rows, list):
+                raise ValueError("liste de cas invalide")
+            bank = cls(order=order)
+            for row in rows:
+                if not isinstance(row, dict):
+                    raise ValueError("cas invalide")
+                case_id = row["id"]
+                features = row["features"]
+                outcome = row["outcome"]
+                if not isinstance(case_id, str) or not case_id:
+                    raise ValueError("identifiant de cas invalide")
+                if not isinstance(features, dict) or not isinstance(outcome, dict):
+                    raise ValueError("contenu de cas invalide")
+                if case_id in bank._cases:
+                    raise ValueError(f"cas dupliqué : {case_id}")
+                bank.add_case(
+                    Case(
+                        id=case_id,
+                        features={key: float(value) for key, value in features.items()},
+                        outcome=dict(outcome),
+                    )
+                )
+            return bank
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"banc de cas invalide : {exc}") from exc
+
 
 class Navigator:
     """4 stratégies nommées (design IspaceNav) sur le nemeton + le banc de cas."""

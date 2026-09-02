@@ -73,3 +73,18 @@ def make_llm(*, live: bool = False) -> Tuple[Any, str]:
     if not model:
         raise RuntimeError("Une voix est demandée mais aucun modèle n'est installé.")
     return OllamaClient(model=model), model
+
+
+def restore_llm(label: str) -> Tuple[Any, str]:
+    """Reconstruit le client d'une session sans effectuer d'appel réseau.
+
+    La disponibilité réelle d'un modèle reste vérifiée par son prochain appel.
+    Une simple lecture de session ne doit ni charger Ollama ni muter le système.
+    """
+    from core.llm import EchoClient, OllamaClient
+
+    if label == "premières couches":
+        return EchoClient(), label
+    if not isinstance(label, str) or not label.strip():
+        raise RuntimeError("La session persistée n'a pas de moteur valide.")
+    return OllamaClient(model=label), label

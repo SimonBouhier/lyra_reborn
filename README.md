@@ -7,7 +7,7 @@
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Core: pure stdlib" src="https://img.shields.io/badge/core-pure%20stdlib-22c55e">
   <img alt="LLM: Ollama local" src="https://img.shields.io/badge/LLM-Ollama%20local-0ea5e9">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-269%20passed-brightgreen">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-284%20passed-brightgreen">
 </p>
 
 <p align="center"><em>An honest cognitive OS for local LLMs — control loop, living memory, autonomous exploration, and rest.</em></p>
@@ -42,7 +42,7 @@ aucun chiffre non reproductible, aucun pipeline « vert mais vide ».)*
 | **P3 — Mémoire** | graphe *nemeton* (deltas auditables + rollback), écologie mémorielle (oubli différé + réveil du compost), rappel par cas (Memento) | ✅ testé |
 | **P4 — Exploration** | ESMM : lacunes → exploration multi-modèles → **consensus sémantique à 2 niveaux** → graphe. Premier pipeline productif de l'histoire du projet | ✅ validé live (3 modèles) |
 | P5 — Agentivité | outils + auto-plugins + SilenceØ | ⬜ à construire |
-| **P6 — Application** | serveur FastAPI local ; chat P0–P4, sessions en mémoire, moteur isolé par session, page locale | 🟡 socle testé ; persistance SQLite, graphe REST, sélection multimodèle et auth minimale restent à construire |
+| **P6 — Application** | serveur FastAPI local ; chat P0–P4 ; état complet des sessions persisté en SQLite et repris après redémarrage ; moteur isolé par session ; page locale | 🟡 première tranche verticale testée ; graphe REST, sélection multimodèle et auth minimale restent à construire |
 | **P7 — Évaluation** | V11 : Q0 franchie, calibration complète, Q1 arrêtée par une stabilité insuffisante et des confonds budget/longueur | 🧪 atelier métrologique ; H11 `UNTESTED`, 60 cas tenus intacts, aucune V12 avant validation conjointe de l'instrument ([preuve](docs/P7_V11_STATUS.md)) |
 | **La Jachère** | Pouponnière évolutive (harness auto-cultivé) + le Songe (sommeil/rêve) | 📐 fondé (littérature versée, métriques pré-spécifiées) |
 
@@ -81,7 +81,7 @@ flowchart TB
 ## Démarrage
 
 ```bash
-python -m pytest -q          # état vérifié : 269 réussis, 2 ignorés
+python -m pytest -q          # état vérifié : 284 réussis, 2 ignorés
 python scripts/demo.py       # démo hors-ligne, déterministe
 LYRA_LIVE=1 python scripts/demo.py   # avec un Ollama réel (pip install requests)
 ```
@@ -100,6 +100,18 @@ $env:LYRA_LIVE = '1'
 Sans `LYRA_THINK`, le champ n'est pas envoyé et le comportement historique du
 modèle est conservé. Une valeur mal orthographiée est refusée plutôt que
 silencieusement interprétée.
+
+La porte locale ouverte par `Ouvrir Lyra.vbs` conserve désormais chaque
+session dans `data/lyra_sessions.sqlite3` (fichier ignoré par Git). Le
+navigateur mémorise seulement son identifiant et reprend automatiquement son
+état au redémarrage ; « Nouvelle session » oublie ce pointeur local sans
+supprimer la session durable. `LYRA_DB_PATH` permet de choisir un autre
+fichier SQLite.
+
+Cette base contient en clair les prompts, sorties et états internes nécessaires
+à la reprise. Le serveur reste volontairement lié à `127.0.0.1` : tant que
+l'authentification minimale n'est pas construite, il ne doit pas être exposé
+sur le réseau.
 
 Le noyau (`core/`, `memory/`) est **pure stdlib**. Options : `requests` (Ollama),
 `numpy/matplotlib` (recherche).
