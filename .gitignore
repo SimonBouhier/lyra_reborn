@@ -33,5 +33,7 @@ desktop.ini
 .vscode/
 .idea/
 
-# articles tiers : liens dans docs/REFERENCES.md, jamais redistribues
+# Articles tiers : références et liens officiels dans la documentation ;
+# les copies de lecture restent locales et ne sont jamais redistribuées.
 docs/*.pdf
+docs/pdfs/*.pdf
