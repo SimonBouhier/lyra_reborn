@@ -9,7 +9,7 @@ le graphe n'est plus vide. Un prompt vide lève une erreur, il n'est pas avalé.
 """
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 import time
 import uuid
 
@@ -75,9 +75,11 @@ class LyraConversation:
     """Une session : une boucle, un graphe, une écologie, un banc de cas."""
 
     def __init__(self, llm=None, session_id: Optional[str] = None,
-                 refractory_ms: int = 1200):
+                 refractory_ms: int = 1200,
+                 backend_label: Optional[str] = None):
         self.id = session_id or uuid.uuid4().hex[:12]
         self.llm = llm or EchoClient()
+        self.backend_label = backend_label or getattr(self.llm, "model", "inconnu")
         self.loop = _make_loop(self.llm, refractory_ms=refractory_ms)
         # Premier tour : la période réfractaire ne doit pas avaler la première parole.
         self.loop.state.last_update_ms = 0
@@ -87,6 +89,12 @@ class LyraConversation:
         self.navigator = Navigator(self.graph, self.memento)
         self.created = time.time()
         self.turns: int = 0
+
+    def use_backend(self, llm: Any, label: str) -> None:
+        """Remplace le moteur de cette session sans affecter les autres."""
+        self.llm = llm
+        self.loop.llm = llm
+        self.backend_label = label
 
     def turn(self, prompt: str, task_type: str = "general") -> TurnRecord:
         text = (prompt or "").strip()
@@ -154,24 +162,40 @@ class LyraConversation:
             "memoire": self.ecology.counts(),
             "cas": len(self.memento),
             "nemeton": inject(self.graph),
+            "moteur": self.backend_label,
         }
 
 
 class SessionBook:
     """Registre en mémoire — une session par id, pas de base distante."""
 
-    def __init__(self, llm_factory=None):
-        self._llm_factory = llm_factory or EchoClient
+    def __init__(self, llm_factory: Optional[Callable[[], Tuple[Any, str]]] = None):
+        self._llm_factory = llm_factory or (
+            lambda: (EchoClient(), "premières couches")
+        )
         self._sessions: Dict[str, LyraConversation] = {}
 
-    def get(self, session_id: Optional[str] = None,
-            refractory_ms: int = 1200) -> LyraConversation:
+    def create(
+        self,
+        session_id: Optional[str] = None,
+        refractory_ms: int = 1200,
+        backend: Optional[Tuple[Any, str]] = None,
+    ) -> LyraConversation:
         if session_id and session_id in self._sessions:
-            return self._sessions[session_id]
+            raise ValueError(f"session déjà existante : {session_id}")
+        llm, label = backend if backend is not None else self._llm_factory()
         conv = LyraConversation(
-            llm=self._llm_factory(),
+            llm=llm,
             session_id=session_id,
             refractory_ms=refractory_ms,
+            backend_label=label,
         )
         self._sessions[conv.id] = conv
         return conv
+
+    def require(self, session_id: str) -> LyraConversation:
+        """Retourne une session existante ; ne crée jamais pendant une lecture."""
+        try:
+            return self._sessions[session_id]
+        except KeyError as exc:
+            raise KeyError(f"session inconnue : {session_id}") from exc

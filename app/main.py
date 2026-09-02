@@ -23,14 +23,8 @@ HOSTS = (
     "http://localhost:8766",
 )
 
-MOTEUR_LABEL = "premières couches"
-
-
 def _llm_factory(*, live: bool = False):
-    global MOTEUR_LABEL
-    client, label = make_llm(live=live)
-    MOTEUR_LABEL = label
-    return client
+    return make_llm(live=live)
 
 
 book = SessionBook(llm_factory=_llm_factory)
@@ -52,21 +46,34 @@ class ChatIn(BaseModel):
 
 @app.get("/api/sante")
 def sante():
-    return {"ok": True, "moteur": MOTEUR_LABEL}
+    return {"ok": True, "moteur": "configuration par session"}
 
 
 @app.post("/api/parler")
 def parler(body: ChatIn):
-    global MOTEUR_LABEL
-    conv = book.get(body.session)
+    conv = None
+    if body.session is not None:
+        try:
+            conv = book.require(body.session)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc.args[0])) from exc
+
+    requested_backend = None
     if body.voix:
         try:
-            client, label = make_llm(live=True)
+            requested_backend = make_llm(live=True)
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
-        conv.llm = client
-        conv.loop.llm = client
-        MOTEUR_LABEL = label
+
+    if conv is None:
+        try:
+            conv = book.create(backend=requested_backend)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    if requested_backend is not None:
+        client, label = requested_backend
+        conv.use_backend(client, label)
     try:
         rec = conv.turn(body.texte)
     except ValueError as exc:
@@ -93,13 +100,16 @@ def parler(body: ChatIn):
         "memoire": rec.ecology,
         "concepts": rec.concepts,
         "nemeton": rec.nemeton,
-        "moteur": MOTEUR_LABEL,
+        "moteur": conv.backend_label,
     }
 
 
 @app.get("/api/session/{sid}")
 def session_etat(sid: str):
-    conv = book.get(sid)
+    try:
+        conv = book.require(sid)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc.args[0])) from exc
     return conv.snapshot()
 
 
