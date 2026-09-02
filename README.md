@@ -7,7 +7,7 @@
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Core: pure stdlib" src="https://img.shields.io/badge/core-pure%20stdlib-22c55e">
   <img alt="LLM: Ollama local" src="https://img.shields.io/badge/LLM-Ollama%20local-0ea5e9">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-76%20passed-brightgreen">
+  <img alt="Tests" src="https://img.shields.io/badge/tests-269%20passed-brightgreen">
 </p>
 
 <p align="center"><em>An honest cognitive OS for local LLMs — control loop, living memory, autonomous exploration, and rest.</em></p>
@@ -27,7 +27,7 @@ rêver).
 
 Ce dépôt est une **consolidation** : le meilleur de ~23 prototypes (2019-2026),
 audités ligne à ligne, ré-implémenté proprement — jamais copié. Chaque brique
-est branchée, testée, et fait ce que la doc dit.
+annoncée comme faite est branchée, testée, et fait ce que la doc dit.
 
 ## État réel
 
@@ -42,8 +42,8 @@ aucun chiffre non reproductible, aucun pipeline « vert mais vide ».)*
 | **P3 — Mémoire** | graphe *nemeton* (deltas auditables + rollback), écologie mémorielle (oubli différé + réveil du compost), rappel par cas (Memento) | ✅ testé |
 | **P4 — Exploration** | ESMM : lacunes → exploration multi-modèles → **consensus sémantique à 2 niveaux** → graphe. Premier pipeline productif de l'histoire du projet | ✅ validé live (3 modèles) |
 | P5 — Agentivité | outils + auto-plugins + SilenceØ | ⬜ à construire |
-| P6 — Application | serveur unifié | ⬜ à construire |
-| P7 — Évaluation | V6 : producteurs qualifiés, mais Gemma ne suit pas la boucle d'outils bornée ; arbitrage evidence pack vs juge plus capable | 🛑 arrêt avant calibration, aucune mesure réelle ([preuve](docs/P7_V6_STATUS.md)) |
+| **P6 — Application** | serveur FastAPI local ; chat P0–P4, sessions en mémoire, moteur isolé par session, page locale | 🟡 socle testé ; persistance SQLite, graphe REST, sélection multimodèle et auth minimale restent à construire |
+| **P7 — Évaluation** | V11 : Q0 franchie, calibration complète, Q1 arrêtée par une stabilité insuffisante et des confonds budget/longueur | 🧪 atelier métrologique ; H11 `UNTESTED`, 60 cas tenus intacts, aucune V12 avant validation conjointe de l'instrument ([preuve](docs/P7_V11_STATUS.md)) |
 | **La Jachère** | Pouponnière évolutive (harness auto-cultivé) + le Songe (sommeil/rêve) | 📐 fondé (littérature versée, métriques pré-spécifiées) |
 
 ## Architecture
@@ -81,7 +81,7 @@ flowchart TB
 ## Démarrage
 
 ```bash
-python -m pytest -q          # 76 tests, zéro dépendance pour le noyau
+python -m pytest -q          # état vérifié : 269 réussis, 2 ignorés
 python scripts/demo.py       # démo hors-ligne, déterministe
 LYRA_LIVE=1 python scripts/demo.py   # avec un Ollama réel (pip install requests)
 ```
@@ -115,10 +115,10 @@ sans les autres ; un pont ne se dégèle que sur validation pré-enregistrée) :
 | **Origami Transformer** | l'instrument métrologique — géométrie de Fisher des représentations, hypothèses pré-enregistrées | [repo](https://github.com/SimonBouhier/Origami_Transformer) |
 | **EPP Verdict** | le moteur d'attestation épistémique | [docs](https://epp-verdict-docs.vercel.app) |
 
-> 2026-07-20 : la campagne pré-enregistrée v5 d'Origami a **confirmé** (3/4
-> modèles, seuils gelés) que la géométrie de Fisher porte une signature de la
-> contestation épistémique — ouvrant le pont vers une « tension » de Lyra
-> fondée instrumentalement. Voir `docs/ORGANES_ET_PONTS.md`.
+> État final, 2026-07-26 : le signal brut observé en v5 n'a pas survécu aux
+> contrôles renforcés de v6–v7. La campagne v7 a rendu `HF_DÉMENTI` sur 0/6
+> modèles ; le pont Fisher vers Lyra et EPP reste gelé. Ce gel est une décision
+> d'ingénierie stable, pas une dette. Voir `docs/ORGANES_ET_PONTS.md`.
 
 ## La Jachère — la vie hors-tâche
 
@@ -138,6 +138,7 @@ code). Voir `docs/BANNIERE_LA_JACHERE.md` et `docs/METRIQUES_SONGE.md`.
 | `manifeste/DOCTRINE_ARCHITECTE.md` | la posture qui gouverne le projet |
 | `docs/PLAN_EDIFICATION.md` | le plan directeur (P0→P7 + Jachère + Vigie) |
 | `docs/ORGANES_ET_PONTS.md` | doctrine inter-projets et état des ponts |
+| `docs/CADRAGE_EXTERNE_P6_P7_POST_V11.md` | état post-V11, priorités P6 et questions ouvertes pour audit/littérature |
 | `BUILD_STATUS.md` | l'état exact, brique par brique, avec provenance |
 
 ## Licence & références

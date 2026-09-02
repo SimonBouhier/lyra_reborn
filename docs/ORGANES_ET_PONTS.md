@@ -12,15 +12,14 @@
    │  L'OS COGNITIF          │◄───────►│  MOTEUR D'ATTESTATION        │
    │  contrôle · mémoire ·   │ (futur) │  DE CONNAISSANCE             │
    │  exploration · Jachère  │         │  ESMM mûr · attestations 5D ·│
-   └─────────────────────────┘         │  fingerprints · Solana       │
+   └─────────────────────────┘         │  SQLite · gouvernance GitHub  │
               ▲                        └──────────────┬───────────────┘
               │ pont (futur)                          │ epp_adapter (stub gelé)
    ┌──────────┴──────────────────────────────────────▼───────────────┐
-   │  Origami_Transformer (Work_in_Progress/Origa_Tranf_Test)        │
+   │  Origami_Transformer (Triptique/Origa_Tranf_Test)               │
    │  L'INSTRUMENT MÉTROLOGIQUE — géométrie de Fisher par couche     │
-   │  v4 : baseline (négatif publiable ; compression finale 4/4)     │
-   │  v5 (H-C, pré-enregistrée) : signature géométrique de la        │
-   │  CONTESTATION épistémique                                       │
+   │  série v4–v7 close ; v7 HF_DÉMENTI 0/6                         │
+   │  pont Fisher gelé : non défendable comme signal épistémique     │
    └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -36,11 +35,12 @@
    dans `bridges/` (à naître), qui traduit entre les vocabulaires des deux
    organes. Il peut manquer sans casser l'hôte.
 
-3. **Un pont ne se dégèle que sur validation** — le patron `epp_adapter.py`
-   d'Origa est LE modèle canonique : le stub **lève une erreur à l'import**
-   tant que ses conditions de dégel (pré-enregistrées, committées) ne sont pas
-   remplies. « EPP consomme un instrument validé. Jamais l'inverse. » Aucun
-   pont de complaisance : un organe non validé ne nourrit pas les autres.
+3. **Un pont ne se dégèle que sur validation** — le patron historique
+   `epp_adapter.py` d'Origa rend cette règle exécutable : le stub **lève une
+   erreur à l'import** tant que ses conditions ne sont pas remplies. La v5 les
+   avait provisoirement satisfaites ; les contrôles v6–v7 ont invalidé l'usage
+   d'ingénierie visé. « EPP consomme un instrument validé. Jamais l'inverse. »
+   Aucun pont de complaisance : un organe non validé ne nourrit pas les autres.
 
 ## Ce que chaque pont pourrait porter (esquisse, PAS un engagement)
 
@@ -50,16 +50,16 @@
   chantier. D'ici là : récolte passive des idées d'EPP éprouvées (fingerprints
   Jaro-Winkler en cascade avant embeddings ; groupes de synonymes de relations ;
   track-record/tiers de `post_crystallization` → écologie mémorielle).
-- **Origa → lyra_reborn** : la géométrie de Fisher comme SIGNAL ÉPISTÉMIQUE
-  RÉEL pour le pont P2 (une « tension » fondée instrumentalement — le
-  successeur légitime de la topologie κ/ρ abandonnée).
-  **✅ CONDITION DE DÉGEL REMPLIE (2026-07-20)** : verdict v5 `HC_CONFIRMÉ`
-  aux seuils gelés (3/4 modèles, 1 VOID — `Origa/NOTE_RESULTATS_v5.md`,
-  gel `ca588c3`). Le chantier du pont peut être DESSINÉ (spec puis code) —
-  ouverture sur décision de Simon.
-- **Origa → EPP_Verdict** : déjà spécifié côté Origa (`epp_adapter.py`, gelé).
-  **✅ Conditions de dégel du stub réunies (2026-07-20)** — mise à jour du
-  stub (ère v3 → H-C) et dégel à la main du chercheur.
+- **Origa → lyra_reborn** : **GELÉ DÉFINITIVEMENT POUR LA SÉRIE v4–v7
+  (2026-07-26).** v5 avait trouvé une séparabilité brute (`HC_CONFIRMÉ`, 3/4),
+  mais v6 a retiré sa spécificité géométrique et v7 a rendu `HF_DÉMENTI` 0/6.
+  La géométrie de Fisher actuelle n'est donc pas importée comme signal P2.
+  Cela n'affirme pas qu'aucune géométrie épistémique ne puisse exister ; cela
+  clôt ce pont-ci avec cet instrument-ci.
+- **Origa → EPP_Verdict** : **GELÉ pour la même raison.** Le stub historique
+  et ses preuves restent des artefacts ; ils ne constituent plus une voie
+  d'intégration active. Une éventuelle étude future repartirait comme projet
+  indépendant, sous un nouveau pré-enregistrement, sans réactivation tacite.
 
 ## Leçon méthodologique importée d'Origa
 

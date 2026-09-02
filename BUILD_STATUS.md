@@ -2,7 +2,7 @@
 
 Pont entre le **plan directeur** (`docs/PLAN_EDIFICATION.md`) et le code. Tenu à jour
 à chaque phase. Les audits détaillés (43 documents, avec numéros de ligne et bugs)
-vivent dans le dossier d'audit `../audits_en_cours/` (lots 1 & 2) — s'y référer pour
+vivent dans le dossier d'audit `../../audits_en_cours/` (lots 1 & 2) — s'y référer pour
 chaque brique à extraire.
 
 ## Fait ✅ (testé)
@@ -62,9 +62,9 @@ des **masques transitoires de projection** du tour. Preuve :
 | ~~P3~~ | ~~`memory/`~~ | **FAIT** — voir tableau ci-dessus. Notes de périmètre : implémentation mémoire pure-stdlib (persistance JSON) ; le Strategy multi-backend NetworkX/igraph d'Uni_0_2 volontairement simplifié en **une** implémentation propre derrière la même API (charte §5 — on ajoutera un backend si un besoin de perf le prouve) ; pas d'embeddings encore (arrivent avec le pont P2/éval) | — |
 | ~~P4~~ | ~~`explore/esmm/`~~ | **FAIT** — voir tableau ci-dessus. Restes : cochaîne 5D complète (v1 = support/diversité/sources), adaptation dynamique du plan de cycles, recalibration τ_obj sur campagne large | — |
 | P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
-| **P6 (acompte)** | `app/session.py` + `app/main.py` | **Premières couches :** un tour de chat traverse P0–P4 (boucle + pont P+I + nemeton borné + graphe + écologie + CBR). Porte HTTP locale (`/api/parler`, page `app/static/index.html`, CORS localhost:8766). Pas encore sessions persistantes SQLite, ni graphe REST, ni multimodèle. | plan §6 P6 DoD partiel : tour complet + smoke HTTP à assertions de contenu (`tests/test_p6_first_layers.py`, `tests/test_p6_http.py`) |
-| P6 (reste) | `app/` | persistance, graphe REST, multimodèle, auth minimale | `lyra_clean_bis` — porter plus tard |
-| P7 | `eval/` | **V6 ARRÊTÉE AVANT CALIBRATION** : Gemma lit SOURCE + traces puis répète SOURCE au lieu de vérifier/juger. Décision requise : evidence pack déterministe (recommandé) ou juge agentique plus capable | `docs/P7_V6_STATUS.md` |
+| **P6 (acompte)** | `app/session.py` + `app/main.py` | **Premières couches :** un tour de chat traverse P0–P4 (boucle + pont P+I + nemeton borné + graphe + écologie + CBR). Porte HTTP locale (`/api/parler`, lecture de session, page `app/static/index.html`, CORS localhost:8766). Une lecture inconnue échoue sans créer de session ; moteur et étiquette sont isolés par session. Sessions encore volatiles. | plan §6 P6 DoD partiel : tour complet + smoke HTTP à assertions de contenu et régressions de mutation (`tests/test_p6_first_layers.py`, `tests/test_p6_http.py`) |
+| P6 (reste) | `app/` | persistance SQLite, graphe REST, catalogue/sélection multimodèle, auth minimale | `lyra_clean_bis` — source à réexaminer avant port |
+| P7 | `eval/` + `scripts/p7_v11.py` | **V11 arrêtée protectivement à Q1 après calibration complète.** Le juge lit le contenu mais reste trop instable (54,8 %) et biaisé par la position ; budgets et contrat ont sélectionné la capacité à finir le JSON, tandis que la longueur est confondue avec le bouton testé. H11 `UNTESTED`, jeu tenu 60/60 intact. P7 est en atelier métrologique, sans H12. | `docs/P7_V11_STATUS.md` + `docs/CADRAGE_EXTERNE_P6_P7_POST_V11.md` |
 | — | `research/` | orbites FLOATLAP, métriques fractales, calibrations | `session_2/tranzit` — exploratoire |
 
 ## Bannière « La Jachère » — vie hors-tâche (nouveau flux, cf. plan §8·bis)
@@ -80,9 +80,10 @@ Flux qui **mûrit après P3/P4/P7** (il les consomme). Détail : `docs/BANNIERE_
 
 Décision Simon 2026-07-18 : `lyra_reborn` = OS cognitif ; **EPP_Verdict** =
 moteur d'attestation (organe indépendant, ESMM mûr — jamais audité, hors lots) ;
-**Origami_Transformer** = instrument métrologique (géométrie de Fisher ; H-C v5
-pré-enregistrée = signature de la contestation épistémique). Indépendance
-stricte, ponts = contrats minces dégelés sur validation uniquement. Détail :
+**Origami_Transformer** = instrument métrologique dont la série v4–v7 est close :
+le résultat brut v5 n'a pas survécu aux contrôles v6–v7 (`HF_DÉMENTI` 0/6),
+donc aucun signal Fisher n'est importé dans Lyra ou EPP. Indépendance stricte,
+ponts = contrats minces dégelés sur validation uniquement. Détail :
 `docs/ORGANES_ET_PONTS.md`. D'autres organes viendront.
 
 ## Cap d'application n°1 — « La Vigie » (doctrine 2026-07-19)
