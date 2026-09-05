@@ -1,5 +1,13 @@
 # Plan d'édification de Lyra — le plan global
 
+> **Lecture actuelle — 2026-09-05.** Ce plan conserve les objectifs et la
+> provenance de sa rédaction initiale. Il n'est pas un état de livraison.
+> Lire d'abord [ETAT_ACTUEL](ETAT_ACTUEL.md) et [BUILD_STATUS](../BUILD_STATUS.md).
+> Décisions postérieures : P6 principal ; P7 en atelier métrologique ; H11
+> `UNTESTED` ; aucune V12 avant qualification conjointe de l'instrument ;
+> pont Fisher clos ; EPP sans blockchain. Les anciens « constructible » ou
+> « à porter » ne valent pas autorisation de lancer une campagne ou un nouveau chantier.
+
 > **Date :** 2026-07-16 · **Statut :** plan directeur, à exécuter par étapes · **Nature :** ce document est la pièce qui manquait. Les deux audits (lot 1 + lot 2) ont dit *ce qui existe, ce qui vaut, et d'où l'extraire*. Ce plan dit *quoi construire, dans quel ordre, et comment savoir que c'est fait*.
 
 ---

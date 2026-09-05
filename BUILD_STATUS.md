@@ -1,5 +1,9 @@
 # BUILD STATUS — où en est l'édification
 
+> **Relecture documentaire : 2026-09-05.** Synthèse des capacités et limites
+> actuelles : [ETAT_ACTUEL](docs/ETAT_ACTUEL.md). Les validations live citées
+> ci-dessous sont historiques ; elles n'ont pas été relancées lors de cette revue.
+
 Pont entre le **plan directeur** (`docs/PLAN_EDIFICATION.md`) et le code. Tenu à jour
 à chaque phase. Les audits détaillés (43 documents, avec numéros de ligne et bugs)
 vivent dans le dossier d'audit `../../audits_en_cours/` (lots 1 & 2) — s'y référer pour
@@ -29,12 +33,11 @@ Preuves : `python -m pytest` (dont `test_modulation.py` = la modulation est rée
 
 ## Note d'architecture (importante, honnête)
 
-Il y a **deux** chemins de modulation, volontairement séparés tant que le pont P2
-n'est pas fait :
+Il y a **deux** chemins d'exécution, dont les rôles sont distincts :
 
-1. **Réactif** (`reactive.py`, chemin RÉEL de `LyraLoop`) : de vraies métriques
-   cheap sur une vraie génération pilotent les boutons.
-2. **P+I** (`controller.py`, `run_autopilot`) : régule une dynamique épistémique
+1. **Génération** (`LyraLoop`) : métriques textuelles sur la sortie, politique
+   réactive et, quand un contrôleur est fourni, pont P2 vers le P+I.
+2. **Autopilote de démonstration** (`run_autopilot`) : régule une dynamique épistémique
    **synthétique** (`core/control/measures.py`, formules-jouets honnêtement
    étiquetées, issues de `lyra_framework_bundle`).
 
@@ -62,8 +65,8 @@ des **masques transitoires de projection** du tour. Preuve :
 | ~~P3~~ | ~~`memory/`~~ | **FAIT** — voir tableau ci-dessus. Notes de périmètre : implémentation mémoire pure-stdlib (persistance JSON) ; le Strategy multi-backend NetworkX/igraph d'Uni_0_2 volontairement simplifié en **une** implémentation propre derrière la même API (charte §5 — on ajoutera un backend si un besoin de perf le prouve) ; pas d'embeddings encore (arrivent avec le pont P2/éval) | — |
 | ~~P4~~ | ~~`explore/esmm/`~~ | **FAIT** — voir tableau ci-dessus. Restes : cochaîne 5D complète (v1 = support/diversité/sources), adaptation dynamique du plan de cycles, recalibration τ_obj sur campagne large | — |
 | P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
-| **P6 (tranche 1)** | `app/session.py` + `app/storage.py` + `app/main.py` | Un tour traverse P0–P4 puis l'état complet versionné est enregistré atomiquement en SQLite. Restauration paresseuse après redémarrage, 404 sans création implicite, moteur restauré sans appel réseau, rollback mémoire si génération ou sauvegarde échoue, registre `GET /api/sessions`. La page reprend l'identifiant localement et « Nouvelle session » ne supprime rien. | suite complète + tests de corruption/incohérence + reprise vérifiée entre deux processus serveur (`tests/test_p6_first_layers.py`, `tests/test_p6_http.py`, `tests/test_session_persistence.py`) |
-| P6 (reste) | `app/` | graphe REST, catalogue/sélection multimodèle, auth minimale | `lyra_clean_bis` — matériau d'audit, pas un bloc à transplanter |
+| **P6 (tranche 1)** | `app/session.py` + `app/storage.py` + `app/main.py` | Un tour traverse le contrôle P0–P2 et la mémoire P3 (sans appel à l'ESMM P4), puis l'état complet versionné est enregistré atomiquement en SQLite. Restauration paresseuse après redémarrage, 404 sans création implicite, moteur restauré sans appel réseau, rollback mémoire si génération ou sauvegarde échoue, registre `GET /api/sessions`. La page reprend l'identifiant localement et « Nouvelle session » ne supprime rien. | suite complète + tests de corruption/incohérence + reprise vérifiée entre deux processus serveur (`tests/test_p6_first_layers.py`, `tests/test_p6_http.py`, `tests/test_session_persistence.py`) |
+| P6 (reste) | `app/` | contexte conversationnel, réaffichage des échanges, retours utilisateur durables, graphe REST, catalogue/sélection multimodèle, auth minimale | `lyra_clean_bis` — matériau d'audit, pas un bloc à transplanter |
 | P7 | `eval/` + `scripts/p7_v11.py` | **V11 arrêtée protectivement à Q1 après calibration complète.** Le juge lit le contenu mais reste trop instable (54,8 %) et biaisé par la position ; budgets et contrat ont sélectionné la capacité à finir le JSON, tandis que la longueur est confondue avec le bouton testé. H11 `UNTESTED`, jeu tenu 60/60 intact. P7 est en atelier métrologique, sans H12. | `docs/P7_V11_STATUS.md` + `docs/CADRAGE_EXTERNE_P6_P7_POST_V11.md` |
 | — | `research/` | orbites FLOATLAP, métriques fractales, calibrations | `session_2/tranzit` — exploratoire |
 
@@ -79,7 +82,7 @@ Flux qui **mûrit après P3/P4/P7** (il les consomme). Détail : `docs/BANNIERE_
 ## Organes & ponts (doctrine inter-projets)
 
 Décision Simon 2026-07-18 : `lyra_reborn` = OS cognitif ; **EPP_Verdict** =
-moteur d'attestation (organe indépendant, ESMM mûr — jamais audité, hors lots) ;
+moteur d'attestation local et personnel (organe indépendant, scope ADR-022) ;
 **Origami_Transformer** = instrument métrologique dont la série v4–v7 est close :
 le résultat brut v5 n'a pas survécu aux contrôles v6–v7 (`HF_DÉMENTI` 0/6),
 donc aucun signal Fisher n'est importé dans Lyra ou EPP. Indépendance stricte,
@@ -111,3 +114,10 @@ sur modèles live n'est pas encore revendiquée. Voir `docs/VIGIE_QUARANTINE.md`
   premiers triplets consensuels (cf. tableau P4). La découverte en prime : le
   « fix once » n'aurait PAS suffi — l'accord lexical inter-modèles était une
   4ᵉ cause racine invisible à l'audit, résolue par consensus sémantique.
+
+## Précision de disponibilité — 2026-09-05
+
+Le sidecar EPP mentionné dans V0-q existe au commit `3a274cd` sur la branche
+`fix/td-002-graph-seeder-adapter`. Il n'est pas présent dans EPP `main` à
+`84879d2`. Les références de campagne restent gelées ; aucune disponibilité
+inter-dépôts courante ni qualification live n'est déduite de ce code historique.

@@ -7,27 +7,23 @@
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Core: pure stdlib" src="https://img.shields.io/badge/core-pure%20stdlib-22c55e">
   <img alt="LLM: Ollama local" src="https://img.shields.io/badge/LLM-Ollama%20local-0ea5e9">
-  <img alt="Tests" src="https://img.shields.io/badge/tests-284%20passed-brightgreen">
 </p>
 
-<p align="center"><em>An honest cognitive OS for local LLMs — control loop, living memory, autonomous exploration, and rest.</em></p>
+<p align="center"><em>A local control and memory layer for LLMs — application under construction.</em></p>
 
 ---
 
 > **Le LLM *utilise* Lyra ; il n'*est pas* Lyra.**
 
-**Lyra** est une couche de contrôle cognitive au-dessus d'un LLM local (Ollama) :
-un système qui **se règle lui-même** (quatre boutons ρ/δr/τc/κ pilotés par un
-vrai contrôleur), qui **ressent son état** (signaux épistémiques dérivés de la
-génération réelle), qui **oublie volontairement** pour mieux tenir ce qui compte
-(écologie mémorielle : pouponnière / journal d'oubli / compost), qui **explore
-seul** les lacunes de sa connaissance (consensus multi-modèles), et qui aura
-bientôt une **vie hors-tâche** (la Jachère : cultiver ses propres modules, et
-rêver).
+**Lyra** est une couche de contrôle et de mémoire au-dessus d'un LLM local
+(Ollama). Elle module des paramètres de génération, conserve un graphe de
+concepts et un état de session, et dispose d'un moteur d'exploration distinct.
+P6, l'application locale, est le chantier principal. La Jachère et le Songe
+restent des pistes de recherche et de construction, sans calendrier de livraison.
 
-Ce dépôt est une **consolidation** : le meilleur de ~23 prototypes (2019-2026),
-audités ligne à ligne, ré-implémenté proprement — jamais copié. Chaque brique
-annoncée comme faite est branchée, testée, et fait ce que la doc dit.
+Ce dépôt consolide des designs issus des prototypes antérieurs.
+L'[état courant daté](docs/ETAT_ACTUEL.md) distingue les briques testées, leur
+intégration effective dans l'application et les bénéfices encore à démontrer.
 
 ## État réel
 
@@ -42,7 +38,7 @@ aucun chiffre non reproductible, aucun pipeline « vert mais vide ».)*
 | **P3 — Mémoire** | graphe *nemeton* (deltas auditables + rollback), écologie mémorielle (oubli différé + réveil du compost), rappel par cas (Memento) | ✅ testé |
 | **P4 — Exploration** | ESMM : lacunes → exploration multi-modèles → **consensus sémantique à 2 niveaux** → graphe. Premier pipeline productif de l'histoire du projet | ✅ validé live (3 modèles) |
 | P5 — Agentivité | outils + auto-plugins + SilenceØ | ⬜ à construire |
-| **P6 — Application** | serveur FastAPI local ; chat P0–P4 ; état complet des sessions persisté en SQLite et repris après redémarrage ; moteur isolé par session ; page locale | 🟡 première tranche verticale testée ; graphe REST, sélection multimodèle et auth minimale restent à construire |
+| **P6 — Application** | serveur local ; contrôle P0–P2 et mémoire P3 ; état de session persisté en SQLite ; moteur isolé par session. L'ESMM P4 n'est pas appelé par ce tour de chat | 🟡 première tranche testée ; historique conservé mais non réinjecté ni réaffiché à la reprise ; graphe REST, sélection multimodèle et auth minimale restent à construire |
 | **P7 — Évaluation** | V11 : Q0 franchie, calibration complète, Q1 arrêtée par une stabilité insuffisante et des confonds budget/longueur | 🧪 atelier métrologique ; H11 `UNTESTED`, 60 cas tenus intacts, aucune V12 avant validation conjointe de l'instrument ([preuve](docs/P7_V11_STATUS.md)) |
 | **La Jachère** | Pouponnière évolutive (harness auto-cultivé) + le Songe (sommeil/rêve) | 📐 fondé (littérature versée, métriques pré-spécifiées) |
 
@@ -81,7 +77,7 @@ flowchart TB
 ## Démarrage
 
 ```bash
-python -m pytest -q          # état vérifié : 284 réussis, 2 ignorés
+python -m pytest -q          # suite complète ; voir les résultats datés dans docs/ETAT_ACTUEL.md
 python scripts/demo.py       # démo hors-ligne, déterministe
 LYRA_LIVE=1 python scripts/demo.py   # avec un Ollama réel (pip install requests)
 ```
@@ -107,6 +103,12 @@ navigateur mémorise seulement son identifiant et reprend automatiquement son
 état au redémarrage ; « Nouvelle session » oublie ce pointeur local sans
 supprimer la session durable. `LYRA_DB_PATH` permet de choisir un autre
 fichier SQLite.
+
+Cette reprise restaure les indicateurs et les états internes. Elle ne réaffiche
+pas encore les échanges et ne fournit pas l'historique conversationnel au
+modèle : il reçoit le message courant et le résumé de concepts du graphe.
+L'historique interne est borné aux 50 derniers tours. Une archive complète
+des échanges et des retours utilisateur reste à construire.
 
 Cette base contient en clair les prompts, sorties et états internes nécessaires
 à la reprise. Le serveur reste volontairement lié à `127.0.0.1` : tant que
@@ -145,6 +147,7 @@ code). Voir `docs/BANNIERE_LA_JACHERE.md` et `docs/METRIQUES_SONGE.md`.
 
 | Document | Contenu |
 |---|---|
+| `docs/ETAT_ACTUEL.md` | état daté, limites d'usage et situation des branches |
 | `manifeste/CHARTE.md` | les 6 règles anti-pathologies (chacune paie une leçon vécue) |
 | `manifeste/VOCABULAIRE.md` | sens canonique + **décisions datées** |
 | `manifeste/DOCTRINE_ARCHITECTE.md` | la posture qui gouverne le projet |

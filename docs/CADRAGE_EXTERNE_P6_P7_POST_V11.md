@@ -1,5 +1,10 @@
 # Cadrage externe P6–P7 après V11
 
+> **Actualisation documentaire du 2026-09-05.** La persistance SQLite a été
+> livrée depuis la première rédaction, au commit `d7353d4`. L'état courant
+> et les limites conversationnelles sont décrits dans [ETAT_ACTUEL](ETAT_ACTUEL.md).
+> Le cadrage métrologique ci-dessous reste un document de travail, sans nouveau gel.
+
 **Date :** 2026-09-02
 **Statut :** document de travail pour audit externe et recherche bibliographique
 **Autorité :** non normatif — ce document n'est ni une préinscription, ni un gel,
@@ -38,9 +43,12 @@ Ce document expose les faits, les décisions closes et les questions à soumettr
 ### P6 — l'application
 
 P6 doit fournir une Lyra minimale utilisable au quotidien. Le socle FastAPI
-existe : un tour de chat traverse le contrôle et les mémoires P0–P4, les
-sessions sont accessibles par HTTP et le moteur est isolé par session. Restent
-notamment la persistance SQLite, un accès REST au graphe, une vraie sélection
+existe : un tour de chat traverse P0–P2 et le graphe conceptuel P3 ; la
+mémoire ESMM P4 n'est pas appelée par ce parcours. Les sessions sont
+accessibles par HTTP et le moteur est isolé par session.
+La persistance SQLite de l'état et la restauration après redémarrage sont
+livrées. Restent le contexte conversationnel, le réaffichage des échanges,
+les retours utilisateur durables, un accès REST au graphe, la sélection
 multimodèle et une authentification minimale avant toute exposition.
 
 P6 peut avancer sans verdict P7. Son usage local peut produire le matériau

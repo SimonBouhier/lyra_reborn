@@ -1,5 +1,10 @@
 # Organes et ponts — doctrine d'architecture inter-projets
 
+> **État vérifié le 2026-09-05 :** EPP est local et personnel, sans publication
+> blockchain (ADR-022). Le pont d'attestation reste à valider. Le sidecar Vigie
+> existe sur une branche EPP distincte, absent de `main` à `84879d2` ; les
+> campagnes historiques conservent leurs propres références gelées.
+
 > **Décision Simon, 2026-07-18.** Lyra n'est pas un monolithe en croissance :
 > c'est un **OS cognitif** auquel se greffent des **organes indépendants**,
 > reliés par des **ponts**. D'autres organes viendront.
@@ -14,7 +19,7 @@
    │  exploration · Jachère  │         │  ESMM mûr · attestations 5D ·│
    └─────────────────────────┘         │  SQLite · gouvernance GitHub  │
               ▲                        └──────────────┬───────────────┘
-              │ pont (futur)                          │ epp_adapter (stub gelé)
+              │ pont clos v4–v7                       │ epp_adapter (stub gelé)
    ┌──────────┴──────────────────────────────────────▼───────────────┐
    │  Origami_Transformer (Triptique/Origa_Tranf_Test)               │
    │  L'INSTRUMENT MÉTROLOGIQUE — géométrie de Fisher par couche     │
