@@ -1,0 +1,82 @@
+{
+  "created_utc": "2026-09-05T21:11:07.088391+00:00",
+  "commit": "788971a00f4303d2ba24cc671f4c0049fab772f9",
+  "python": "3.14.7",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "probe_sha256": "cfe60f650706d72b1bd844ba2418bed08814dd9c26000a1986927d734cb18891",
+  "scope": "FastAPI TestClient, client factice, deux scénarios déterministes, SQLite temporaire ; aucun réseau, Ollama, corpus P7 ou session réelle",
+  "results": [
+    {
+      "case": "temoin_sequentiel",
+      "http_A": 200,
+      "http_B": 502,
+      "http_C": 200,
+      "disk_after_A_B": {
+        "turns": 2,
+        "outputs": [
+          "- REPONSE_INITIALE",
+          "- REPONSE_A_A_CONSERVER"
+        ]
+      },
+      "memory_after_A_B": {
+        "turns": 2,
+        "outputs": [
+          "- REPONSE_INITIALE",
+          "- REPONSE_A_A_CONSERVER"
+        ]
+      },
+      "disk_after_C": {
+        "turns": 3,
+        "outputs": [
+          "- REPONSE_INITIALE",
+          "- REPONSE_A_A_CONSERVER",
+          "- REPONSE_C_SUIVANTE"
+        ]
+      },
+      "state_after_new_registry": {
+        "turns": 3,
+        "outputs": [
+          "- REPONSE_INITIALE",
+          "- REPONSE_A_A_CONSERVER",
+          "- REPONSE_C_SUIVANTE"
+        ]
+      },
+      "accepted_A_preserved": true
+    },
+    {
+      "case": "chevauchement",
+      "http_A": 200,
+      "http_B": 502,
+      "http_C": 200,
+      "disk_after_A_B": {
+        "turns": 2,
+        "outputs": [
+          "- REPONSE_INITIALE",
+          "- REPONSE_A_A_CONSERVER"
+        ]
+      },
+      "memory_after_A_B": {
+        "turns": 1,
+        "outputs": [
+          "- REPONSE_INITIALE"
+        ]
+      },
+      "disk_after_C": {
+        "turns": 2,
+        "outputs": [
+          "- REPONSE_INITIALE",
+          "- REPONSE_C_SUIVANTE"
+        ]
+      },
+      "state_after_new_registry": {
+        "turns": 2,
+        "outputs": [
+          "- REPONSE_INITIALE",
+          "- REPONSE_C_SUIVANTE"
+        ]
+      },
+      "accepted_A_preserved": false
+    }
+  ],
+  "conclusion": "Perte du tour A accepté reproduite avec chevauchement et échec B ; absente dans le témoin séquentiel. Ce test ne mesure pas la fréquence en usage réel."
+}

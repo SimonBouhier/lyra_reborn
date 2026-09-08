@@ -8,6 +8,19 @@
 > pont Fisher clos ; EPP sans blockchain. Les anciens « constructible » ou
 > « à porter » ne valent pas autorisation de lancer une campagne ou un nouveau chantier.
 
+> **Avancement local P6 — 8 septembre 2026 :** A01 et journal complétés par le
+> contexte conversationnel, les corrections, le rappel explicite et la navigation.
+> 73 tests Python et neuf JavaScript réussis ; navigateur vérifié sur moteur factice.
+> Le [guide courant](P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md) distingue le
+> transport vérifié du contre-exemple Gemma sur l'utilisation d'une correction.
+> Qualité d'usage, suppression et sauvegardes restent ouvertes ; migration v3
+> préparée sur copie, aucune migration utilisateur exécutée.
+> Le [diagnostic exploratoire des rappels](P6_DIAGNOSTIC_RAPPELS_2026-09-08.md)
+> dispose d'un plan scellé et d'une collecte achevée : 6 336 réponses sur quatre
+> configurations, après quatre admissions techniques ; 212 tests de l'instrument
+> séparé réussis. Les dossiers de relecture sont prêts. La confirmation sur de
+> nouvelles situations et l'admission d'usage restent à organiser ; ce travail ne relance pas P7.
+
 > **Date :** 2026-07-16 · **Statut :** plan directeur, à exécuter par étapes · **Nature :** ce document est la pièce qui manquait. Les deux audits (lot 1 + lot 2) ont dit *ce qui existe, ce qui vaut, et d'où l'extraire*. Ce plan dit *quoi construire, dans quel ordre, et comment savoir que c'est fait*.
 
 ---
@@ -197,6 +210,14 @@ Chaque phase : **objectif → matériau source (dossier + audit + fichiers) → 
 - **DoD :** un outil est appelé de bout en bout via la boucle ; un cas déclenche SilenceØ ; zéro `eval()` sur du texte LLM.
 
 ### P6 — Application unifiée *(après P1 ; intègre P2-P5 au fil de l'eau)*
+
+**Précision du 8 septembre 2026 :** les objectifs ci-dessous conservent la vision
+initiale d'intégration. Le contrat courant réalise d'abord un dialogue à profil
+fixe avec journal, corrections et rappels explicites ; les briques de contrôle
+et de mémoire dérivée restent dans un parcours historique distinct. La collecte
+exploratoire et les relectures éclaireront la qualification d'usage ; elles ne
+valident pas encore ce DoD global. Voir le [contrat P6](CONTRAT_USAGE_P6_v0_2026-09-07.md).
+
 - **Objectif :** un seul serveur qui expose le tout.
 - **Source :** socle canonique = `lyra_clean_bis` (FastAPI async, sessions, chat, graphe, multimodèle) — y rapatrier les meilleures docs d'ACE ; réconcilier avec le « serveur unifié » de `Lyra_Uni_0_2` (dont le point d'entrée `lyra_unified_server.py` était cassé — importait `lyra_core.bridge`/`auto_controller` inexistants ; le serveur *réel* était `lyra_chat/lyra_web_server.py`).
 - **Tâches :** endpoints chat/sessions/graphe/nemeton/multimodèle ; brancher P1-P5 ; corriger les bugs d'endpoints connus (`/models/set` `Request` non importé ; `/ispace/suggest`) ; durcir (CORS restreint, pas de `*`, auth minimale avant toute exposition).
@@ -256,6 +277,14 @@ Quoi prendre, où, vers quelle couche. (« ré-impl. » = ré-implémenter d'apr
 ---
 
 ## 8·bis. Bannière — « La Jachère » : la vie hors-tâche *(ajout 2026-07-18)*
+
+> **Actualisation du 7 septembre 2026 :** la
+> [note de cloisonnement](NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md)
+> fait référence pour l'architecture à venir : consolidation, recombinaison et
+> sélection autonomes, ponts facultatifs, critères distincts. Les formulations
+> initiales ci-dessous ne valent pas validation des mécanismes ni engagement
+> de calendrier. P6 précède leur réalisation ; le verdict conjoint du Songe
+> doit être révisé avant tout préenregistrement.
 
 Deux aspects personnels manquaient au plan ; ils se réunissent sous **une même bannière** : *ce que Lyra fait quand elle ne répond pas* — des processus **hors-ligne, auto-dirigés, génératifs ET sélectifs** qui transforment le système lui-même (ses modules ET sa mémoire). Nom de travail : **La Jachère** (le champ qu'on laisse reposer pour qu'il régénère) — à rebaptiser librement. Détail + ancrage bibliographique : `lyra_reborn/docs/BANNIERE_LA_JACHERE.md`.
 

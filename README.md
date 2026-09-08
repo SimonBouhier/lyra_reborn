@@ -38,11 +38,32 @@ aucun chiffre non reproductible, aucun pipeline « vert mais vide ».)*
 | **P3 — Mémoire** | graphe *nemeton* (deltas auditables + rollback), écologie mémorielle (oubli différé + réveil du compost), rappel par cas (Memento) | ✅ testé |
 | **P4 — Exploration** | ESMM : lacunes → exploration multi-modèles → **consensus sémantique à 2 niveaux** → graphe. Premier pipeline productif de l'histoire du projet | ✅ validé live (3 modèles) |
 | P5 — Agentivité | outils + auto-plugins + SilenceØ | ⬜ à construire |
-| **P6 — Application** | serveur local ; contrôle P0–P2 et mémoire P3 ; état de session persisté en SQLite ; moteur isolé par session. L'ESMM P4 n'est pas appelé par ce tour de chat | 🟡 première tranche testée ; historique conservé mais non réinjecté ni réaffiché à la reprise ; graphe REST, sélection multimodèle et auth minimale restent à construire |
+| **P6 — Application** | journal SQLite v3, contexte conversationnel à profil fixe, corrections liées, rappels explicites et navigation ; ancien profil de contrôle conservé séparément | 🟡 73 tests Python + 9 JavaScript réussis le 8 septembre ; parcours navigateur vérifié. Contrôle réel Gemma : transport conforme, erreur d'interprétation d'un rappel corrigé. Qualité d'usage, suppression et sauvegardes restent à qualifier ou construire. [Preuves et limites](docs/P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md) |
 | **P7 — Évaluation** | V11 : Q0 franchie, calibration complète, Q1 arrêtée par une stabilité insuffisante et des confonds budget/longueur | 🧪 atelier métrologique ; H11 `UNTESTED`, 60 cas tenus intacts, aucune V12 avant validation conjointe de l'instrument ([preuve](docs/P7_V11_STATUS.md)) |
-| **La Jachère** | Pouponnière évolutive (harness auto-cultivé) + le Songe (sommeil/rêve) | 📐 fondé (littérature versée, métriques pré-spécifiées) |
+| **La Jachère** | Consolidation et recombinaison autonomes ; Pouponnière évolutive et ponts facultatifs | 📐 cadrage du 7 septembre ; métriques candidates à réviser, bénéfices non établis |
+
+Le [diagnostic des rappels corrigés](docs/P6_DIAGNOSTIC_RAPPELS_2026-09-08.md)
+dispose d'un plan exploratoire scellé et de 6 336 réponses sur quatre configurations,
+après quatre appels d'admission technique. Les 212 tests de cet instrument séparé
+ont réussi ; ils ne remplacent pas les contrôles de l'application P6.
+Les [dossiers de relecture séparée](docs/P6_RELECTURE_MODE_EMPLOI_2026-09-08.md)
+sont préparés ; la confirmation indépendante et l'admission d'usage restent ouvertes.
+
+Le dépôt versionne le protocole, les sources, les tests et les guides. Les traces
+de campagne (`data/runs/`) et les archives de partage (`output/`) restent locales,
+ignorées par Git : leurs liens documentaires ne sont pas téléchargeables sur GitHub.
+Le [guide d'exécution](experiments/p6_recall/README.md) permet de reproduire la
+collecte ; le [guide des exports](docs/P6_RAPPEL_EXPORTS_2026-09-08.md) décrit les
+paquets à produire et à transmettre manuellement.
+
+Le [lot publié et la provenance des preuves](docs/P6_PUBLICATION_2026-09-08.md)
+précisent le contenu disponible sur GitHub et les pièces conservées localement.
 
 ## Architecture
+
+Le schéma ci-dessous décrit les briques de contrôle et de recherche. Le nouveau
+dialogue P6 suit une voie distincte : journal → sélection du contexte → adaptateur
+de moteur à profil fixe. Il n'active pas automatiquement ces briques.
 
 ```mermaid
 flowchart TB
@@ -97,18 +118,35 @@ Sans `LYRA_THINK`, le champ n'est pas envoyé et le comportement historique du
 modèle est conservé. Une valeur mal orthographiée est refusée plutôt que
 silencieusement interprétée.
 
-La porte locale ouverte par `Ouvrir Lyra.vbs` conserve désormais chaque
-session dans `data/lyra_sessions.sqlite3` (fichier ignoré par Git). Le
-navigateur mémorise seulement son identifiant et reprend automatiquement son
-état au redémarrage ; « Nouvelle session » oublie ce pointeur local sans
-supprimer la session durable. `LYRA_DB_PATH` permet de choisir un autre
-fichier SQLite.
+La porte locale utilise par défaut `data/lyra_sessions.sqlite3` (ignoré par Git).
+**Depuis la tranche conversationnelle du 8 septembre, le serveur attend le format v3.** Une
+ancienne base v1 ou v2 est refusée ; la migration préparée crée une copie neuve et
+ne s'exécute pas automatiquement. `LYRA_DB_PATH` permet de choisir cette copie.
+Voir le [guide du dialogue P6](docs/P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md) avant de
+relancer une installation existante avec `Ouvrir Lyra.vbs`.
 
-Cette reprise restaure les indicateurs et les états internes. Elle ne réaffiche
-pas encore les échanges et ne fournit pas l'historique conversationnel au
-modèle : il reçoit le message courant et le résumé de concepts du graphe.
-L'historique interne est borné aux 50 derniers tours. Une archive complète
-des échanges et des retours utilisateur reste à construire.
+Le navigateur conserve une copie locale des envois avant leur acceptation par
+le serveur. Il retrouve le journal et les indicateurs de sa conversation ;
+« Nouvelle session » change ce pointeur sans supprimer les données durables.
+Le journal v3 conserve les nouveaux échanges au-delà des 50 tours de l'historique
+interne de contrôle. Les lacunes des archives v1 restent signalées.
+
+Le nouveau dialogue reçoit les échanges récents et les passages explicitement
+rappelés, avec leurs corrections. Le contexte de chaque tentative est inspectable.
+L'ancien profil de contrôle reste identifiable dans les conversations historiques.
+
+**Concurrence et reprise :** une demande est enregistrée avant sa génération.
+Sa répétition retrouve son statut ou sa réponse ; un nouvel envoi dans une
+conversation occupée reçoit 409. L'accès à une autre conversation reste possible.
+Le périmètre est un registre dans un processus. Les contrôles du 8 septembre
+donnent 73 réussites Python et 9 JavaScript. Le
+[guide courant](docs/P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md) conserve les
+preuves, le parcours navigateur et la limite sémantique du contrôle Gemma réel.
+Le rejeu du 7 septembre reste une preuve historique distincte. Commande hors ligne :
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\verifier_p6.ps1
+```
 
 Cette base contient en clair les prompts, sorties et états internes nécessaires
 à la reprise. Le serveur reste volontairement lié à `127.0.0.1` : tant que
@@ -140,8 +178,12 @@ Ce que Lyra fera quand elle ne répond pas : **cultiver** ses propres modules de
 harness (évolution hors-ligne, adaptation par cas en ligne — fondée sur la
 littérature *scaffolding self-improvement* et *harness effect*) et **rêver**
 (consolidation + recomposition des vecteurs du passé, paradigme *sleep/dreaming*,
-métriques de nouveauté et de consolidation pré-spécifiées avant toute ligne de
-code). Voir `docs/BANNIERE_LA_JACHERE.md` et `docs/METRIQUES_SONGE.md`.
+métriques candidates de nouveauté et de consolidation). Le cadrage du 7 septembre
+sépare les fonctions et leurs critères de réussite, avec des échanges
+facultatifs, traçables et révocables. Voir la
+[note d'architecture](docs/NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md),
+la [bannière](docs/BANNIERE_LA_JACHERE.md) et les
+[métriques à réviser](docs/METRIQUES_SONGE.md).
 
 ## Pour aller plus loin
 
@@ -153,6 +195,12 @@ code). Voir `docs/BANNIERE_LA_JACHERE.md` et `docs/METRIQUES_SONGE.md`.
 | `manifeste/DOCTRINE_ARCHITECTE.md` | la posture qui gouverne le projet |
 | `docs/PLAN_EDIFICATION.md` | le plan directeur (P0→P7 + Jachère + Vigie) |
 | `docs/ORGANES_ET_PONTS.md` | doctrine inter-projets et état des ponts |
+| [Note Jachère — cloisonnement](docs/NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md) | décisions du 7 septembre, contrats proposés, preuves attendues et articulation P6 |
+| [Contrat d'usage P6](docs/CONTRAT_USAGE_P6_v0_2026-09-07.md) | conversations séparées, conservation, corrections et ordre de réalisation |
+| [Journal et cycle des demandes P6](docs/P6_JOURNAL_DEMANDES_2026-09-07.md) | réalisation de l'étape 2, preuves ciblées, commandes PowerShell et migration sur copie |
+| [Contexte, corrections et rappels P6](docs/P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md) | état courant, frontière du moteur, migration v3 et preuves techniques distinctes de la qualité d'usage |
+| [Diagnostic exploratoire des rappels P6](docs/P6_DIAGNOSTIC_RAPPELS_2026-09-08.md) | plan scellé, collecte achevée, vérification de l'instrument et limites scientifiques |
+| [Mode d'emploi des relectures P6](docs/P6_RELECTURE_MODE_EMPLOI_2026-09-08.md) | pièces locales à partager, instruction commune et conservation séparée des retours |
 | `docs/CADRAGE_EXTERNE_P6_P7_POST_V11.md` | état post-V11, priorités P6 et questions ouvertes pour audit/littérature |
 | `BUILD_STATUS.md` | l'état exact, brique par brique, avec provenance |
 

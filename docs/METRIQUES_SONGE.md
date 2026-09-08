@@ -1,5 +1,15 @@
 # Métriques du Songe (Organe 2) — spécification à pré-enregistrer
 
+> **Révision de cadrage — 7 septembre 2026 :** le texte ci-dessous conserve la
+> proposition antérieure, **à réviser avant tout gel ou usage comme verdict**.
+> La [note de cloisonnement Jachère](NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md)
+> retient des résultats indépendants pour consolidation et recombinaison. Elle
+> remet en examen le filtre obligatoire 1d, la hausse obligatoire de Q, la
+> compacité et l'attribution de l'utilité aval. Le verdict conjoint ci-dessous
+> est remplacé comme orientation ; aucune nouvelle métrique n'est scellée ici.
+> Les primitives de graphe existent ; une boucle complète du Songe n'est pas
+> qualifiée. La mention historique « attend P3 » ne décrit plus l'état du code.
+
 > Document **à geler** (seuils inclus) et committer **avant** que la boucle de
 > sommeil ne lise de vraies données — pré-enregistrement au sens de la charte
 > (§4) et du skill `preregistration`. Tant que l'Organe 2 n'a pas de code (il

@@ -49,6 +49,12 @@
 
 ## Ce que chaque pont pourrait porter (esquisse, PAS un engagement)
 
+**Déclinaison interne à Lyra — 7 septembre 2026 :** la
+[note de cloisonnement Jachère](NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md)
+applique cette doctrine à la consolidation, à la recombinaison et à la
+Pouponnière : fonctions autonomes, propositions séparées, admission et retrait
+traçables. Elle n'ouvre aucun des ponts inter-projets ci-dessous.
+
 - **lyra_reborn ↔ EPP_Verdict** : Lyra soumet ses triplets consensuels (P4) à
   l'attestation ; EPP renvoie des attestations = mémoire à haute confiance
   (strate au-dessus de la pouponnière ?). À dessiner quand Simon ouvrira le

@@ -1,5 +1,12 @@
 # La Jachère — la vie hors-tâche de Lyra
 
+> **Cadrage retenu le 7 septembre 2026 :** consolidation et recombinaison doivent
+> fonctionner séparément, avec des échanges facultatifs vers la Pouponnière.
+> La [note d'architecture détaillée](NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md)
+> fait référence pour les frontières, l'admission, les budgets, le retrait et
+> les preuves attendues. Les rapprochements bibliographiques ci-dessous ne
+> démontrent ni l'équivalence des mécanismes ni un bénéfice dans Lyra.
+
 > **Bannière** réunissant deux aspects sous-représentés dans le plan. *Nom de
 > travail* — à rebaptiser librement (autres pistes : « Hypnos », « Le Métabolisme »,
 > « Le Songe et la Pouponnière », « Otium »).
@@ -13,8 +20,9 @@
 Dans un esprit, le repos n'est pas l'inactivité. Le sommeil **consolide** la
 mémoire *et* **élague/reconfigure** la structure ; le développement **cultive et
 sélectionne** des modules. Les deux aspects sont les deux visages d'une même
-chose : **l'auto-transformation au repos**. Les unir n'est pas cosmétique — c'est
-reconnaître qu'ils se nourrissent l'un l'autre (voir « le pont », plus bas).
+chose : **l'auto-transformation au repos**. La bannière commune décrit cette
+intention ; elle n'impose pas de dépendance entre les fonctions. Les échanges
+seront facultatifs et qualifiés séparément (voir « le pont », plus bas).
 
 C'est aussi le **point d'orgue de l'élan « intériorité »** : après le contrôle
 (P1), la perception de soi (P2), la mémoire (P3), l'exploration (P4), l'agentivité
@@ -149,7 +157,10 @@ paliers** :
   grand). À ouvrir seulement si/quand une brique de fine-tuning local est ajoutée.
   Marqué **« Cible »** d'ici là.
 
-**Definition of Done (Palier 1, testable).** Spécification figée + seuils :
+**Ancienne proposition de Definition of Done (Palier 1) — à réviser.**
+Le verdict conjoint suivant n'est plus l'orientation retenue ; voir la note du
+7 septembre. Il est conservé pour rendre l'évolution du cadrage explicite.
+La proposition prévoyait une spécification figée + seuils :
 `docs/METRIQUES_SONGE.md` (à pré-enregistrer avant le premier run réel). En bref,
 une phase de sommeil passe **ssi**, sur un *lot* de rêves :
 - **(a) Nouveauté** (bande bornée, ni copie ni bruit) : anti-copie `sim_max<τ_copie`
@@ -170,7 +181,7 @@ bornent le sens : *rêve-copie* (doit échouer la nouveauté) et *rêve-nul* (do
 
 ---
 
-## Le pont (pourquoi les deux ne font qu'un)
+## Le pont (coopération facultative, à qualifier)
 
 ```
    Le SONGE  ──génère──►  contextes recomposés / associations neuves
@@ -182,12 +193,14 @@ bornent le sens : *rêve-copie* (doit échouer la nouveauté) et *rêve-nul* (do
    La POUPONNIÈRE ◄──adopte / composte──  (fitness = tâche × économie tokens)
 ```
 
-Le rêve **nourrit** la culture ; la culture **oriente** ce qui mérite d'être rêvé.
-C'est la boucle hors-tâche de l'auto-transformation.
+Ce schéma décrit les échanges envisagés. La génération de candidats ne devient
+pas une dépendance de la consolidation ni de la Pouponnière. Un éventuel retour
+de sélection vers la génération est un pont distinct à qualifier ; aucune
+boucle de confirmation automatique n'est autorisée par ce schéma.
 
 ## Place dans le plan
 
 Nouveau flux (cf. plan directeur §8·bis) qui **mûrit après P3/P4/P7** — il les
-consomme. **Organe 1** est constructible bientôt (fondé sur les deux papiers +
-l'audité). **Organe 2** reste en attente de tes références. Rien n'est codé tant
-que ce document ne pointe pas vers des sources et une DoD testable.
+consomme selon des interfaces à préciser. Les références sont versées, mais les
+fonctions et leurs ponts restent à construire ou qualifier, sans engagement de
+calendrier. P6 reste prioritaire ; la note du 7 septembre fixe l'ordre de reprise.

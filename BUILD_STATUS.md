@@ -4,6 +4,18 @@
 > actuelles : [ETAT_ACTUEL](docs/ETAT_ACTUEL.md). Les validations live citées
 > ci-dessous sont historiques ; elles n'ont pas été relancées lors de cette revue.
 
+> **Actualisation P6 — 8 septembre 2026 :** dialogue de référence local, corrections,
+> rappels et navigation implémentés. 73 Python + 9 JavaScript réussis ; navigateur
+> vérifié sur moteur factice. Contrôle réel Gemma limité : transport vérifié,
+> contre-exemple d'utilisation d'une correction. [Détail](docs/P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md).
+> Le [diagnostic exploratoire des rappels](docs/P6_DIAGNOSTIC_RAPPELS_2026-09-08.md)
+> est achevé : plan scellé, 6 336 traces sur quatre configurations après quatre
+> admissions techniques ; 212 tests de l'instrument séparé réussis. Les dossiers
+> de relecture sont prêts, sans confirmation indépendante ni admission d'usage.
+> Les traces et archives sont locales et ignorées par Git ; les
+> [commandes de reproduction](experiments/p6_recall/README.md) et le
+> [guide de partage](docs/P6_RELECTURE_MODE_EMPLOI_2026-09-08.md) sont versionnés.
+
 Pont entre le **plan directeur** (`docs/PLAN_EDIFICATION.md`) et le code. Tenu à jour
 à chaque phase. Les audits détaillés (43 documents, avec numéros de ligne et bugs)
 vivent dans le dossier d'audit `../../audits_en_cours/` (lots 1 & 2) — s'y référer pour
@@ -33,13 +45,17 @@ Preuves : `python -m pytest` (dont `test_modulation.py` = la modulation est rée
 
 ## Note d'architecture (importante, honnête)
 
-Il y a **deux** chemins d'exécution, dont les rôles sont distincts :
+Les chemins de contrôle historiques ont des rôles distincts :
 
 1. **Génération** (`LyraLoop`) : métriques textuelles sur la sortie, politique
    réactive et, quand un contrôleur est fourni, pont P2 vers le P+I.
 2. **Autopilote de démonstration** (`run_autopilot`) : régule une dynamique épistémique
    **synthétique** (`core/control/measures.py`, formules-jouets honnêtement
    étiquetées, issues de `lyra_framework_bundle`).
+
+Depuis le 8 septembre, `DialogueConversation` est une troisième voie : historique
+du journal et rappels explicites vers un adaptateur chat, à réglages fixes.
+Elle ne passe pas par `LyraLoop` ni par l'autopilote.
 
 **Pont P2 : FAIT (2026-07-18)** — `core/control/bridge.py` dérive
 coherence/fit/pressure/tension de la génération réelle ; `LyraLoop(controller=…)`
@@ -66,7 +82,10 @@ des **masques transitoires de projection** du tour. Preuve :
 | ~~P4~~ | ~~`explore/esmm/`~~ | **FAIT** — voir tableau ci-dessus. Restes : cochaîne 5D complète (v1 = support/diversité/sources), adaptation dynamique du plan de cycles, recalibration τ_obj sur campagne large | — |
 | P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
 | **P6 (tranche 1)** | `app/session.py` + `app/storage.py` + `app/main.py` | Un tour traverse le contrôle P0–P2 et la mémoire P3 (sans appel à l'ESMM P4), puis l'état complet versionné est enregistré atomiquement en SQLite. Restauration paresseuse après redémarrage, 404 sans création implicite, moteur restauré sans appel réseau, rollback mémoire si génération ou sauvegarde échoue, registre `GET /api/sessions`. La page reprend l'identifiant localement et « Nouvelle session » ne supprime rien. | suite complète + tests de corruption/incohérence + reprise vérifiée entre deux processus serveur (`tests/test_p6_first_layers.py`, `tests/test_p6_http.py`, `tests/test_session_persistence.py`) |
-| P6 (reste) | `app/` | contexte conversationnel, réaffichage des échanges, retours utilisateur durables, graphe REST, catalogue/sélection multimodèle, auth minimale | `lyra_clean_bis` — matériau d'audit, pas un bloc à transplanter |
+| **P6 (journal, 7 septembre, local)** | `app/journal.py` + `app/requests.py` + client de la page | Demandes acceptées avant génération, réponse et état validés ensemble, répétitions sans second résultat, tentatives explicites, reprise visible et migration v1 préparée sur copie. Garde A01 réutilisée ; un registre dans un processus. | 57 tests Python + 7 tests JavaScript réussis en développement, puis dans le PowerShell de Simon ; rapport relu et 19 empreintes concordantes. Clients factices, SQLite temporaire, DOM simulé. [Guide et limites](docs/P6_JOURNAL_DEMANDES_2026-09-07.md). |
+| **P6 (dialogue, 8 septembre, local)** | `app/dialogue.py`, `context.py`, `dialogue_store.py`, `chat_backend.py`, page | Profil fixe sans mémoire dérivée automatique ; rôles, corrections, rappels choisis, contexte par tentative, navigation et migration v3 sur copie. | 73 Python + 9 JavaScript réussis ; navigateur factice vérifié ; contrôle Gemma réel limité, qualité de rappel non admise. [Guide](docs/P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md). |
+| **P6 (diagnostic exploratoire, 8 septembre)** | `experiments/p6_recall/`, scripts d'exécution et d'export | Instrument séparé de l'application et de P7 ; plan scellé, corpus synthétique, traces durables et paquets de relecture isolée. | 212 tests instrumentaux réussis ; 6 336 réponses techniquement valides + 4 admissions. Statut `DESCRIPTIF_EXPLORATOIRE_DISPONIBLE`, sans confirmation indépendante ni comparaison générale des familles. [Preuves et limites](docs/P6_DIAGNOSTIC_RAPPELS_2026-09-08.md). |
+| P6 (reste) | `app/` | qualification d'usage, suppression et sauvegardes, isolation/admission des runtimes, graphe REST, catalogue/sélection multimodèle, auth minimale | `lyra_clean_bis` — matériau d'audit, pas un bloc à transplanter |
 | P7 | `eval/` + `scripts/p7_v11.py` | **V11 arrêtée protectivement à Q1 après calibration complète.** Le juge lit le contenu mais reste trop instable (54,8 %) et biaisé par la position ; budgets et contrat ont sélectionné la capacité à finir le JSON, tandis que la longueur est confondue avec le bouton testé. H11 `UNTESTED`, jeu tenu 60/60 intact. P7 est en atelier métrologique, sans H12. | `docs/P7_V11_STATUS.md` + `docs/CADRAGE_EXTERNE_P6_P7_POST_V11.md` |
 | — | `research/` | orbites FLOATLAP, métriques fractales, calibrations | `session_2/tranzit` — exploratoire |
 

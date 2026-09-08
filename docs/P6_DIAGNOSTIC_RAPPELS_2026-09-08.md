@@ -41,6 +41,10 @@ migration utilisateur, génération Qwen ou publication n'a été effectuée.
 
 ## Ce que les contrôles établissent
 
+L'[index public des preuves locales](preuves/P6_MANIFESTE_PUBLIC_2026-09-08.json)
+fournit leurs empreintes et leur portée. Les rapports complets liés ci-dessous
+restent locaux ; cet index ne constitue pas une réplication indépendante.
+
 Les **212 tests** du corpus, du runner, de l'export et de la transcription compacte
 ont réussi à la clôture. Un premier lot de 185 tests avait réussi avant le
 lancement de la collecte. Ils utilisent des clients factices : ils vérifient notamment
