@@ -80,6 +80,12 @@
     }
     button:disabled { opacity: 0.5; cursor: wait; }
     a { color: var(--encre); }
+    select { max-width: 100%; padding: 8px; font: inherit; }
+    [hidden] { display: none !important; }
+    dialog { max-width: min(760px, 94vw); max-height: 90vh; overflow: auto; border-radius: 18px; border: 1px solid var(--ligne); background: #fffdf8; }
+    dialog pre { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 24vh; overflow: auto; }
+    .actions-message button { font-size: .8rem; padding: 6px 10px; margin: 4px; }
+    #rappels-actifs { font-size: .85rem; }
     .attente { font-style: italic; color: var(--muet); }
   </style>
 </head>
@@ -87,179 +93,55 @@
   <main>
     <p class="muet"><a href="http://127.0.0.1:8765/">← Table de travail</a></p>
     <h1>Parler à Lyra</h1>
-    <p class="muet" id="moteur">Premières couches : le chemin, pas encore une voix.</p>
-    <div class="etat">
+    <nav aria-label="Conversations conservées">
+      <select id="conversations" aria-label="Conversation à ouvrir"></select>
+      <button type="button" onclick="ouvrirConversation()">Ouvrir</button>
+      <button type="button" onclick="actualiseConversations()">Actualiser</button>
+    </nav>
+    <p class="muet" id="moteur">Conversation de référence · modèle à activer</p>
+    <div class="etat" id="indicateurs-controle" hidden>
       <div><strong id="rho">—</strong><span>ρ structure</span></div>
       <div><strong id="deltar">—</strong><span>δr souffle</span></div>
       <div><strong id="tauc">—</strong><span>τc tension</span></div>
       <div><strong id="kappa">—</strong><span>κ courbure</span></div>
     </div>
-    <p class="muet" id="meta">Graphe : — · Mémoire : —</p>
+    <p class="muet" id="meta">Conversations séparées · rappels choisis par toi</p>
     <div id="fil">
-      <p class="muet">Écris, puis Envoyer. Lyra te dira ce que le chemin a fait de tes mots — pas un bavardage. La voix d’un modèle est un autre geste, volontaire.</p>
+      <p class="muet">Écris puis « Demander une voix » pour activer le modèle. « Envoyer » prépare une démonstration tant que la voix est inactive, puis poursuit avec le modèle de la conversation. Tu peux retrouver, corriger et rappeler tes messages.</p>
     </div>
+    <button type="button" id="charger-journal" onclick="chargerJournal()" hidden>Charger la suite du journal</button>
     <textarea id="parole" placeholder="Écris ici, en français…"></textarea>
     <div>
       <button type="button" id="envoyer" onclick="envoyer(false)">Envoyer</button>
       <button type="button" id="voix" onclick="envoyer(true)">Demander une voix</button>
       <button type="button" id="nouvelle-session" onclick="nouvelleSession()">Nouvelle session</button>
-      <span class="muet" id="echo"></span>
+      <span class="muet" id="echo" role="status" aria-live="polite"></span>
     </div>
+    <div id="envois" aria-label="Envois à reprendre"></div>
+    <section id="rappels-actifs" aria-label="Passages explicitement rappelés"></section>
+    <dialog id="passage-dialogue">
+      <h2>Message et provenance</h2>
+      <p id="passage-source"></p>
+      <pre id="passage-original"></pre>
+      <p id="passage-revisions"></p>
+      <label for="passage-correction">Correction déclarée de ce message entier</label>
+      <textarea id="passage-correction"></textarea>
+      <button type="button" onclick="enregistrerCorrection()">Enregistrer la correction</button>
+      <p>Rappeler ce message entier dans une conversation. Seul ce message et sa correction seront transmis ; les corrections futures le suivront lors de sa prochaine utilisation.</p>
+      <select id="rappel-destination" aria-label="Destination du rappel"></select>
+      <button type="button" onclick="enregistrerRappel()">Rappeler dans cette conversation</button>
+      <p id="passage-statut" role="status"></p>
+      <button type="button" onclick="document.getElementById('passage-dialogue').close()">Fermer</button>
+    </dialog>
+    <dialog id="contexte-dialogue">
+      <h2>Contexte de la tentative</h2>
+      <p>Messages effectivement transmis, provenance, corrections et omissions. Les caractères et les tokens sont indiqués séparément.</p>
+      <pre id="contexte-contenu"></pre>
+      <button type="button" onclick="document.getElementById('contexte-dialogue').close()">Fermer</button>
+    </dialog>
   </main>
-  <script>
-    const cleSession = "lyra.session.v1";
-    let session = null;
-    try {
-      session = window.localStorage.getItem(cleSession);
-    } catch (err) {
-      session = null;
-    }
-    const fil = document.getElementById("fil");
-    const zone = document.getElementById("parole");
-    const bouton = document.getElementById("envoyer");
-    const echo = document.getElementById("echo");
-
-    function bulle(qui, texte, classe) {
-      const d = document.createElement("div");
-      d.className = "bulle " + (classe || "");
-      d.innerHTML = "<div class='qui'></div><div class='txt'></div>";
-      d.querySelector(".qui").textContent = qui;
-      d.querySelector(".txt").textContent = texte;
-      fil.appendChild(d);
-      fil.scrollTop = fil.scrollHeight;
-      return d;
-    }
-
-    function afficheEtat(data) {
-      const b = data.boutons_suivants || data.boutons || {};
-      const fmt = x => (x == null ? "—" : Number(x).toFixed(2));
-      document.getElementById("rho").textContent = fmt(b.rho);
-      document.getElementById("deltar").textContent = fmt(b.delta_r);
-      document.getElementById("tauc").textContent = fmt(b.tau_c);
-      document.getElementById("kappa").textContent = fmt(b.kappa);
-      const g = data.graphe || {};
-      const m = data.memoire || {};
-      document.getElementById("meta").textContent =
-        "Graphe : " + (g.nodes || 0) + " concepts, " + (g.edges || 0) + " liens · Mémoire : "
-        + (m.pouponniere || 0) + " actifs, " + (m.oubli || 0) + " différés, " + (m.compost || 0) + " au repos";
-      if (data.moteur) {
-        document.getElementById("moteur").textContent = "Modèle : " + data.moteur;
-      }
-    }
-
-    function detailErreur(data) {
-      if (!data) return "Lyra n’a pas répondu.";
-      if (typeof data.detail === "string") return data.detail;
-      if (Array.isArray(data.detail)) return data.detail.map(x => x.msg || x).join(" ");
-      return "Lyra n’a pas répondu.";
-    }
-
-    function memoriseSession(id) {
-      session = id;
-      try {
-        window.localStorage.setItem(cleSession, id);
-      } catch (err) {
-        echo.textContent = "Session active, mais le navigateur ne peut pas mémoriser son identifiant.";
-      }
-    }
-
-    function oublieSessionLocale() {
-      session = null;
-      try {
-        window.localStorage.removeItem(cleSession);
-      } catch (err) {
-        echo.textContent = "Le navigateur ne peut pas oublier l’identifiant local.";
-      }
-    }
-
-    function nouvelleSession() {
-      oublieSessionLocale();
-      fil.replaceChildren();
-      bulle("Lyra", "Nouvelle session locale. La précédente reste conservée.", "lyra");
-      for (const id of ["rho", "deltar", "tauc", "kappa"]) {
-        document.getElementById(id).textContent = "—";
-      }
-      document.getElementById("meta").textContent = "Graphe : — · Mémoire : —";
-      echo.textContent = "";
-      zone.focus();
-    }
-
-    async function reprendreSession() {
-      if (!session) return;
-      try {
-        const r = await fetch("/api/session/" + encodeURIComponent(session));
-        const data = await r.json();
-        if (r.status === 404) {
-          oublieSessionLocale();
-          echo.textContent = "L’ancienne session n’existe plus dans ce registre.";
-          return;
-        }
-        if (!r.ok) {
-          echo.textContent = detailErreur(data);
-          return;
-        }
-        afficheEtat(data);
-        echo.textContent = "Session reprise · " + (data.tours || 0) + " tour(s).";
-      } catch (err) {
-        echo.textContent = "La reprise attend que la porte soit disponible.";
-      }
-    }
-
-    async function envoyer(voix) {
-      const texte = zone.value.trim();
-      if (!texte) { echo.textContent = "Écris un mot."; return; }
-      echo.textContent = "";
-      bouton.disabled = true;
-      document.getElementById("voix").disabled = true;
-      zone.value = "";
-      bulle("Toi", texte);
-      const attente = bulle("Lyra", voix ? "Une voix est demandée — j’attends le modèle…" : "Le chemin travaille.", "lyra attente");
-      try {
-        const r = await fetch("/api/parler", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ texte, session, voix: !!voix })
-        });
-        const data = await r.json();
-        attente.remove();
-        if (!r.ok) {
-          bulle("Lyra", detailErreur(data), "lyra");
-          echo.textContent = "Ça n’a pas abouti.";
-          return;
-        }
-        memoriseSession(data.session);
-        const parole = (data.reponse || "").replace(/^\[echo[^\]]*\]\s*/, "");
-        bulle("Lyra", parole || "(silence)", "lyra");
-        afficheEtat(data);
-      } catch (err) {
-        attente.remove();
-        bulle("Lyra", "Je n’ai pas pu joindre la porte. Rouvre la page dans un instant.", "lyra");
-      } finally {
-        bouton.disabled = false;
-        document.getElementById("voix").disabled = false;
-        zone.focus();
-      }
-    }
-
-    zone.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        envoyer(false);
-      }
-    });
-
-    async function initialiser() {
-      try {
-        const r = await fetch("/api/sante");
-        const data = await r.json();
-        document.getElementById("moteur").textContent = "Modèle : " + (data.moteur || "inconnu");
-      } catch (err) {
-        document.getElementById("moteur").textContent = "La porte ne répond pas. Double-clique « Ouvrir Lyra ».";
-      }
-      await reprendreSession();
-    }
-
-    initialiser();
-  </script>
+  <script src="/static/journal-client.js"></script>
+  <script src="/static/dialogue-ui.js"></script>
+  <script src="/static/p6-ui.js"></script>
 </body>
 </html>

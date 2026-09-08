@@ -43,6 +43,9 @@ class SessionStorageError(RuntimeError):
 class SQLiteSessionStore:
     """Dépôt SQLite local, sans suppression ni repli silencieux."""
 
+    schema_version = STORAGE_SCHEMA_VERSION
+    state_versions = (STORAGE_SCHEMA_VERSION,)
+
     def __init__(self, path: str | Path):
         self.path = Path(path)
         self._initialized = False
@@ -68,26 +71,14 @@ class SQLiteSessionStore:
                         version = int(
                             connection.execute("PRAGMA user_version").fetchone()[0]
                         )
-                        if version not in (0, STORAGE_SCHEMA_VERSION):
+                        if version not in (0, self.schema_version):
                             raise SessionStorageError(
                                 f"version SQLite non supportée : {version}"
                             )
-                        connection.execute(
-                            """
-                            CREATE TABLE IF NOT EXISTS sessions (
-                                session_id TEXT PRIMARY KEY,
-                                schema_version INTEGER NOT NULL,
-                                backend_label TEXT NOT NULL,
-                                turns INTEGER NOT NULL CHECK (turns >= 0),
-                                created_at REAL NOT NULL,
-                                updated_at REAL NOT NULL,
-                                state_json TEXT NOT NULL
-                            )
-                            """
-                        )
+                        self._create_tables(connection)
                         if version == 0:
                             connection.execute(
-                                f"PRAGMA user_version = {STORAGE_SCHEMA_VERSION}"
+                                f"PRAGMA user_version = {self.schema_version}"
                             )
                         connection.execute("PRAGMA journal_mode = WAL")
                 self._initialized = True
@@ -97,6 +88,19 @@ class SQLiteSessionStore:
                 raise SessionStorageError(
                     f"impossible d'initialiser le stockage SQLite : {exc}"
                 ) from exc
+
+    def _create_tables(self, connection):
+        connection.execute(
+            """CREATE TABLE IF NOT EXISTS sessions (
+                session_id TEXT PRIMARY KEY,
+                schema_version INTEGER NOT NULL,
+                backend_label TEXT NOT NULL,
+                turns INTEGER NOT NULL CHECK (turns >= 0),
+                created_at REAL NOT NULL,
+                updated_at REAL NOT NULL,
+                state_json TEXT NOT NULL
+            )"""
+        )
 
     @contextmanager
     def _connect(self) -> Iterator[sqlite3.Connection]:
@@ -117,6 +121,18 @@ class SQLiteSessionStore:
     def save(self, state: Dict[str, Any]) -> None:
         """Insère ou remplace atomiquement l'état complet d'une session."""
         try:
+            with self._connect() as connection:
+                self._write_state(connection, state)
+        except SessionStorageError:
+            raise
+        except sqlite3.Error as exc:
+            raise SessionStorageError(
+                f"impossible d'enregistrer la session : {exc}"
+            ) from exc
+
+    def _write_state(self, connection, state: Dict[str, Any]) -> None:
+        """Même validation v1 ; l'appelant possède la transaction de publication."""
+        try:
             session_id = state["id"]
             schema_version = int(state["schema_version"])
             backend_label = state["backend_label"]
@@ -126,7 +142,7 @@ class SQLiteSessionStore:
                 raise ValueError("identifiant de session vide")
             if not isinstance(backend_label, str) or not backend_label:
                 raise ValueError("étiquette de moteur vide")
-            if schema_version != STORAGE_SCHEMA_VERSION:
+            if schema_version not in self.state_versions:
                 raise ValueError(f"version d'état non supportée : {schema_version}")
             if turns < 0:
                 raise ValueError("nombre de tours négatif")
@@ -141,38 +157,30 @@ class SQLiteSessionStore:
             raise SessionStorageError(f"état de session invalide : {exc}") from exc
 
         updated_at = time.time()
-        try:
-            with self._connect() as connection:
-                connection.execute(
-                    """
-                    INSERT INTO sessions
-                        (session_id, schema_version, backend_label, turns,
-                         created_at, updated_at, state_json)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(session_id) DO UPDATE SET
-                        schema_version = excluded.schema_version,
-                        backend_label = excluded.backend_label,
-                        turns = excluded.turns,
-                        created_at = excluded.created_at,
-                        updated_at = excluded.updated_at,
-                        state_json = excluded.state_json
-                    """,
-                    (
-                        session_id,
-                        schema_version,
-                        backend_label,
-                        turns,
-                        created_at,
-                        updated_at,
-                        payload,
-                    ),
-                )
-        except SessionStorageError:
-            raise
-        except sqlite3.Error as exc:
-            raise SessionStorageError(
-                f"impossible d'enregistrer la session : {exc}"
-            ) from exc
+        connection.execute(
+            """
+            INSERT INTO sessions
+                (session_id, schema_version, backend_label, turns,
+                 created_at, updated_at, state_json)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(session_id) DO UPDATE SET
+                schema_version = excluded.schema_version,
+                backend_label = excluded.backend_label,
+                turns = excluded.turns,
+                created_at = excluded.created_at,
+                updated_at = excluded.updated_at,
+                state_json = excluded.state_json
+            """,
+            (
+                session_id,
+                schema_version,
+                backend_label,
+                turns,
+                created_at,
+                updated_at,
+                payload,
+            ),
+        )
 
     def load(self, session_id: str) -> Dict[str, Any] | None:
         """Retourne l'état durable, sans créer de ligne lors d'une lecture."""
@@ -196,7 +204,7 @@ class SQLiteSessionStore:
 
         if row is None:
             return None
-        if int(row["schema_version"]) != STORAGE_SCHEMA_VERSION:
+        if int(row["schema_version"]) not in self.state_versions:
             raise SessionStorageError(
                 f"version de session non supportée : {row['schema_version']}"
             )

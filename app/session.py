@@ -8,9 +8,12 @@ Anti « vert mais vide » : après un prompt qui porte au moins un concept,
 le graphe n'est plus vide. Un prompt vide lève une erreur, il n'est pas avalé.
 """
 from __future__ import annotations
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import asdict, dataclass
 import json
 import math
+import threading
 from typing import Any, Callable, Dict, List, Optional, Protocol, Tuple
 import time
 import uuid
@@ -52,6 +55,10 @@ SESSION_STATE_VERSION = 1
 
 class SessionStateError(ValueError):
     """Un état durable ne respecte pas le contrat de session courant."""
+
+
+class SessionBusyError(RuntimeError):
+    """Une opération HTTP détient déjà l'accès à cette session."""
 
 
 class SessionPersistence(Protocol):
@@ -332,20 +339,50 @@ class LyraConversation:
 
 
 class SessionBook:
-    """Registre vivant avec restauration paresseuse depuis un dépôt local."""
+    """Registre vivant avec restauration paresseuse depuis un dépôt local.
+
+    Les accès HTTP utilisent ``exclusive`` avant toute récupération et jusqu'à
+    la fin de la sauvegarde ou du rollback. Les méthodes de bas niveau restent
+    utilisables seules dans un contexte séquentiel ; elles ne protègent pas un
+    objet mutable conservé par leur appelant. Portée : un registre, un processus.
+    """
 
     def __init__(
         self,
         llm_factory: Optional[Callable[[], Tuple[Any, str]]] = None,
         backend_resolver: Optional[Callable[[str], Tuple[Any, str]]] = None,
         storage: Optional[SessionPersistence] = None,
+        conversation_factory=None,
     ):
         self._llm_factory = llm_factory or (
             lambda: (EchoClient(), "premières couches")
         )
         self._backend_resolver = backend_resolver or _default_backend_resolver
         self._storage = storage
+        self._conversation_factory = conversation_factory or LyraConversation
         self._sessions: Dict[str, LyraConversation] = {}
+        # Indépendant des objets conversation : un rollback peut les remplacer.
+        # Seules les opérations actives occupent une entrée, pas chaque ID lu.
+        self._active_sessions: set[str] = set()
+        self._access_lock = threading.Lock()
+
+    @contextmanager
+    def exclusive(self, session_id: str) -> Iterator[None]:
+        """Réserve l'identité avant require/create, sans attendre une génération.
+
+        Le verrou du registre ne couvre que la réservation/libération ; aucun
+        calcul ni accès SQLite n'empêche une autre session de réserver son ID.
+        Cette garde non réentrante doit entourer tout le cycle de l'appelant.
+        """
+        with self._access_lock:
+            if session_id in self._active_sessions:
+                raise SessionBusyError(session_id)
+            self._active_sessions.add(session_id)
+        try:
+            yield
+        finally:
+            with self._access_lock:
+                self._active_sessions.remove(session_id)
 
     def create(
         self,
@@ -359,7 +396,7 @@ class SessionBook:
             if self._storage.load(session_id) is not None:
                 raise ValueError(f"session déjà existante : {session_id}")
         llm, label = backend if backend is not None else self._llm_factory()
-        conv = LyraConversation(
+        conv = self._conversation_factory(
             llm=llm,
             session_id=session_id,
             refractory_ms=refractory_ms,
@@ -376,10 +413,7 @@ class SessionBook:
         if self._storage is not None:
             state = self._storage.load(session_id)
             if state is not None:
-                conv = LyraConversation.from_state(
-                    state,
-                    backend=self._backend_resolver(state.get("backend_label", "")),
-                )
+                conv = self._restore_state(state)
                 self._sessions[conv.id] = conv
                 return conv
         raise KeyError(f"session inconnue : {session_id}")
@@ -389,13 +423,22 @@ class SessionBook:
             self._storage.save(conv.to_state())
 
     def restore(self, state: Dict[str, Any]) -> LyraConversation:
+        conv = self._restore_state(state)
+        self._sessions[conv.id] = conv
+        return conv
+
+    def _restore_state(self, state):
+        if state.get("schema_version") == 2:
+            from app.dialogue import DialogueConversation
+            try:
+                return DialogueConversation.from_state(state)
+            except ValueError as exc:
+                raise SessionStateError(str(exc)) from exc
         label = state.get("backend_label", "")
-        conv = LyraConversation.from_state(
+        return LyraConversation.from_state(
             state,
             backend=self._backend_resolver(label),
         )
-        self._sessions[conv.id] = conv
-        return conv
 
     def rollback(
         self,
@@ -403,8 +446,10 @@ class SessionBook:
         previous_state: Optional[Dict[str, Any]],
     ) -> None:
         """Annule une mutation mémoire sans toucher à l'état SQLite antérieur."""
+        # Même si la reconstruction échoue, aucun appel suivant ne doit
+        # retrouver l'objet contenant des modifications non sauvegardées.
+        self._sessions.pop(session_id, None)
         if previous_state is None:
-            self._sessions.pop(session_id, None)
             return
         self.restore(previous_state)
 

@@ -7,12 +7,15 @@ from fastapi.testclient import TestClient
 import app.main as main_module
 from app.main import app, book
 from app.storage import SQLiteSessionStore, SessionStorageError
+from app.session import LyraConversation
 from core.llm import EchoClient
 
 
 @pytest.fixture
-def client(tmp_path):
+def client(tmp_path, monkeypatch):
     book._sessions.clear()
+    # Ces tests portent explicitement sur la porte v1 historique.
+    monkeypatch.setattr(book, "_conversation_factory", LyraConversation)
     book._llm_factory = lambda: (EchoClient(), "premières couches")
     book._backend_resolver = lambda label: (EchoClient(model=label), label)
     book._storage = SQLiteSessionStore(tmp_path / "sessions.sqlite3")
@@ -27,7 +30,9 @@ def test_health_and_page(client):
     assert page.status_code == 200
     assert "Parler à Lyra" in page.text
     assert "chemin" in page.text.lower() or "Demander une voix" in page.text
-    assert "lyra.session.v1" in page.text
+    assert "/static/p6-ui.js" in page.text
+    assert "lyra.session.v1" in client.get("/static/p6-ui.js").text
+    assert "journal-client.js" in page.text
     assert "Nouvelle session" in page.text
 
 

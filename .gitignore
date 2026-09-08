@@ -12,6 +12,15 @@ dist/
 
 # Données de runs (ne pas versionner les sorties)
 data/runs/
+output/p6-recall/
+tmp/pdfs/p6_*/
+# Relectures et notes personnelles : partage manuel, hors publication du code.
+/docs/relectures/**/retours/
+/docs/relectures/2026-09-05_base_conversationnelle/INDEX_RELECTURES_v1.json
+/docs/relectures/2026-09-05_base_conversationnelle/CONSOLIDATION_v1_2026-09-05.md
+/docs/relectures/2026-09-08_p6_rappels/01_methode/
+/docs/relectures/2026-09-08_p6_rappels/02_resultats/
+/docs/Programme P7 · mise à plat.txt
 data/*.db
 data/*.sqlite*
 *.log
