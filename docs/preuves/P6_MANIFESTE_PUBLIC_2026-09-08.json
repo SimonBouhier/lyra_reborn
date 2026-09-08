@@ -1,0 +1,122 @@
+{
+  "kind": "public_index_of_local_evidence",
+  "date": "2026-09-08",
+  "qualification": "This index records hashes and reported local checks; it is not the full raw evidence or an independent replication. Re-run deterministic tests from the published sources; request the raw packet for inspection of the original collection.",
+  "product": {
+    "python_tests": 73,
+    "javascript_tests": 9,
+    "mode": "fake clients and temporary SQLite; no live call in this test set",
+    "reports": [
+      {
+        "path": "data/runs/p6-verification/20260908-102233-74d68cd6665f4a97a1ce8cc71378276f/verification.json",
+        "sha256": "8d799915008237b99b256cda0b1b7551e659d151d0236556134cf62d1419509d",
+        "availability": "local_ignored_by_git"
+      },
+      {
+        "path": "data/runs/p6-verification/20260908-102233-74d68cd6665f4a97a1ce8cc71378276f/pytest.xml",
+        "sha256": "c94db2269c91e266934f06c7d7191128336e74bc6f46236f22b7aa2c174deb0e",
+        "availability": "local_ignored_by_git"
+      },
+      {
+        "path": "data/runs/p6-verification/20260908-102233-74d68cd6665f4a97a1ce8cc71378276f/javascript.log",
+        "sha256": "cbe437959d5ef7c45e99c52e307ef564c2ae5af2627d5da2989de5dddb37cd14",
+        "availability": "local_ignored_by_git"
+      }
+    ]
+  },
+  "instrument": {
+    "tests": 212,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "reports": [
+      {
+        "path": "data/runs/p6-recall/v1/instrument-final-verification.json",
+        "sha256": "35c814f6fd565dc845e120386756899987efcfcf2c3479646ea0645a46c0903b",
+        "availability": "local_ignored_by_git"
+      },
+      {
+        "path": "data/runs/p6-recall/v1/instrument-tests-final.xml",
+        "sha256": "9878fffd9dbbbec5f3bb6d5cadbb9ddb9356b9c44df9c7887750ccd22f4b67e9",
+        "availability": "local_ignored_by_git"
+      }
+    ]
+  },
+  "exploration": {
+    "planned": 6336,
+    "terminal_records": 6336,
+    "technical_status_counts": {
+      "valid": 6336
+    },
+    "additional_technical_admissions": 4,
+    "protocol_sha256": "98b9c1698828deb985bba64e184c58a14f4bdb5d2c2f20630bc9585b32fe4ef1",
+    "reports": [
+      {
+        "path": "data/runs/p6-recall/v1/verification.json",
+        "sha256": "7d05976acc84a01dad06334ee829655a09d8aee3402ca167dbcff59ac67b3c58",
+        "availability": "local_ignored_by_git"
+      },
+      {
+        "path": "data/runs/p6-recall/v1/qualification/verification.json",
+        "sha256": "8aaa2ac29d41ab2f66321040f9c84d75354b0f5ea67de6c54aa62782a59a3031",
+        "availability": "local_ignored_by_git"
+      }
+    ],
+    "independent_confirmation": false,
+    "usage_admission": false
+  },
+  "review_exports": [
+    {
+      "path": "output/p6-recall/02_resultats_v1_revision1.zip",
+      "sha256": "5c4451ab19350ec4ee83a3dcb105ef10dea4371f916b5fb1577b1036ffcf35bf",
+      "availability": "local_ignored_by_git"
+    },
+    {
+      "path": "output/p6-recall/lecture_compacte_v1.zip",
+      "sha256": "0eddcca423716caf293364159bd53bd2cd39f9e33a9f08ad30ae5ee68d7d87e9",
+      "availability": "local_ignored_by_git"
+    }
+  ],
+  "source_files_sha256": {
+    "app/main.py": "61dee348ae83fa5bcea6377cfe0e945fb554ff6b15577962d751349be1bb9621",
+    "app/storage.py": "f27419cb054bbe8487f4a641e31fa2ec7777534ae1dc5cdb2bf05a79d0ea0697",
+    "app/session.py": "d6e7d4baa940c703f6da9b99bcf6e03457915b72e37fb1686bac6ff052141b8e",
+    "app/journal.py": "7f346de01d0c0954738364cc1270a3e24f01bbb07d9b7e4ffd7fe8d219197398",
+    "app/requests.py": "b46554951fd39c9340aa28f358e83f2c1406a3b38f3aa9d36778b2d3e6b89b31",
+    "app/static/index.html": "4327e5e18c031f3374158469e8ee3160f1d2bc49f4f1c95bba6c8095f232a798",
+    "app/static/journal-client.js": "c4490e0295626fa0a269d2dc0e665f1e2ee32c055acb6ce282208f459d857961",
+    "app/static/p6-ui.js": "55869a7b5f39059d70271d479523c3c9f01b4cc95bf08bf64e496edce7bd7cb0",
+    "scripts/migrate_p6_journal.py": "f2830468665b30864fd2397a7e4671709c972e4a524219075269dc5558431077",
+    "scripts/verifier_p6.ps1": "9ae5749cf4fedd2fdd67406c91942f52c5b26503c77145f16efaa5f48975415c",
+    "app/dialogue.py": "6d750c1239d49182e24ad9b934367faded647aee6d59c5cf62962cd6859eb480",
+    "app/dialogue_store.py": "27ec41e107c711b7f652276259adaa13d23e1ac51e3e65e7cb2dee42721df69e",
+    "app/context.py": "d4c1ec7d50824bba61b4748bd99cd0bb836fb9f8c1d7c26219507f427660310c",
+    "app/chat_backend.py": "e06c88d66d6919ef6baf72893aea334148f40911cdcf763067ab10f497291525",
+    "app/static/dialogue-ui.js": "4dec54aa85a598ce491138ede34a39ac6a2d4a3f8bf6b80c3f7087137b0d08bc",
+    "scripts/migrate_p6_dialogue.py": "7319d60f11958308f64c4797a8c0de262dce20f13514ab9a6334a99437cc4412",
+    "tests/test_journal_client.cjs": "290b930ecb14ab9d38078c9df9b0eda36626eb1780a913fd02b8de6756de482c",
+    "tests/test_p6_ui.cjs": "f4bc2c9dcbc111b27f396c9cd4a81eb9fb7ad34e43e375ea00428d0b4369fd14",
+    "tests/test_p6_requests.py": "b2e0a18e8f6b0ece7fc848ba7df5f62c0ea77311b517c3435ef2eee38d721369",
+    "tests/test_p6_requests_http.py": "385757e7c602a3c392c696393b82722a712d699ae6d07099f93b478212ea905a",
+    "tests/test_p6_journal_migration.py": "68773ce5e7bd4f94d6084301884579e2549055bddf0eccc9f579e8bc0456e5b2",
+    "tests/test_session_persistence.py": "00221817a44737d91b40f60925817683d566dc378b1e42065d3071b884e81db3",
+    "tests/test_p6_http.py": "bc4ef8bf47b715fc283419e7208a605239cb55075c00778aa9d64da18545958f",
+    "tests/test_p6_concurrency.py": "0f12f6042f77de5574eeacd61b9b2ebc0126630736dc076ba25084019b33758c",
+    "tests/test_p6_first_layers.py": "2d8ac117218ce456c25e85c89788b9855785e8f49d49b8266b1eb115cb26edb2",
+    "tests/test_p6_context.py": "35050b47dee3755f2b875b6cd44bebf95333a4482559fc897ea68a797e040262",
+    "tests/test_p6_context_http.py": "136149fbc5102647b4e4ef4fab004179aace6a3199e975f28e30e5576c50e156",
+    "tests/test_p6_chat_backend.py": "409c2c38756e2b2837fc7058f7c302b3955413b85a9482b1e88b42dfcfed18fa",
+    "tests/test_p6_dialogue_migration.py": "b02bcbd08237f20197b40de1e43766e624e5ee6800aa30290281da4c027db527",
+    "core/llm.py": "78cc7e6a33b2bdf34718778adf9ef5b856621c140db794e76b0840794cac62d0",
+    "experiments/p6_recall/corpus.py": "51fa400f2076b90a3acefaf07082d6f503889ab0594ce484acf67e3bb3c4c998",
+    "experiments/p6_recall/study.py": "79a4ab5545cd3e274b35c7b3f1312b20f49772ddce59ff2213ef8e6e823daa38",
+    "scripts/p6_recall_study.py": "fa134bf9db8ea1fa01c2f33e331d99728e2992263131915c280742623a279eef",
+    "experiments/p6_recall/packets.py": "561f9f13d4cbe7b292537648bcc77080ea888a3ea2ba62c3dbcdb13734b48b59",
+    "scripts/export_p6_recall_packets.py": "39bb26c7a52587949ed37f4f4434e1cb3a0aafd014e90dd905a24da584cb260a",
+    "scripts/export_p6_recall_reading.py": "5629e6ee3758d0171e5e7591f4ae01df23f907453c8b98d7192f666086b4b08b",
+    "tests/test_p6_recall_corpus.py": "d6c3152b75e859f8134d71377236ba1782bbbb5434528f0ba3e3c365d49cde09",
+    "tests/test_p6_recall_packets.py": "ec7ee3439d563c474359f07f0e6ea1ea32be00f64a8f319a6f23d212b4ecbebe",
+    "tests/test_p6_recall_reading.py": "75467ae3910e90498c0d3b358dfdf6af962d8bd72c577392fadd81636e0df77e",
+    "tests/test_p6_recall_study.py": "1c4f8a58e014dda102476c159dd5cecda289000a0ff481dbf1d0ca971cc5ab32"
+  }
+}
