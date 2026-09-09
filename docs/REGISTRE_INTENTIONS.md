@@ -56,7 +56,7 @@ pertinent.
 `pouponniere.md` n'a été retrouvé dans l'arbre de Lyra, ses références Git locales,
 `Triptique/archives`, `PROJECTS/audits_en_cours` ou `PROJECTS/archives chat`.
 La recherche de références dans les documents actifs et les audits n'a pas
-résolu ces deux noms. Les seuls noms d'entrées des 40 fichiers ZIP recensés dans
+résolu ces deux noms. Les seuls noms d'entrées des fichiers ZIP recensés dans
 les trois dossiers anciens ont également été inspectés, sans correspondance ;
 aucune extraction ni lecture de leur contenu n'a eu lieu. Les archives imbriquées,
 les exports de conversations et les emplacements extérieurs n'ont pas été lus.

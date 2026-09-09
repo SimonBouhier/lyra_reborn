@@ -23,11 +23,25 @@ travail, puis conserve les contributions par deux fusions sans squash :
 | origin/main connue | `c47b3d9` | Trois pages, feuille de style, `.nojekyll`, workflow Pages |
 | charte de transformation | `cd73735` | [Texte candidat](../manifeste/CHARTE_TRANSFORMATION.md), conservé intégralement ; aucune ratification implicite |
 
-Les commits documentaires suivants appartiennent à cette branche d'intégration.
-La livraison prévoit ensuite `git switch main` puis
-`git merge --ff-only codex/alignement-conservatoire-2026-09-09`, uniquement après
-contrôles et relecture de la pointe main. Le relevé final et les commandes
-effectivement exécutées sont conservés dans le rapport local de livraison.
+Les commits documentaires `b99d22d` et `faa64f1` appartiennent à cette branche
+d'intégration. **main locale a été avancée en fast-forward à `faa64f1` après
+les contrôles disponibles**, puis reçoit le relevé de livraison sur la même
+filiation. La pointe attendue a été relue et l'ascendance vérifiée par
+`git merge-base --is-ancestor` ; `git update-ref` avec l'ancienne pointe attendue
+effectue l'avance atomique. main n'était ouverte dans aucun worktree. Cette
+méthode évite un aller-retour par l'ancien arbre et ses conversions de fins de
+ligne ; elle ne force ni divergence ni réécriture. main et la branche
+d'intégration portent le même état à la livraison.
+
+**Réserve de livraison : rendu navigateur non observé dans cette session.**
+Le script P6 a réussi 73 tests Python et 9 JavaScript ; les trois pages et leurs
+liens internes répondent en HTTP local. `agent-browser` n'est pas disponible
+et l'inventaire du connecteur de navigateur est vide. Ces contrôles ne remplacent
+pas une observation visuelle ni un parcours navigateur frais du README.
+La revue documentaire et la conservation Git sont vérifiées ; le lot A–D
+reste à compléter sur ce contrôle visuel avant de le déclarer entièrement vérifié.
+Le rapport local `output/lyra-alignement-2026-09-09/LIVRAISON.md`, dans le
+workspace parent, conserve les pointes exactes et les limites des preuves.
 Toutes les branches historiques restent conservées ; aucune suppression prévue.
 
 ## Classement exhaustif des références de départ
@@ -53,7 +67,7 @@ contrôlée indépendamment. Un nom de branche ne sert pas de preuve d'intégrat
 | `codex/p7-v10-q1`<br>`origin/codex/p7-v10-q1` | `cdd7ff8b98c76fcca66d26dd871f5e8c1979aa5f` | Intégrée : commit ancêtre de l’intégration. |
 | `codex/vigie-shadow-campaign-v1`<br>`origin/codex/vigie-shadow-campaign-v1` | `fb9faf92230072052f021707b8b7557911734cd1` | Intégrée : commit ancêtre de l’intégration. |
 | `codex/vigie-shadow-campaign-v2`<br>`origin/codex/vigie-shadow-campaign-v2` | `77040ee61b8e54cdce12da34081902a3c8fe8a11` | Intégrée : commit ancêtre de l’intégration. |
-| `main` | `b8a1079b7329a192cd4731a87932f5c2a330d4f0` | Intégrée : commit ancêtre de l’intégration. main locale à avancer uniquement par fast-forward après vérification. |
+| `main` | `b8a1079b7329a192cd4731a87932f5c2a330d4f0` | Intégrée : commit ancêtre de l’intégration. Pointe initiale de main locale, conservée par sauvegarde après son avance en fast-forward. |
 | `origin/main` | `0dd08094100df9e40ad378493f19c289da2f91a7` | Intégrée : commit ancêtre de l’intégration. |
 | `origin/qa/github-pages-smoke` | `2ddf6eb543dbdf51ad8587f4ea6c7ba082f7f1a1` | Redondante en contenu avec origin/main de départ (arbres identiques), commit non ancêtre ; provenance et branche conservées. |
 
