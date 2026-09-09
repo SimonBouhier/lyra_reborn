@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lyra — État</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="kicker">lyra_reborn</div>
+    <h1>Lyra</h1>
+    <p class="lede">Un OS cognitif honnête pour LLM locaux. Le LLM utilise Lyra ; il n’est pas Lyra.</p>
+    <nav>
+      <a href="index.html">Accueil</a>
+      <a href="etat.html" aria-current="page">État</a>
+      <a href="organes.html">Organes</a>
+      <a href="https://github.com/SimonBouhier/lyra_reborn">Repo</a>
+    </nav>
+  </header>
+  <main>
+    <h2>État réel</h2>
+    <p>Ce qui existe et est testé, pas la vision. Aucun pipeline « vert mais vide ».</p>
+    <table>
+      <thead><tr><th>Couche</th><th>Quoi</th><th>État</th></tr></thead>
+      <tbody>
+        <tr><td>P0 Fondations</td><td>boutons ρ/δr/τc/κ, charte, vocabulaire</td><td class="ok">testé</td></tr>
+        <tr><td>P1 Contrôle</td><td>P+I fuyant, garde-fous</td><td class="ok">testé</td></tr>
+        <tr><td>P2 État cognitif</td><td>signaux réels, phase λ</td><td class="ok">validé live</td></tr>
+        <tr><td>P3 Mémoire</td><td>nemeton, écologie, Memento</td><td class="ok">testé</td></tr>
+        <tr><td>P4 Exploration</td><td>ESMM, consensus 2 niveaux</td><td class="ok">validé live</td></tr>
+        <tr><td>P5 Agentivité</td><td>outils, auto-plugins, SilenceØ</td><td class="empty">à construire</td></tr>
+        <tr><td>P6 Application</td><td>serveur unifié</td><td class="empty">à construire</td></tr>
+        <tr><td>P7 Évaluation</td><td>juge pairwise, NSGA-II</td><td class="empty">à construire</td></tr>
+        <tr><td>La Jachère</td><td>pouponnière + songe</td><td class="wip">fondé</td></tr>
+      </tbody>
+    </table>
+    <p>Démarrage local : <code>python -m pytest -q</code> puis <code>python scripts/demo.py</code>.</p>
+    <p><a href="https://github.com/SimonBouhier/lyra_reborn/blob/main/BUILD_STATUS.md">BUILD_STATUS.md</a></p>
+  </main>
+  <footer>
+    MIT · Simon Bouhier · page de smoke-test GitHub Pages, pas le serveur P6
+  </footer>
+</body>
+</html>
