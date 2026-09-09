@@ -2,7 +2,7 @@
   --bg: #0f1110;
   --bg2: #171a18;
   --ink: #e8e4d8;
-  --muted: #9a9588;
+  --muted: #b2ac9e;
   --line: #2a2e2b;
   --ok: #8fbf7a;
   --wip: #c4a35a;
@@ -15,7 +15,10 @@ html, body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5
 body { min-height: 100vh; }
 a { color: var(--link); text-underline-offset: 3px; }
 a:hover { color: #fff; }
-header, main, footer { max-width: 42rem; margin: 0 auto; padding: 0 1.25rem; }
+a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.skip { position: absolute; top: -5rem; left: 1rem; padding: 0.6rem 1rem; background: var(--bg2); z-index: 1; }
+.skip:focus { top: 0.5rem; }
+header, main, footer { max-width: 52rem; margin: 0 auto; padding: 0 1.25rem; }
 header { padding-top: 2.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--line); }
 nav { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.92rem; margin-top: 0.75rem; }
 nav a { color: var(--muted); text-decoration: none; }
@@ -25,9 +28,12 @@ h1 { font-size: 2rem; font-weight: 600; margin: 0.35rem 0 0.5rem; letter-spacing
 .lede { color: var(--muted); margin: 0; }
 main { padding-top: 2rem; padding-bottom: 3rem; }
 h2 { font-size: 1.1rem; margin: 2rem 0 0.75rem; }
-table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: 0.95rem; }
+caption { text-align: left; color: var(--muted); padding-bottom: 0.75rem; }
 th, td { text-align: left; padding: 0.45rem 0.5rem; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { color: var(--muted); font-weight: 500; font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; }
+tbody th { color: var(--ink); text-transform: none; letter-spacing: normal; font-size: 0.9rem; }
 .ok { color: var(--ok); }
 .wip { color: var(--wip); }
 .empty { color: var(--empty); }
@@ -35,7 +41,9 @@ th { color: var(--muted); font-weight: 500; font-family: ui-sans-serif, system-u
 .row { display: grid; gap: 0.75rem; }
 @media (min-width: 640px) { .row { grid-template-columns: 1fr 1fr 1fr; } }
 .card h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+.card h2 { margin-top: 0; }
 .card p { margin: 0; color: var(--muted); font-size: 0.92rem; }
+.card p + p { margin-top: 0.75rem; }
 blockquote { margin: 1.25rem 0; padding-left: 1rem; border-left: 2px solid var(--accent); color: var(--muted); }
 footer { border-top: 1px solid var(--line); padding: 1.25rem; color: var(--muted); font-size: 0.85rem; }
-code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.88em; }
+code { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.88em; overflow-wrap: anywhere; }

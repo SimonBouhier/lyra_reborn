@@ -3,30 +3,43 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Lyra — OS cognitif</title>
+  <meta name="description" content="Lyra construit une couche de contrôle, de mémoire et d'exploration pour LLM locaux. Application P6 en construction ; ambitions de la Jachère conservées.">
+  <title>Lyra — contrôle, mémoire et exploration</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <a class="skip" href="#contenu">Aller au contenu</a>
   <header>
-    <div class="kicker">lyra_reborn</div>
+    <div class="kicker">lyra_reborn · projet local</div>
     <h1>Lyra</h1>
-    <p class="lede">Un OS cognitif honnête pour LLM locaux. Le LLM utilise Lyra ; il n’est pas Lyra.</p>
-    <nav>
+    <p class="lede">Contrôle, mémoire, exploration — vers un OS cognitif pour LLM locaux.</p>
+    <nav aria-label="Navigation principale">
       <a href="index.html" aria-current="page">Accueil</a>
-      <a href="etat.html">État</a>
-      <a href="organes.html">Organes</a>
-      <a href="https://github.com/SimonBouhier/lyra_reborn">Repo</a>
+      <a href="etat.html">État et usage</a>
+      <a href="organes.html">Organes et ponts</a>
+      <a href="https://github.com/SimonBouhier/lyra_reborn">Dépôt</a>
     </nav>
   </header>
-  <main>
+  <main id="contenu">
     <blockquote>Le LLM <em>utilise</em> Lyra ; il n’<em>est pas</em> Lyra.</blockquote>
-    <p>Couche de contrôle au-dessus d’un LLM local (Ollama) : quatre boutons ρ/δr/τc/κ, signaux épistémiques réels, mémoire qui oublie exprès, exploration autonome des lacunes.</p>
-    <p>Pas d’app web encore. Le serveur unifié (P6) est à construire. Cette page existe pour qu’on puisse cliquer un déploiement, en attendant.</p>
-    <h2>Où cliquer</h2>
-    <p><a href="etat.html">État des couches</a> · <a href="organes.html">Le triptyque</a> · <a href="https://github.com/SimonBouhier/lyra_reborn/pull/1">PR #1 (draft, charte)</a></p>
+    <p>Lyra construit une couche de contrôle, de mémoire et d’exploration autour d’un modèle local. Elle porte aussi une ambition de vie hors-tâche : consolider le passé, laisser décroître des traces, recombiner et cultiver ses modules.</p>
+    <section class="card" aria-labelledby="maintenant">
+      <h2 id="maintenant">Aujourd’hui : l’application P6</h2>
+      <p>Un journal SQLite, des conversations séparées, la navigation, des corrections liées et des rappels explicites sont implémentés. Le dialogue courant suit un profil fixe. Le contrôle historique, les mémoires dérivées et l’exploration ont leurs chemins distincts.</p>
+      <p>Les contrôles techniques documentés ne suffisent pas à qualifier l’usage : un essai Gemma a montré une mauvaise utilisation d’un rappel corrigé. Suppression volontaire et traitement des sauvegardes restent à construire ou qualifier.</p>
+      <p><a href="etat.html">Comprendre l’état et essayer P6 localement →</a></p>
+    </section>
+    <h2>La Jachère — la vie hors-tâche</h2>
+    <p>Le Songe, la recombinaison et la Pouponnière évolutive restent des intentions actives, avec des contrats à compléter et des fonctions à construire. Leurs résultats et leurs droits sont distincts ; leurs échanges seront facultatifs, traçables et révocables. Les métriques sont candidates, les bénéfices locaux non établis.</p>
+    <p>Cette trajectoire conserve l’oubli, le compost, les traces résiduelles et l’horizon d’une transformation par entraînement local. L’application conversationnelle constitue un premier jalon dans ce programme.</p>
+    <h2>Lire les autorités du projet</h2>
+    <ul>
+      <li><a href="https://github.com/SimonBouhier/lyra_reborn/blob/main/docs/ETAT_ACTUEL.md">État actuel</a> : disponibilité, intégrations, limites et preuves datées.</li>
+      <li><a href="https://github.com/SimonBouhier/lyra_reborn/blob/main/docs/PLAN_EDIFICATION.md">Plan d’édification</a> : ordre des chantiers et décisions ouvertes.</li>
+      <li><a href="https://github.com/SimonBouhier/lyra_reborn/blob/main/docs/REGISTRE_INTENTIONS.md">Registre des intentions</a> : ambitions conservées et sources.</li>
+    </ul>
+    <p>La <a href="https://github.com/SimonBouhier/lyra_reborn/blob/main/manifeste/CHARTE_TRANSFORMATION.md">charte de transformation</a> est conservée comme texte candidat à ratification. Sa présence dans le dépôt ne vaut pas adoption.</p>
   </main>
-  <footer>
-    MIT · Simon Bouhier · page de smoke-test GitHub Pages, pas le serveur P6
-  </footer>
+  <footer>MIT · Simon Bouhier · synthèse du 9 septembre 2026<br>Présentation statique ; l’application P6 se lance sur votre ordinateur.</footer>
 </body>
 </html>

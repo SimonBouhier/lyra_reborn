@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" role="img" aria-label="Lyra Reborn">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 280" role="img" aria-labelledby="banner-title banner-desc">
+  <title id="banner-title">Lyra Reborn — contrôle et mémoire pour LLM locaux</title>
+  <desc id="banner-desc">Vers un OS cognitif local. Application P6 en construction ; Jachère, Songe et Pouponnière évolutive restent à construire et qualifier. Constellation et courbes de contrôle décoratives.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0%" stop-color="#0d0b1e"/>
@@ -38,7 +40,7 @@
   <text x="62" y="118" font-family="Segoe UI, Helvetica, Arial, sans-serif"
         font-size="58" font-weight="700" fill="url(#title)" letter-spacing="2">LYRA REBORN</text>
   <text x="64" y="158" font-family="Segoe UI, Helvetica, Arial, sans-serif"
-        font-size="21" fill="#cbd5e1" letter-spacing="0.5">Un OS cognitif pour LLM locaux — contrôle, mémoire vivante, exploration, jachère</text>
+        font-size="21" fill="#cbd5e1" letter-spacing="0.5">Contrôle, mémoire, exploration — vers un OS cognitif local</text>
   <text x="64" y="196" font-family="Consolas, Menlo, monospace"
-        font-size="15" fill="#94a3b8">ρ · δr · τc · κ   |   le LLM utilise Lyra ; il n'est pas Lyra</text>
+        font-size="15" fill="#cbd5e1">Application P6 en construction · Jachère à construire</text>
 </svg>
