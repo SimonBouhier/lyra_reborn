@@ -1,5 +1,13 @@
 # La Jachère — la vie hors-tâche de Lyra
 
+> **Alignement du 9 septembre 2026 :** les sources bibliographiques citées
+> sont des pistes de lecture issues du cadrage antérieur. Le présent lot ne
+> vérifie ni les articles ni leurs chiffres ; ces rapprochements ne sont pas
+> des critères d'admission. La rédaction antérieure reste dans l'historique
+> Git, à `15bcede4d1b876821524dd1f6d53c51879497c6a`.
+> [ETAT_ACTUEL](ETAT_ACTUEL.md) porte la maturité locale ; le
+> [registre](REGISTRE_INTENTIONS.md) conserve les intentions et leurs jalons.
+
 > **Cadrage retenu le 7 septembre 2026 :** consolidation et recombinaison doivent
 > fonctionner séparément, avec des échanges facultatifs vers la Pouponnière.
 > La [note d'architecture détaillée](NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md)
@@ -43,9 +51,10 @@ la tâche qui le prend en main**.
   (Ren, Chen, Guo… **J. Schmidhuber**, KAUST, juil. 2026). Formalise un agent =
   *modèle de fondation* + *scaffold* (prompts, mémoire, outils, logique de
   contrôle) ; l'auto-amélioration = un **opérateur de mise à jour auto-induit**
-  portant soit sur les paramètres du modèle, soit sur le scaffold. **Ton idée = la
-  case « Scaffolding-Improvement / Population-Based » de leur taxonomie.**
-  Précédents nommés directement exploitables :
+  portant soit sur les paramètres du modèle, soit sur le scaffold, selon la
+  lecture historique à vérifier. La catégorie « Scaffolding-Improvement /
+  Population-Based » est une piste de comparaison avec la Pouponnière, pas
+  une identité établie. Précédents nommés à examiner avant réutilisation :
   - **Promptbreeder** — auto-amélioration *auto-référentielle* par évolution de prompts.
   - **ADAS** — *Open-Ended Search over Agent Designs* (recherche ouverte sur les architectures d'agents : agent initial → meilleur agent au fil des itérations).
   - **Darwin Gödel Machine**, **Gödel Agent** — réécriture de soi ; **AlphaEvolve / ShinkaEvolve** — évolution de programmes ; **GPTSwarm** — populations d'agents.
@@ -54,15 +63,11 @@ la tâche qui le prend en main**.
   - Le survey liste explicitement « **evaluation harnesses** », « **skill libraries** », « **autonomous tool creation** » comme cibles de scaffold self-improvement.
 
 - **`2607.06906v1.pdf` — *The Harness Effect*** (Writer, Inc., juil. 2026).
-  Thèse : le **harness** (couche d'orchestration qui assemble le contexte, expose
-  les outils, décide des tours) est **LE** levier — sur le coût *et* la qualité, un
-  seul levier tiré une fois. En ne changeant **que** l'orchestration (tâches et
-  modèles constants) : **−33 à −61 % de coût**, **+82 % de qualité/\$**, **−38 %
-  de tokens à parité**, plus rapide. Point décisif pour nous : le gain est
-  **spécifique au modèle** (« *the rate at which a model converts orchestration
-  structure into quality* » diffère selon le modèle). → **Justification empirique**
-  qu'un harness doit être **cultivé par-modèle et par-tâche** — exactement ton
-  « s'adapte selon le modèle qui le prend en main ».
+  Piste de lecture : effet de l'orchestration sur le coût et la qualité selon
+  le modèle et la tâche. Les chiffres du cadrage antérieur sont retirés de
+  cette synthèse active jusqu'à vérification des conditions de l'article.
+  L'intention Lyra de cultiver un scaffold adapté au modèle et à la tâche
+  demeure ; son utilité devra être mesurée dans son propre périmètre.
 
 - **`2607.14159v1.pdf` — *MemoHarness: Agent Harnesses That Learn from
   Experience***. Le *comment* concret. Décompose le harness en **six dimensions
@@ -72,16 +77,18 @@ la tâche qui le prend en main**.
   sans recherche au moment du test**. ⭐ **Séparation clé pour nous** : la
   **recherche évolutive lourde** se fait **hors-ligne** (= pendant la Jachère),
   l'**adaptation par-cas légère** se fait **en ligne** par simple *retrieval* — ce
-  qui **répond au budget de calcul** (on ne relance pas d'évolution génétique à
-  chaque requête). Son banc à deux couches **est** notre **journal** (épisodique) +
-  **nemeton** (global distillé), et la distillation par-cas → global **est** une
-  opération de **consolidation** (nouveau pont vers l'Organe 2).
+  qui suggère une séparation de budgets à étudier. Le rapprochement entre ce
+  banc et le journal/Nemeton de Lyra est une analogie de conception à vérifier,
+  sans identité de stockage, de mécanisme ou de bénéfice démontrée. Un éventuel
+  pont de consolidation relève du contrat Jachère et de ses preuves propres.
 
-**Filiation Lyra.** C'est **la pouponnière/compost de `LyrArc`** (auditée), promue
-de « cultiver des tâches » à « cultiver des modules ». L'écologie à 3 niveaux
-(pouponnière ≥ seuil / journal d'oubli / compost) devient le **substrat de
-sélection** ; le **NSGA-II** de `Lyra_Core/bench` est l'optimiseur multi-objectif ;
-l'**ESMM** (P4) fournit des modules candidats ; l'**éval** (P7) fournit la fitness.
+**Filiation et rôles envisagés.** La pouponnière/compost de `LyrArc` (auditée)
+inspire le passage de « cultiver des tâches » à « cultiver des modules ».
+L'écologie à trois niveaux fournit un design possible de sélection ; NSGA-II
+de `Lyra_Core/bench` est une source historique d'optimisation multi-objectif.
+ESMM pourrait proposer des candidats et un instrument adapté les évaluer.
+Ces échanges ne sont pas implémentés par cette filiation ; ils n'imposent ni
+l'ouverture de H11 ni la disponibilité de toute P7.
 
 **Forme dans le dépôt** (proposition — à valider) : un flux `evolve/`. Une
 **population** de modules-de-scaffold ; chacun a un *génome* = les **six
@@ -129,18 +136,18 @@ synthétique pour se raffiner elle-même, sans supervision.
      Moteur théorique : contrer l'**oubli catastrophique** ⇒ auto-amélioration
      itérative.
 
-**Le pont vers l'Organe 1 n'est plus une métaphore.** Le Dreaming *est* un
-générateur de curriculum auto-généré. « Le rêve sème des candidats que la
-Pouponnière sélectionne » et « le Dreaming du papier » sont **le même mécanisme**
-vu sous deux angles : le Songe le *produit*, la Pouponnière le *sélectionne et le
-pérennise*. (Et le Knowledge Seeding « petit-soi → plus grand » résonne avec la
-croissance de la pouponnière.)
+**Le pont vers l'Organe 1 est une proposition Lyra.** « Le rêve sème des
+candidats que la Pouponnière sélectionne » décrit l'échange envisagé entre
+recombinaison et sélection. Son identité avec le Dreaming de l'article n'est
+pas établie. Production, sélection et admission gardent des résultats et des
+droits propres, et leur coopération reste facultative.
 
-**Filiation Lyra.** Le **nemeton** (`memory/graph`, P3) = le magasin des vecteurs à
-rejouer/recomposer ; le **journal d'oubli** = la sélection de ce qui mérite d'être
-consolidé vs composté ; **FLOATLAP** (`research/`) = une traversée basse-énergie de
-l'espace mental = une forme de génération de rêve déjà prototypée ; les
-**transitions de phase κ/ρ** (P2) = le cycle **NREM ↔ REM**.
+**Filiation Lyra.** Nemeton (`memory/graph`, P3), journal d'oubli et compost,
+FLOATLAP (`research/`) et transitions κ/ρ sont des sources de primitives ou de
+questions pour le Songe. Le graphe actuel contient des nœuds et des arêtes ;
+il ne constitue pas à lui seul le magasin vectoriel complet envisagé. Une
+traversée numérique de FLOATLAP ne prouve pas la génération d'un rêve utile,
+et les transitions de contrôle ne sont pas identifiées aux stades NREM/REM.
 
 **⚠️ Scoping honnête (Ollama = poids gelés).** Le papier consolide en **espace
 paramétrique** (distillation / RL fine-tuning). Lyra tourne sur des modèles
@@ -200,7 +207,9 @@ boucle de confirmation automatique n'est autorisée par ce schéma.
 
 ## Place dans le plan
 
-Nouveau flux (cf. plan directeur §8·bis) qui **mûrit après P3/P4/P7** — il les
-consomme selon des interfaces à préciser. Les références sont versées, mais les
-fonctions et leurs ponts restent à construire ou qualifier, sans engagement de
-calendrier. P6 reste prioritaire ; la note du 7 septembre fixe l'ordre de reprise.
+Flux inscrit au [plan actif](PLAN_EDIFICATION.md), avec primitives de mémoire,
+sources autorisées et instruments adaptés comme dépendances à préciser. Cela
+n'impose ni réouverture de H11, ni V12, ni achèvement de toute P7 pour travailler
+sur les contrats et composants. Les fonctions et leurs ponts restent à
+construire ou qualifier. P6 reste prioritaire ; la note du 7 septembre fixe
+les responsabilités et le retrait, sans abandon du palier paramétrique futur.

@@ -1,5 +1,12 @@
 # Cadrage externe P6–P7 après V11
 
+> **Lecture au 9 septembre 2026 :** les passages sur l'application P6 décrivent
+> leur base historique. Le contexte conversationnel, les corrections et les
+> rappels explicites ont évolué depuis ; [ETAT_ACTUEL](ETAT_ACTUEL.md) fait
+> autorité sur leur disponibilité et leurs limites. Les neuf conditions de
+> reprise ci-dessous restent des exigences de cadrage, pas une autorisation
+> de campagne. [PLAN_EDIFICATION](PLAN_EDIFICATION.md) porte l'ordre actif.
+
 > **Actualisation documentaire du 2026-09-05.** La persistance SQLite a été
 > livrée depuis la première rédaction, au commit `d7353d4`. L'état courant
 > et les limites conversationnelles sont décrits dans [ETAT_ACTUEL](ETAT_ACTUEL.md).

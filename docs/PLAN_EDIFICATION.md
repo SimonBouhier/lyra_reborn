@@ -1,12 +1,17 @@
 # Plan d'édification de Lyra — le plan global
 
-> **Lecture actuelle — 2026-09-05.** Ce plan conserve les objectifs et la
-> provenance de sa rédaction initiale. Il n'est pas un état de livraison.
-> Lire d'abord [ETAT_ACTUEL](ETAT_ACTUEL.md) et [BUILD_STATUS](../BUILD_STATUS.md).
-> Décisions postérieures : P6 principal ; P7 en atelier métrologique ; H11
-> `UNTESTED` ; aucune V12 avant qualification conjointe de l'instrument ;
-> pont Fisher clos ; EPP sans blockchain. Les anciens « constructible » ou
-> « à porter » ne valent pas autorisation de lancer une campagne ou un nouveau chantier.
+> **Lecture actuelle — 9 septembre 2026.** Ce plan fait autorité sur les
+> intentions, les dépendances et l'ordre des chantiers. [ETAT_ACTUEL](ETAT_ACTUEL.md)
+> fait autorité sur la disponibilité, l'intégration et les limites ; les
+> documents de campagne portent leurs verdicts. Le [registre des intentions](REGISTRE_INTENTIONS.md)
+> relie chaque ambition à ses sources, contraintes, prochain jalon et questions ouvertes.
+> Le **séquencement actif est en §7**. Les couches et matériaux historiques
+> ci-dessous conservent la cible, sans constater leur livraison.
+> P6 reste principal ; P7 est un atelier métrologique, V11 arrêtée après
+> calibration, H11 `UNTESTED`. La Jachère peut avancer sur ses contrats et
+> fonctions sans rouvrir H11 ni attendre une V12. EPP est mis de côté dans ce lot ;
+> les ponts Fisher historiques restent gelés. Aucun « constructible » ou « à
+> porter » ne vaut autorisation de campagne, d'activation ou d'action distante.
 
 > **Avancement local P6 — 8 septembre 2026 :** A01 et journal complétés par le
 > contexte conversationnel, les corrections, le rappel explicite et la navigation.
@@ -29,9 +34,14 @@
 
 Vous héritez de ~23 dossiers de prototypes (2 lots audités) et de deux synthèses. **Ne repartez pas de zéro et ne relisez pas tout le code brut** : la lecture a déjà été faite pour vous. Votre matière première, ce sont les documents d'audit, pas les 30 000 fichiers.
 
-**Ordre de lecture obligatoire avant toute action :**
-1. [`_SYNTHESE_AUDIT_LYRA_2026-06-08.md`](_SYNTHESE_AUDIT_LYRA_2026-06-08.md) — lot 1 (le projet récent, sept. 2025→févr. 2026) + son addendum.
-2. [`session_2/_SYNTHESE_AUDIT_SESSION2_2026-07-16.md`](session_2/_SYNTHESE_AUDIT_SESSION2_2026-07-16.md) — lot 2 (la préhistoire, janv.→sept. 2025).
+**Lecture des matériaux avant une extraction de couche :** les deux synthèses
+ont été retrouvées et lues le 9 septembre 2026 dans
+`C:/Users/simon/PROJECTS/audits_en_cours/`, hors de ce dépôt. Ce sont des sources
+locales, pas des liens de téléchargement GitHub. Le [registre, inventaire des sources](REGISTRE_INTENTIONS.md#sources-et-limites-de-linventaire)
+conserve les emplacements exacts et les limites de recherche.
+
+1. `_SYNTHESE_AUDIT_LYRA_2026-06-08.md` dans ce dossier — lot 1 (sept. 2025→févr. 2026) + addendum corrigeant les idées réputées orphelines.
+2. `session_2/_SYNTHESE_AUDIT_SESSION2_2026-07-16.md` dans ce dossier — lot 2 (janv.→sept. 2025).
 3. Ce plan.
 4. Au moment d'attaquer une couche : l'`AUDIT_*.md` (et le `DELTA_VS_DOCS_*.md`) du ou des dossiers-source de cette couche — ils contiennent les numéros de ligne, les bugs et les pièges précis.
 
@@ -140,9 +150,15 @@ Ces règles ne sont pas décoratives : chacune neutralise une pathologie *observ
 
 ---
 
-## 5. Vocabulaire canonique (à figer dans `manifeste/VOCABULAIRE.md` avant tout code)
+## 5. Vocabulaire et provenance des définitions
 
-Source unique, pour arrêter la dérive de sens constatée d'un dossier à l'autre :
+[VOCABULAIRE](../manifeste/VOCABULAIRE.md) fait autorité sur les définitions et
+les décisions de sens, avec leur correspondance au code. Le tableau suivant
+conserve les **formulations du plan initial**, antérieures au mapping retenu et
+au report topologique du 18 juillet ; il ne constitue pas une deuxième autorité.
+En particulier, le mapping courant est ρ → `top_p`, δr → `num_predict`,
+τc → `temperature`, κ → `repeat_penalty`. Ce mapping de génération n'épuise pas
+les intentions historiques de contexte, courbure ou navigation.
 
 | Terme | Définition retenue | Origine / preuve |
 |---|---|---|
@@ -157,13 +173,21 @@ Source unique, pour arrêter la dérive de sens constatée d'un dossier à l'aut
 | **modules A/M/P/G/X/R** | ontologie de modules cognitifs typés | manifeste, `Archi/kit_lyra` |
 | **SilenceØ** | le refus/silence comme réponse de première classe | `LyrAgent` |
 
-⚠️ Piège documenté : la « courbure » livrée n'est **pas** Ollivier mais un proxy Jaccard ; et `ρ` topologique ≠ `ρ` polarité de `Lyra_Jupyter_MCA`. Trancher et documenter dès P0.
+⚠️ Piège historique : la « courbure » des archives n'est **pas** Ollivier mais
+un proxy Jaccard ; et `ρ` topologique ≠ `ρ` polarité de `Lyra_Jupyter_MCA`.
+L'arbitrage topologique reste reporté selon la décision de Simon du 18 juillet,
+visible dans VOCABULAIRE ; il n'est pas relancé par ce tableau.
 
 ---
 
 ## 6. Les phases d'édification
 
-Chaque phase : **objectif → matériau source (dossier + audit + fichiers) → tâches → Definition of Done → pièges**. Les phases P0-P1 sont fondatrices et bloquantes ; P2-P5 sont largement parallélisables une fois P1 acquis.
+Chaque phase : **objectif → matériau source (dossier + audit + fichiers) → tâches
+→ Definition of Done → pièges**. Cette description conserve le programme initial
+du 16 juillet ; les « à porter », prérequis et DoD sont des objectifs historiques,
+pas l'état d'exécution. Les décisions datées du vocabulaire et le §7 ci-dessous
+prévalent pour reprendre un chantier. Les capacités existantes sont recensées
+dans [ETAT_ACTUEL](ETAT_ACTUEL.md), sans déduction de maturité depuis ce plan.
 
 ### P0 — Fondations & décisions *(bloquant, court)*
 - **Objectif :** un squelette de dépôt, le vocabulaire figé, la charte, et le canon `conscious` **exécutable**.
@@ -224,6 +248,12 @@ valident pas encore ce DoD global. Voir le [contrat P6](CONTRAT_USAGE_P6_v0_2026
 - **DoD :** `uvicorn` démarre ; un tour de chat complet passe par le noyau de contrôle + la mémoire ; smoke-test HTTP vert **avec assertions de contenu** (pas juste 200 OK).
 
 ### P7 — Évaluation & optimisation *(transverse ; démarrer tôt, formaliser en dernier)*
+
+**Lecture actuelle :** conserver la question comparative générale, les
+instruments et leurs résultats. Le [statut V11](P7_V11_STATUS.md) prévaut sur ce
+DoD initial ; le §7.3 ci-dessous conditionne toute reprise. Aucune nouvelle
+campagne n'est nécessaire pour achever l'alignement documentaire ou le jalon P6.
+
 - **Objectif :** savoir si l'assemblage vaut mieux qu'un LLM nu — honnêtement.
 - **Source :** `LLM_asa_judge/AUDIT_2026-06-08.md` (15 prompts + rubrique 6 critères réutilisables) ; `lyra_clean/evaluation/` (harnais triple-aveugle + post-mortem « grade inflation ») ; `Lyra_Core/bench/ga_search.py` (NSGA-II réel sur (ρ,δr,τc,κ), pop. 528 — *la* source des « 528 configs ») ; logging forensique de `Lyra_Uni_0_2`.
 - **Tâches :** juge **pairwise** (et non pointwise — l'effet plafond a mis 5/5 partout) ; **conserver la clé réponse→variante** (perdue au lot 1 ⇒ résultats inexploitables) ; harnais anti grade-inflation ; NSGA-II pour régler les boutons ; logging forensique (payload Ollama exact) sur tous les runs.
@@ -233,18 +263,137 @@ valident pas encore ce DoD global. Voir le [contrat P6](CONTRAT_USAGE_P6_v0_2026
 
 ## 7. Séquencement & dépendances
 
-```
-P0 ──► P1 ──►┬──► P2 ─────────►┐
-             ├──► P3 ─────────►┤
-             ├──► P5 ─────────►┼──► P6 ──► (démo bout-en-bout)
-             └──► P4 (dép. P3)►┘
-P7 ── transverse : commencer le logging forensique dès P1, formaliser le juge après P6
-```
+**Ordre retenu pour la reprise du 9 septembre :** alignement conservatoire local,
+puis jalon P6 borné ; intégration progressive des capacités P1–P5 et construction
+des fonctions autonomes de la Jachère suivant leurs prérequis. P7 ne se rouvre
+que pour une question précise. Ce séquencement conserve le programme de juillet
+sans traiter toutes ses étapes comme encore vierges ou déjà livrées.
 
-**Chemin critique :** P0 → P1 → P6. **Quick wins à fort levier (faire tôt, moral + valeur) :**
-1. Le **patch `options{}`** (P0) — trivial, débloque la modulation réelle.
-2. Le **« fix once » `get_embedding`** (P4, mais 5 min) — puis relancer un run ESMM pour voir enfin des triplets.
-3. La **boucle de contrôle** de `lyra_framework_bundle` (P1) — c'est du code *fonctionnel* à porter, pas à réinventer.
+### 7.1 Premier lot — alignement local
+
+Inventorier et protéger les sources et preuves ; réconcilier les contributions
+Git locales ; attribuer les autorités documentaires ; vérifier conservation,
+cohérence du site local et régression P6 hors ligne. Livrables de traçabilité :
+[registre des intentions](REGISTRE_INTENTIONS.md), [carte datée des branches](BRANCHES.md)
+et ETAT_ACTUEL. La fin de ce lot ne requiert ni achèvement de P6 ni campagne P7.
+Les sources anciennes retrouvées servent de carte d'extraction, pas de mandat
+pour relire ou réimplémenter tous les prototypes.
+
+### 7.2 P6 — référence utilisable, puis intégration progressive
+
+**Jalon suivant : alpha privée locale**, suivant le
+[contrat P6](CONTRAT_USAGE_P6_v0_2026-09-07.md). L'état réalisé et ses preuves
+restent dans ETAT_ACTUEL ; les points ci-dessous décrivent ce qu'il faut achever
+ou qualifier, sans demander de rejouer les travaux déjà acquis.
+
+1. Définir et réaliser suppression volontaire, traitement des dérivés et
+   sauvegardes gérés, et restauration respectant suppressions et corrections.
+2. Relire la couverture A01–A10 : identités, demandes, concurrence, reprise et
+   persistance, dans l'enveloppe locale **un utilisateur, un processus**.
+3. Préparer et vérifier la migration sur une copie cohérente et récupérable.
+   L'exécution sur les conversations réelles reste une décision explicite sur
+   cette copie et le retour possible.
+4. Qualifier séparément français, poursuite, rappels et emploi des corrections
+   avec un modèle réel identifié. Lire d'abord les retours du
+   [diagnostic exploratoire existant](P6_DIAGNOSTIC_RAPPELS_2026-09-08.md) ;
+   définir les critères avant toute nouvelle mesure comparative. Les tests de
+   transport n'admettent pas l'usage sémantique.
+5. Documenter lancement, limites, attente/abandon et identité du moteur.
+   Une mise à jour de runtime constitue une décision distincte.
+
+**Sortie :** le parcours « converser, reprendre, corriger, rappeler, supprimer »
+fonctionne dans le périmètre déclaré ; ses sauvegardes et restaurations
+respectent le contrat, et les limites du modèle sont évaluées. Cette alpha
+n'achève pas toute P6 et n'abandonne aucune capacité adaptative.
+
+**P6.1 proposé, à confirmer après examen des dépendances :** graphe REST,
+catalogue/sélecteur de modèles et authentification minimale peuvent constituer
+une tranche suivante si leur absence n'empêche pas le contrat local. L'écoute
+reste locale tant que le contrat d'exposition et l'authentification manquent.
+
+**Jalon explicite après stabilisation de la référence : intégrer Lyra dans son
+application par tranches distinctes.** Pour chaque tranche, nommer l'effet
+recherché, garder le profil fixe comme témoin, fixer droits et budgets, montrer
+le chemin réellement appelé, qualifier l'apport et le retrait. Un branchement
+technique ne vaut pas admission d'usage.
+
+| Tranche | Capacité et intention conservée | Dépendance et sortie à établir |
+|---|---|---|
+| P1–P2 | Contrôle, signaux, phase et surface affective facultative ([I011](REGISTRE_INTENTIONS.md#lyra-i011--contrôle-perception-de-létat-et-affect)) | Référence stable ; profil explicite, modulation observée et bénéfice évalué séparément ; topologie toujours soumise à son report |
+| P3 | Nemeton, écologie, cas et navigation ([I003](REGISTRE_INTENTIONS.md#lyra-i003--élagage-oubli-différé-compost-et-réveil), [I015](REGISTRE_INTENTIONS.md#lyra-i015--nemeton-et-navigation-ispace)) | Sources et portée P6, filiation, corrections, suppression/retrait ; aucune injection automatique dans le témoin |
+| P4 | Exploration ESMM ([I012](REGISTRE_INTENTIONS.md#lyra-i012--exploration-agentivité-et-silenceø)) | Mémoire et admission des candidats définies ; budgets de recherche, provenance et effet contrôlés |
+| P5 | Outils, modules, choix d'action, SilenceØ ; application Vigie possible ([I012](REGISTRE_INTENTIONS.md#lyra-i012--exploration-agentivité-et-silenceø), [I018](REGISTRE_INTENTIONS.md#lyra-i018--présence-externe-et-vigie)) | Contrats de droits, d'ingestion et de sortie ; appel d'outil et abstention de première classe démontrables, action externe séparément autorisée |
+
+L'ordre détaillé peut évoluer d'après les prérequis observés. Les capacités
+reportées gardent leur tranche ; le profil fixe ne devient pas la définition
+exhaustive de Lyra.
+
+### 7.3 P7 — reprise conditionnelle de l'atelier métrologique
+
+V11 conserve `V11_ARRETEE_APRES_CALIBRATION`, H11 `UNTESTED`. Une formule telle
+que « terminée pour ce cycle » décrit un calendrier, pas un nouveau verdict
+scientifique. Le diagnostic des rappels P6 est un chantier produit séparé et
+ne rouvre pas la série H.
+
+Avant une éventuelle V12 : question nommée, budget, condition d'arrêt et preuves
+des neuf conditions du [cadrage post-V11, §9](CADRAGE_EXTERNE_P6_P7_POST_V11.md#9-conditions-dentrée-dune-éventuelle-v12) :
+compatibilité budget/contrat, effet de longueur, sensibilité à la position,
+choix de règle de jugement, référence humaine, adjudication et TIE/INVALID,
+instrument versionné indépendamment du gel, justification de l'emploi du jeu
+tenu et maintien de P6 exploitable avec la politique simple en cas d'échec.
+Le jeu tenu n'est pas consulté pour choisir ces règles.
+
+### 7.4 Jachère — contrats, fonctions autonomes, puis ponts
+
+La [note du 7 septembre](NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md)
+porte l'orientation retenue. Les contrats détaillés restent des propositions
+à préciser. Ce travail nécessite des évaluations adaptées à chaque fonction ;
+il **n'exige pas de rouvrir H11, lancer V12 ou « terminer P7 »**. Un instrument
+peut être réutilisé s'il est qualifié pour la question présente.
+
+1. Définir sources autorisées, portée, versions, filiation, droits, budgets,
+   admission et retrait. Concilier la politique approuvée de validation
+   automatique avec la séparation des pouvoirs de la charte **candidate**,
+   dont la récupération n'est pas une ratification.
+2. Construire séparément consolidation ([I002](REGISTRE_INTENTIONS.md#lyra-i002--consolidation-du-songe)),
+   recombinaison ([I004](REGISTRE_INTENTIONS.md#lyra-i004--recombinaison-et-rêve))
+   et sélection de modules ([I006](REGISTRE_INTENTIONS.md#lyra-i006--pouponnière-évolutive)).
+   Chaque fonction a ses résultats et son abstention ; aucune ne dépend de la
+   réussite de l'autre.
+3. Réaliser les vues stables, calculs privés, revalidation à l'admission et
+   publication atomique des versions dérivées. Éprouver J01–J16 : notamment
+   corrections/suppressions pendant calcul, conflits, retrait, non-résurrection,
+   hypothèses réutilisées sans fausse confirmation et ressources interactives.
+4. Étudier séparément les [traces résiduelles I005](REGISTRE_INTENTIONS.md#lyra-i005--traces-résiduelles),
+   avec stockage et influence bornés, conditionnels et décroissants.
+5. Réviser les métriques candidates **avant gel** : absence de voisinage ≠
+   nouveauté sémantique, modularité ≠ mémoire utile, candidat prometteur ≠
+   effet causal de la méthode. Préenregistrer les mesures réelles pertinentes
+   avec témoins, attribution et budgets comparables.
+6. Qualifier puis ouvrir un pont à la fois ([I007](REGISTRE_INTENTIONS.md#lyra-i007--coopération-facultative)),
+   avec arrêt des échanges et retrait des résultats séparés.
+
+**Horizons conservés, sans calendrier imposé :** palier d'entraînement local
+([I008](REGISTRE_INTENTIONS.md#lyra-i008--transformation-paramétrique-future)),
+identité par continuité et pouvoirs de transformation ([I009–I010](REGISTRE_INTENTIONS.md#lyra-i009--identité-par-continuité-vérifiable)),
+topologie/Φ et sens laissés à Simon ([I013](REGISTRE_INTENTIONS.md#lyra-i013--topologie-φ-et-sens-encore-ouverts)),
+orbites, fractales, ontologie et Harmonia ([I016](REGISTRE_INTENTIONS.md#lyra-i016--orbites-fractales-ontologie-des-modules-et-harmonia)),
+fertilité et cartographie des échecs ([I017](REGISTRE_INTENTIONS.md#lyra-i017--fertilité-des-empreintes-et-apprentissage-des-échecs)).
+Leur prochain jalon est un cadrage nommé depuis les audits retrouvés ou la
+source attendue, avant toute extraction ou mesure. Le marché reste hors périmètre.
+
+### 7.5 Filiation du séquencement
+
+Le chemin initial P0 → P1 → P6 reste la filiation technique. P2/P3/P5 étaient
+parallélisables après P1, P4 dépendait de P3 et P7 était transverse. Les trois
+« quick wins » initiaux étaient le payload `options{}`, les causes de panne
+ESMM et le port du contrôleur. Ce sont désormais des matériaux historiques à
+rapprocher de l'état existant, sans consigne implicite de les réimplémenter.
+
+Un échec peut motiver une autre réalisation ; abandonner une intention,
+supprimer un invariant ou modifier la portée des conversations demande une
+décision humaine distincte. Les sources manquantes restent des questions, pas
+une autorisation de réduire le programme.
 
 ---
 
@@ -278,32 +427,52 @@ Quoi prendre, où, vers quelle couche. (« ré-impl. » = ré-implémenter d'apr
 
 ## 8·bis. Bannière — « La Jachère » : la vie hors-tâche *(ajout 2026-07-18)*
 
-> **Actualisation du 7 septembre 2026 :** la
+> **Orientation retenue le 7 septembre, précisée le 9 septembre 2026 :** la
 > [note de cloisonnement](NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md)
 > fait référence pour l'architecture à venir : consolidation, recombinaison et
 > sélection autonomes, ponts facultatifs, critères distincts. Les formulations
-> initiales ci-dessous ne valent pas validation des mécanismes ni engagement
-> de calendrier. P6 précède leur réalisation ; le verdict conjoint du Songe
-> doit être révisé avant tout préenregistrement.
+> d'intention ci-dessous ne valent pas validation des mécanismes ni engagement
+> de calendrier. P6 reste prioritaire ; le §7.4 donne la suite explicite. Les
+> anciennes équivalences affirmées avec les articles sont remplacées par des
+> rapprochements à vérifier. Leur rédaction antérieure est conservée dans
+> l'historique Git, notamment au commit `15bcede4`. Le verdict conjoint du Songe
+> doit être révisé avant tout préenregistrement ; H11 n'est pas un prérequis.
 
 Deux aspects personnels manquaient au plan ; ils se réunissent sous **une même bannière** : *ce que Lyra fait quand elle ne répond pas* — des processus **hors-ligne, auto-dirigés, génératifs ET sélectifs** qui transforment le système lui-même (ses modules ET sa mémoire). Nom de travail : **La Jachère** (le champ qu'on laisse reposer pour qu'il régénère) — à rebaptiser librement. Détail + ancrage bibliographique : `lyra_reborn/docs/BANNIERE_LA_JACHERE.md`.
 
 **Organe 1 — La Pouponnière évolutive** (aspect déjà présent dans l'audité). Le modèle *cultive, laisse mourir et adopte* ses propres modules de scaffold (prompts, outils, sous-agents, politiques de contrôle) : un **générateur de harness automatique, façon algo génétique, adaptatif selon le modèle et la tâche**.
-- Ancrage : c'est exactement la case **« Scaffolding-Improvement / Population-Based »** du survey *Self-Improvements in Modern Agentic Systems* (`docs/2607.13104v1.pdf`) — précédents nommés : Promptbreeder, ADAS, Darwin Gödel Machine, AlphaEvolve/ShinkaEvolve, GPTSwarm ; plafond théorique = Gödel Machine (Schmidhuber 2003) ; auto-curriculum = POWERPLAY. Le *Harness Effect* (`docs/2607.06906v1.pdf`) prouve que le harness est **LE** levier (−33 à −61 % de coût, +82 % qualité/\$, −38 % tokens à parité) et que le gain est **spécifique au modèle** → justifie l'adaptation par-modèle. **MemoHarness** (`docs/2607.14159v1.pdf`) donne le *comment* : **6 dimensions éditables** (contexte/outils/orchestration/mémoire/décodage/sortie) + **banc d'expérience à 2 couches** (par-cas + global distillé) + **recherche lourde hors-ligne / adaptation par-cas légère par *retrieval*** (budget maîtrisé, pas d'évolution au test-time ; le banc 2 couches = journal + nemeton, la distillation = pont vers l'Organe 2).
-- Réutilise l'existant : pouponnière/compost de `LyrArc` (substrat de sélection), NSGA-II de `Lyra_Core/bench` (optimiseur), ESMM P4 (candidats de modules), eval P7 (fitness). Maison provisoire dans le dépôt : `evolve/`.
-- DoD (charte §1) : une population de harness améliore un objectif mesurable (qualité/token sur un jeu tenu) au fil des générations, de façon reproductible ; un module *adopté* vs *composté*, avec la fitness qui a tranché. **Échoue bruyamment** si les générations ne bougent pas.
+- Pistes bibliographiques conservées : *Self-Improvements in Modern Agentic Systems*, *The Harness Effect* et *MemoHarness*, référencés dans la [bannière](BANNIERE_LA_JACHERE.md) et [REFERENCES](REFERENCES.md). Leur pertinence exacte et les mécanismes décrits exigent une relecture sourcée des articles ; ce lot n'en fait ni une preuve d'équivalence ni une validation locale.
+- Proposition à instruire : modules portant sur contexte, outils, orchestration, mémoire, décodage ou sortie ; recherche lourde hors tâche et adaptation par cas par récupération, avec un budget explicite. La correspondance d'un banc d'expérience externe avec journal/Nemeton est une hypothèse d'architecture, pas une identité acquise.
+- Matériaux candidats : écologie de `LyrArc`, optimiseur NSGA-II historique, ESMM pour certaines sources de candidats et instruments d'évaluation adaptés. Chacun nécessite un contrat de réutilisation ; la strate mémorielle « pouponnière » ne réalise pas l'évolution de modules. `evolve/` reste une maison proposée.
+- DoD à préciser : population et cycle de vie reproductibles, module adopté ou composté avec référence, coûts et mesure de sélection. Distinguer gain, plateau, abstention et panne ; un gain ne se présume pas parce que les générations changent. Les critères comparatifs sont fixés avant leurs mesures.
 
-**Organe 2 — Le Songe** (désormais *fondé*, cf. réf. ajoutée). Déclencher des **phases de « sommeil »** hors-ligne : (1) **consolider** les mémoires récentes fragiles en connaissance durable, (2) **« rêver »** — recomposer les vecteurs du contexte passé en un curriculum synthétique d'auto-raffinement, sans supervision.
-- Ancrage : *Language Models Need Sleep: Learning to Self-Modify and Consolidate Memories* (Behrouz, Hashemi, Mirrokni — `docs/Language_Models_Need_Sleep_...pdf`). Paradigme « Sleep » à 2 stades : **Consolidation mémoire** (*Knowledge Seeding* = distillation ascendante par *replay*, ≈ NREM) + **Dreaming** (curriculum synthétique auto-généré par RL, ≈ REM ; cf. *self-edits* de SEAL).
-- **Pont Organe 2 → Organe 1 explicite** : le Dreaming *est* le générateur de curriculum → il *sème* les candidats que la Pouponnière *sélectionne*. Même mécanisme, deux angles. Voilà pourquoi **une seule bannière**.
-- S'appuie sur du concret Lyra : **nemeton** (magasin des vecteurs à rejouer, P3), **journal d'oubli** (quoi consolider vs composter), **FLOATLAP** (génération de rêve basse-énergie, `research/`), **phases κ/ρ** (cycle NREM↔REM).
-- ⚠️ **Scoping honnête** (Ollama = poids gelés) : **Palier 1** = rêve au niveau scaffold/mémoire (recomposition de contextes → consolidation du graphe + semence de candidats), **constructible sans entraînement** ; **Palier 2** = consolidation paramétrique réelle (distillation LoRA), **nécessite une voie de fine-tuning local**. Détail + DoD testable : `lyra_reborn/docs/BANNIERE_LA_JACHERE.md`.
+**Organe 2 — Le Songe.** Déclencher des **phases de « sommeil »** hors tâche :
+(1) **consolider** une mémoire utilisable en conservant ses sources et distinctions,
+(2) **« rêver »** — recomposer le contexte passé en associations, hypothèses,
+contextes ou tâches candidats. L'ambition d'auto-raffinement demeure ; une
+production n'acquiert pas le statut de connaissance par sa réutilisation.
+- Piste bibliographique : *Language Models Need Sleep: Learning to Self-Modify and Consolidate Memories*, conservée dans la bannière. Ses rapprochements avec les fonctions Lyra demandent lecture des articles ; les labels NREM/REM ne prouvent pas une correspondance de mécanisme.
+- Le pont de candidats vers la Pouponnière est **facultatif**. Consolidation, recombinaison et sélection ont des réussites et droits propres ; la Pouponnière peut recevoir d'autres candidats. La bannière commune n'impose pas un verdict conjoint.
+- Substrat et horizons distincts : **Nemeton** possède des primitives de graphe, sans magasin vectoriel/ANN garanti ; le **journal d'oubli** apporte différé et compost ; **FLOATLAP** reste une filiation de recherche et la **topologie κ/ρ** demeure reportée. Aucun de ces éléments ne livre à lui seul une boucle du Songe.
+- **Palier 1** : modifications de scaffold/mémoire, dont recomposition de contextes, réorganisation du graphe et candidats ; aucune modification de poids. **Palier 2** : consolidation paramétrique réelle, par exemple distillation LoRA, nécessitant une voie d'entraînement local à cadrer séparément. Ce palier reste une cible explicite, sans calendrier ni activation dans ce lot.
+- **Traces résiduelles** : intention complémentaire conservée dans [I005](REGISTRE_INTENTIONS.md#lyra-i005--traces-résiduelles). Stockage séparé, provenance, décroissance et effet faible borné sous condition de correspondance ; sans correspondance, aucun effet sur récupération ou score. Ce n'est pas une injection systématique dans P6.
 
-**Place dans le plan** : nouveau flux qui **mûrit après P3/P4/P7** (il les consomme). Organe 1 est constructible bientôt (fondé) ; Organe 2 reste un jalon de recherche. C'est le **point d'orgue hors-ligne de l'élan « intériorité »** : Lyra se transformant quand elle ne répond pas.
+**Place dans le plan** : P6 prioritaire, puis contrats et fonctions autonomes
+selon le §7.4. Les dépendances P3/P4 et instruments d'évaluation sont établies
+fonction par fonction ; l'ancienne formule « après P3/P4/P7 » ne signifie pas
+qu'il faut réussir H11 ou terminer P7. Le cap reste le **point d'orgue hors tâche
+de l'élan « intériorité »** : Lyra se transformant quand elle ne répond pas.
 
 ---
 
 ## 8·ter. Cap d'application n°1 — « La Vigie » : présence externe *(ajout 2026-07-19)*
+
+**Lecture actuelle :** cap historique conservé, avec prochain jalon P5 en §7.2
+et [intention I018](REGISTRE_INTENTIONS.md#lyra-i018--présence-externe-et-vigie).
+Les mentions de disponibilité ci-dessous décrivent la proposition de juillet ;
+[ETAT_ACTUEL](ETAT_ACTUEL.md) porte les réalisations et limites. L'écologie est
+un matériau de Jachère Sociale, pas la preuve d'un service autonome déjà livré.
+EPP reste hors du chantier d'alignement et aucun pont n'est rouvert ici.
 
 La doctrine de l'Architecte (`lyra_reborn/manifeste/DOCTRINE_ARCHITECTE.md`) identifie le goulot d'étranglement actuel : **l'attention** — l'architecture fonctionne mais opère dans le vide. Premier cap d'application hors laboratoire : **La Vigie** (`lyra_reborn/docs/LA_VIGIE.md`) — veille et contribution épistémique sur X, en démonstration publique de la thèse d'orchestration.
 
@@ -333,6 +502,11 @@ Ce cap **tire** P5 (outils d'ingestion), P7 (pré-évaluation des brouillons) et
 
 ## 10. Definition of Done globale — ce que « Lyra édifiée » signifie
 
+**Cible globale historique, conservée.** Ces critères ne sont ni le verdict du
+lot d'alignement ni les conditions de l'alpha P6. Les reports et qualifications
+suivent le §7 ; aucune démonstration de brique ne suffit à déclarer cet assemblage
+achevé. Le volet topologique demeure notamment soumis à la décision du 18 juillet.
+
 Lyra est « édifiée » (v1) quand, dans **un seul dépôt** :
 1. Un tour de chat passe par : lecture d'état → décision de boutons → **modulation prouvée** de la génération → mise à jour du graphe → gestion mémoire (dont oubli/réveil) — de bout en bout, sans `except` avaleur.
 2. Un run ESMM **produit des triplets** et enrichit le graphe.
@@ -357,4 +531,8 @@ Lyra est « édifiée » (v1) quand, dans **un seul dépôt** :
 
 ---
 
-*Ce plan est un document vivant : il doit être amendé au fil de l'édification (cocher les phases, dater les décisions — ex. le choix κ Ollivier vs Jaccard). Il s'appuie entièrement sur les 43 documents d'audit déjà présents dans `audits_en_cours/` et `session_2/` ; en cas de doute sur une brique, l'`AUDIT_*.md` du dossier-source fait foi.*
+*Ce plan est un document vivant : dater les décisions et conserver leur filiation.
+Ses matériaux historiques viennent des deux lots de `audits_en_cours/`, retrouvés
+hors de ce dépôt. Un audit de prototype fait référence pour son matériau source ;
+ETAT_ACTUEL fait autorité sur Lyra Reborn. Le registre conserve les intentions,
+y compris quand leur réalisation ou leur source autonome reste ouverte.*

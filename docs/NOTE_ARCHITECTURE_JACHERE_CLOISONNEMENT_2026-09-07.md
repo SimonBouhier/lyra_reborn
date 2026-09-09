@@ -57,6 +57,11 @@ interne ; elle n'ouvre aucun pont vers EPP ou Origami.
 
 ## 3. État réel et vocabulaire
 
+**Lecture au 9 septembre 2026 :** l'inventaire ci-dessous décrit la base du
+7 septembre citée en tête, avant le journal SQLite v3 et les rappels explicites.
+L'[état courant](ETAT_ACTUEL.md) fait autorité sur l'application disponible.
+Cette évolution ne vaut pas implémentation des contrats Jachère de cette note.
+
 Dans le code examiné :
 
 - [GraphStore](../memory/graph/store.py) représente des nœuds et des arêtes.

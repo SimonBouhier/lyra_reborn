@@ -1,4 +1,18 @@
-Trace résiduelle de rêve — principe d’injection opportuniste
+# Trace résiduelle de rêve — principe d’injection opportuniste
+
+> **Statut au 9 septembre 2026 : intention conservée, proposition historique.**
+> Les mentions ci-dessous de métriques « pré-enregistrées » et de Songe « validé »
+> sont des conditions envisagées, pas des acquis. Les
+> [métriques candidates](METRIQUES_SONGE.md) sont à réviser ; la
+> [note Jachère du 7 septembre](NOTE_ARCHITECTURE_JACHERE_CLOISONNEMENT_2026-09-07.md)
+> fait référence pour les droits, l'admission et le retrait. Le futur contrat
+> des traces doit préciser stockage séparé, provenance, portée, seuil, budget,
+> décroissance et retrait, y compris après correction ou suppression de source.
+> [ETAT_ACTUEL](ETAT_ACTUEL.md) porte le statut d'implémentation ; le
+> [registre des intentions](REGISTRE_INTENTIONS.md) et le
+> [plan actif](PLAN_EDIFICATION.md) conservent son prochain jalon.
+> Aucune injection automatique dans la P6 de référence n'est activée par ce texte.
+
 Les phases de Songe (Organe 2) opèrent sur les états latents de la mémoire (vecteurs du Nemeton, contextes récents, arêtes de co-occurrence). Elles doivent rester strictement pondérées par les métriques pré-enregistrées de nouveauté et de consolidation (METRIQUES_SONGE.md) : ni copie, ni bruit, ni compression destructrice de la fenêtre récente.
 Cependant, un rêve réussi peut laisser une trace résiduelle subtile — un signal faible, non dominant, distinct des nœuds et arêtes explicitement consolidés ou compostés. Cette trace n’entre pas dans le graphe principal comme fait ou relation stable. Elle est stockée à part, avec un poids très bas et une décroissance temporelle (écologie d’oubli appliquée aussi aux traces).
 Rôle :
@@ -11,7 +25,7 @@ l’absence de correspondance laisse la trace s’éteindre sans effet.
 
 Lien avec l’existant :
 
-S’appuie sur le Nemeton (magasin des vecteurs) et le journal d’oubli / compost (mécanisme de sélection et d’oubli différé déjà prévu).
+Envisage de s'appuyer sur le Nemeton et le journal d'oubli / compost. Le « magasin des vecteurs » désigne ici un horizon ; le graphe courant de nœuds et d'arêtes n'est pas un magasin vectoriel complet (voir [l'état du code](ETAT_ACTUEL.md#correspondance-entre-les-organes-et-le-code)).
 Respecte la séparation Consolidation / Dreaming du Songe.
 Reste compatible avec la charte : aucun claim de « conscience » ; la trace est un mécanisme de mémoire faible, testable, et doit échouer bruyamment si elle se comporte comme une injection systématique ou non ancrée.
 

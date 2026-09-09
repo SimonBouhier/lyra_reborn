@@ -1,5 +1,10 @@
 # Organes et ponts — doctrine d'architecture inter-projets
 
+> **Lecture au 9 septembre 2026 :** cette carte conserve les décisions et
+> constats inter-projets datés ci-dessous. Le lot d'alignement ne réexamine pas
+> EPP ni Origami et n'ouvre aucun pont. Pour Lyra aujourd'hui, consulter
+> [ETAT_ACTUEL](ETAT_ACTUEL.md) et le [plan actif](PLAN_EDIFICATION.md).
+
 > **État vérifié le 2026-09-05 :** EPP est local et personnel, sans publication
 > blockchain (ADR-022). Le pont d'attestation reste à valider. Le sidecar Vigie
 > existe sur une branche EPP distincte, absent de `main` à `84879d2` ; les
@@ -74,8 +79,10 @@ traçables. Elle n'ouvre aucun des ponts inter-projets ci-dessous.
 
 ## Leçon méthodologique importée d'Origa
 
-La discipline d'Origa (pré-enregistrement, seuils gelés AVANT données, négatifs
-publiables, « toute exclusion exige un pré-enregistrement nouveau, jamais
-rétroactif ») est l'application la plus rigoureuse de notre charte §4 observée
-dans tout l'écosystème. `docs/METRIQUES_SONGE.md` suivra exactement ce
-protocole à son gel.
+La discipline historique citée d'Origa (pré-enregistrement, seuils gelés avant
+données, négatifs publiables, exclusions non rétroactives) fournit un précédent
+de méthode pour la charte §4. Le superlatif antérieur ne reposait pas sur une
+comparaison de l'écosystème ; il est retiré de cette présentation. Les
+[métriques du Songe](METRIQUES_SONGE.md) restent candidates à réviser : leur
+futur protocole devra répondre à une question propre, avec témoins et budget,
+sans reprendre mécaniquement celui d'un autre instrument.

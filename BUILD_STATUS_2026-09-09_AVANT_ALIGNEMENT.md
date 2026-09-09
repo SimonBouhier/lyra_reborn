@@ -1,0 +1,142 @@
+# BUILD STATUS — où en est l'édification
+
+> **Relecture documentaire : 2026-09-05.** Synthèse des capacités et limites
+> actuelles : [ETAT_ACTUEL](docs/ETAT_ACTUEL.md). Les validations live citées
+> ci-dessous sont historiques ; elles n'ont pas été relancées lors de cette revue.
+
+> **Actualisation P6 — 8 septembre 2026 :** dialogue de référence local, corrections,
+> rappels et navigation implémentés. 73 Python + 9 JavaScript réussis ; navigateur
+> vérifié sur moteur factice. Contrôle réel Gemma limité : transport vérifié,
+> contre-exemple d'utilisation d'une correction. [Détail](docs/P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md).
+> Le [diagnostic exploratoire des rappels](docs/P6_DIAGNOSTIC_RAPPELS_2026-09-08.md)
+> est achevé : plan scellé, 6 336 traces sur quatre configurations après quatre
+> admissions techniques ; 212 tests de l'instrument séparé réussis. Les dossiers
+> de relecture sont prêts, sans confirmation indépendante ni admission d'usage.
+> Les traces et archives sont locales et ignorées par Git ; les
+> [commandes de reproduction](experiments/p6_recall/README.md) et le
+> [guide de partage](docs/P6_RELECTURE_MODE_EMPLOI_2026-09-08.md) sont versionnés.
+
+Pont entre le **plan directeur** (`docs/PLAN_EDIFICATION.md`) et le code. Tenu à jour
+à chaque phase. Les audits détaillés (43 documents, avec numéros de ligne et bugs)
+vivent dans le dossier d'audit `../../audits_en_cours/` (lots 1 & 2) — s'y référer pour
+chaque brique à extraire.
+
+## Fait ✅ (testé)
+
+| Phase | Brique | Fichiers | Source portée |
+|---|---|---|---|
+| P0 | Squelette + charte + vocabulaire | `manifeste/`, `pyproject.toml` | plan §3–§5 |
+| P0 | Boutons ρ/δr/τc/κ + mapping (source unique) | `core/knobs.py` | `conscious/config.py` |
+| P0 | Correctif `options{}` | `core/llm.py` | `bundle_lyra/gemma_bridge_v2.py` |
+| P1 | Métriques cheap | `core/metrics/cheap.py` | `conscious/metrics/cheap.py` |
+| P1 | Garde-fous (clamp/hystérésis/réfractaire) + EWMA | `core/control/guards.py`, `core/state.py` | `conscious/guards.py,state.py` |
+| P1 | Politique réactive | `core/control/reactive.py` | `conscious/policies/modulator.py` |
+| P1 | Contrôleur P+I fuyant (**gains calibrés B03+P1P2** ; critères §8 → `tests/test_control_criteria.py`) | `core/control/controller.py` | `lyra_framework_bundle/src/run_loop3.py` + `docs/STARTER_KIT_ATELIER_B03_P1P2.md` |
+| P1 | Boucle réelle + autopilote | `core/loop.py` | consolidation |
+| P2 (acompte) | Politique de phase λ | `core/control/phase.py` | `lyra_framework_bundle/.../policies.py` |
+| **P3** | Nemeton : graphe typé + **deltas auditables/rollback** + bornes bruyantes + compaction + primitif `is_novel_link` k=2 (Songe §1d) | `memory/graph/store.py` | design `lyra_clean_bis` (deltas) + famille Uni ; **un seul** chemin de degré (bug double-comptage exclu) |
+| **P3** | Injecteur nemeton **borné** (jamais de graphe entier dans un prompt) | `memory/graph/injector.py` | `Lyra_Uni_0_2/nemeton_prompt_injector.py` |
+| **P3** | Écologie mémorielle : pouponnière/journal d'oubli/compost + **réveil différé** + réveil du compost — les **4 bugs LyrArc explicitement exclus** | `memory/ecology/ecology.py` | ré-impl. du design `session_2/LyrArc` |
+| **P3** | Memento (CBR cosinus) + Navigator 4 stratégies, `Suggestion` à champs explicites (bug `/ispace/suggest` exclu) | `memory/cbr/memento.py` | port du design `session_2/IspaceNav.zip` |
+| **P4** | ESMM : lacunes (isolated/unstable/bridge/contradiction) → exploration multi-modèles séquentielle → **consensus sémantique à 2 niveaux** → graphe + cochaîne épistémique v1. Les 3 causes racines historiques exclues par construction + la **4ᵉ découverte en live** (impasse de l'accord lexical inter-modèles) résolue par matcher mxbai τ=0.78. **Premier run productif de l'histoire du projet** : 6 triplets consensuels commis (gemma3+mistral+llama3.1) | `explore/esmm/` (triplets, gaps, consensus, matcher, orchestrator, **textsim, relations**) + `core/embeddings.py` | ré-impl. du design `lyra_clean_bis/services/esmm` + **récolte EPP_Verdict** (cascade ADR-011-v2, groupes de relations ADR-006) |
+
+Preuves : `python -m pytest` (dont `test_modulation.py` = la modulation est réelle,
+`test_controller.py` = le P+I régule et reste borné).
+
+## Note d'architecture (importante, honnête)
+
+Les chemins de contrôle historiques ont des rôles distincts :
+
+1. **Génération** (`LyraLoop`) : métriques textuelles sur la sortie, politique
+   réactive et, quand un contrôleur est fourni, pont P2 vers le P+I.
+2. **Autopilote de démonstration** (`run_autopilot`) : régule une dynamique épistémique
+   **synthétique** (`core/control/measures.py`, formules-jouets honnêtement
+   étiquetées, issues de `lyra_framework_bundle`).
+
+Depuis le 8 septembre, `DialogueConversation` est une troisième voie : historique
+du journal et rappels explicites vers un adaptateur chat, à réglages fixes.
+Elle ne passe pas par `LyraLoop` ni par l'autopilote.
+
+**Pont P2 : FAIT (2026-07-18)** — `core/control/bridge.py` dérive
+coherence/fit/pressure/tension de la génération réelle ; `LyraLoop(controller=…)`
+active le mode pont (P+I → δr/τc en application directe ; réactif → ρ/κ).
+**Validé en génération réelle** (gemma3 via Ollama : δr 0.300→0.357 en 3 tours
+sous pression réelle 0.20 < consigne 0.45). `measures.py` ne sert plus qu'à
+l'autopilote (démo/tests de la loi de commande), comme étiqueté. Reste P2 :
+volet topologie (κ/ρ + Betti + calibration κc) et calibration du pont
+(`fit_gain`) sur campagne réelle.
+
+**Quirk hérité du canon — RÉSOLU (décision Simon, 2026-07-18)** : dans le canon
+`conscious`, les *task overrides* fuyaient dans l'état persistant via l'EWMA
+(porté trop fidèlement d'un programme corrompu). Réaligné : la politique réactive
+module désormais l'**état de base** (`self.state.knobs`) ; les overrides restent
+des **masques transitoires de projection** du tour. Preuve :
+`tests/test_modulation.py::test_task_overrides_do_not_leak_into_persistent_state`.
+
+## Stubs — dossiers-ancres, à construire
+
+| Phase | Dossier | Quoi | Source (audit) — mode |
+|---|---|---|---|
+| P2 | `core/topology/` | κ/ρ + Betti GF(2) + garde de phase | **REPORTÉ (décision Simon 2026-07-18)** : un programme plus abouti existe hors périmètre — sa conclusion : « je me compliquais la vie pour rien ». Investigation à part entière quand Simon l'ouvrira ; ne PAS porter l'ancien pipeline d'ici là |
+| ~~P3~~ | ~~`memory/`~~ | **FAIT** — voir tableau ci-dessus. Notes de périmètre : implémentation mémoire pure-stdlib (persistance JSON) ; le Strategy multi-backend NetworkX/igraph d'Uni_0_2 volontairement simplifié en **une** implémentation propre derrière la même API (charte §5 — on ajoutera un backend si un besoin de perf le prouve) ; pas d'embeddings encore (arrivent avec le pont P2/éval) | — |
+| ~~P4~~ | ~~`explore/esmm/`~~ | **FAIT** — voir tableau ci-dessus. Restes : cochaîne 5D complète (v1 = support/diversité/sources), adaptation dynamique du plan de cycles, recalibration τ_obj sur campagne large | — |
+| P5 | `agency/tools/` | function-calling + auto-plugins + SilenceØ | `session_2/LyrAgent` — **ré-impl.** (pas de `eval()`) |
+| **P6 (tranche 1)** | `app/session.py` + `app/storage.py` + `app/main.py` | Un tour traverse le contrôle P0–P2 et la mémoire P3 (sans appel à l'ESMM P4), puis l'état complet versionné est enregistré atomiquement en SQLite. Restauration paresseuse après redémarrage, 404 sans création implicite, moteur restauré sans appel réseau, rollback mémoire si génération ou sauvegarde échoue, registre `GET /api/sessions`. La page reprend l'identifiant localement et « Nouvelle session » ne supprime rien. | suite complète + tests de corruption/incohérence + reprise vérifiée entre deux processus serveur (`tests/test_p6_first_layers.py`, `tests/test_p6_http.py`, `tests/test_session_persistence.py`) |
+| **P6 (journal, 7 septembre, local)** | `app/journal.py` + `app/requests.py` + client de la page | Demandes acceptées avant génération, réponse et état validés ensemble, répétitions sans second résultat, tentatives explicites, reprise visible et migration v1 préparée sur copie. Garde A01 réutilisée ; un registre dans un processus. | 57 tests Python + 7 tests JavaScript réussis en développement, puis dans le PowerShell de Simon ; rapport relu et 19 empreintes concordantes. Clients factices, SQLite temporaire, DOM simulé. [Guide et limites](docs/P6_JOURNAL_DEMANDES_2026-09-07.md). |
+| **P6 (dialogue, 8 septembre, local)** | `app/dialogue.py`, `context.py`, `dialogue_store.py`, `chat_backend.py`, page | Profil fixe sans mémoire dérivée automatique ; rôles, corrections, rappels choisis, contexte par tentative, navigation et migration v3 sur copie. | 73 Python + 9 JavaScript réussis ; navigateur factice vérifié ; contrôle Gemma réel limité, qualité de rappel non admise. [Guide](docs/P6_CONTEXTE_CORRECTIONS_RAPPELS_2026-09-08.md). |
+| **P6 (diagnostic exploratoire, 8 septembre)** | `experiments/p6_recall/`, scripts d'exécution et d'export | Instrument séparé de l'application et de P7 ; plan scellé, corpus synthétique, traces durables et paquets de relecture isolée. | 212 tests instrumentaux réussis ; 6 336 réponses techniquement valides + 4 admissions. Statut `DESCRIPTIF_EXPLORATOIRE_DISPONIBLE`, sans confirmation indépendante ni comparaison générale des familles. [Preuves et limites](docs/P6_DIAGNOSTIC_RAPPELS_2026-09-08.md). |
+| P6 (reste) | `app/` | qualification d'usage, suppression et sauvegardes, isolation/admission des runtimes, graphe REST, catalogue/sélection multimodèle, auth minimale | `lyra_clean_bis` — matériau d'audit, pas un bloc à transplanter |
+| P7 | `eval/` + `scripts/p7_v11.py` | **V11 arrêtée protectivement à Q1 après calibration complète.** Le juge lit le contenu mais reste trop instable (54,8 %) et biaisé par la position ; budgets et contrat ont sélectionné la capacité à finir le JSON, tandis que la longueur est confondue avec le bouton testé. H11 `UNTESTED`, jeu tenu 60/60 intact. P7 est en atelier métrologique, sans H12. | `docs/P7_V11_STATUS.md` + `docs/CADRAGE_EXTERNE_P6_P7_POST_V11.md` |
+| — | `research/` | orbites FLOATLAP, métriques fractales, calibrations | `session_2/tranzit` — exploratoire |
+
+## Bannière « La Jachère » — vie hors-tâche (nouveau flux, cf. plan §8·bis)
+
+Flux qui **mûrit après P3/P4/P7** (il les consomme). Détail : `docs/BANNIERE_LA_JACHERE.md`.
+
+| Organe | Quoi | Statut | Source / ancrage |
+|---|---|---|---|
+| 1 — Pouponnière évolutive | le modèle cultive/élague/adopte ses modules de scaffold (harness auto-généré, génétique, adaptatif par-modèle) | **fondé, constructible après P3/P7** — maison provisoire `evolve/` | survey `docs/2607.13104v1.pdf` (Population-Based scaffolding SI) + `docs/2607.06906v1.pdf` (Harness Effect) + `docs/2607.14159v1.pdf` (MemoHarness : 6 dims + banc 2 couches + hors-ligne/en-ligne) + pouponnière `LyrArc` + NSGA-II `Lyra_Core` |
+| 2 — Le Songe | phases de « sommeil » : consolidation (Knowledge Seeding/replay) + Dreaming (curriculum synthétique auto-généré) | **FONDÉ** (papier *LMs Need Sleep*). **Palier 1** (rêve scaffold/mémoire) constructible sans entraînement, après P3 ; **Palier 2** (consolidation paramétrique LoRA) nécessite une voie de fine-tuning local | `docs/Language_Models_Need_Sleep_...pdf` ; s'appuie sur nemeton (P3), journal d'oubli, FLOATLAP, phases κ/ρ (NREM↔REM) ; **métriques figées : `docs/METRIQUES_SONGE.md`** |
+
+## Organes & ponts (doctrine inter-projets)
+
+Décision Simon 2026-07-18 : `lyra_reborn` = OS cognitif ; **EPP_Verdict** =
+moteur d'attestation local et personnel (organe indépendant, scope ADR-022) ;
+**Origami_Transformer** = instrument métrologique dont la série v4–v7 est close :
+le résultat brut v5 n'a pas survécu aux contrôles v6–v7 (`HF_DÉMENTI` 0/6),
+donc aucun signal Fisher n'est importé dans Lyra ou EPP. Indépendance stricte,
+ponts = contrats minces dégelés sur validation uniquement. Détail :
+`docs/ORGANES_ET_PONTS.md`. D'autres organes viendront.
+
+## Cap d'application n°1 — « La Vigie » (doctrine 2026-07-19)
+
+Doctrine de l'Architecte versée (`manifeste/DOCTRINE_ARCHITECTE.md`) : le goulot
+est l'ATTENTION → présence externe. POC : `docs/LA_VIGIE.md` — veille +
+brouillons X validés à la main (files Audit/Amplification, Jachère Sociale =
+l'écologie existante, labels = fitness de la Pouponnière). Règles dures : zéro
+écriture réseau, la cible est l'affirmation jamais la personne. V0 constructible
+(P3+P4+embeddings faits ; entrées gratuites arXiv/RSS/captures). Critère
+d'arbitrage double désormais : solidité interne ET/OU présence externe.
+
+**V0-q (2026-08-09) :** frontière de quarantaine Lyra implémentée dans
+`agency/tools/vigie/quarantine.py` : subprocess sans shell, environnement sans
+secrets hérités, identité liée au SHA-256, schéma fermé et échec explicite vers
+`QUARANTINE`. Tests de frontière et transport hostile dans
+`tests/test_vigie_quarantine.py`. Le sidecar autonome EPP est implémenté sans
+import de la base ou du pipeline historique, avec connexion directe à Ollama
+sur `127.0.0.1`, modèles explicites et unanimité pour `PASS/REJECT`. Sa qualité
+sur modèles live n'est pas encore revendiquée. Voir `docs/VIGIE_QUARANTINE.md`.
+
+## Quick wins restants (fort levier, cf. plan §7)
+
+- ~~⭐ P4 « fix once »~~ **FAIT et dépassé** : l'ESMM ré-implémenté produit ses
+  premiers triplets consensuels (cf. tableau P4). La découverte en prime : le
+  « fix once » n'aurait PAS suffi — l'accord lexical inter-modèles était une
+  4ᵉ cause racine invisible à l'audit, résolue par consensus sémantique.
+
+## Précision de disponibilité — 2026-09-05
+
+Le sidecar EPP mentionné dans V0-q existe au commit `3a274cd` sur la branche
+`fix/td-002-graph-seeder-adapter`. Il n'est pas présent dans EPP `main` à
+`84879d2`. Les références de campagne restent gelées ; aucune disponibilité
+inter-dépôts courante ni qualification live n'est déduite de ce code historique.
