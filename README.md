@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-8b5cf6">
+  <img alt="License: CC BY-NC 4.0" src="https://img.shields.io/badge/license-CC%20BY--NC%204.0-8b5cf6">
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
   <img alt="Core: pure stdlib" src="https://img.shields.io/badge/core-pure%20stdlib-22c55e">
   <img alt="LLM: Ollama local" src="https://img.shields.io/badge/LLM-Ollama%20local-0ea5e9">
@@ -38,6 +38,20 @@ verdicts scientifiques.
 Les preuves datées et la correspondance avec le code sont regroupées dans
 l'[état actuel](docs/ETAT_ACTUEL.md). L'[index des composants](BUILD_STATUS.md)
 conserve les chemins et la provenance, sans établir un second verdict de maturité.
+
+## Repères de lecture au 18 septembre 2026
+
+- **P6** : journal, corrections et rappels explicites implémentés ; la
+  qualification sémantique et les limites restent celles de l'[état actuel](docs/ETAT_ACTUEL.md).
+- **P7** : V11 arrêtée après calibration, H11 `UNTESTED` ; le jeu tenu reste
+  non consulté. Le [statut V11](docs/P7_V11_STATUS.md) conserve son autorité.
+- **Jachère, Songe et Pouponnière** : intentions et contrats conservés dans le
+  [registre](docs/REGISTRE_INTENTIONS.md), sans bénéfice local établi.
+
+Ces repères résument les pièces présentes sur GitHub ; ils n'ajoutent aucune
+nouvelle exécution ni qualification aux rapports datés. Les résultats des autres
+projets conservent leur périmètre ; ils ne qualifient pas automatiquement P6
+ou un pont intégré à Lyra.
 
 ## Premier essai local : P6 avec moteur factice
 
@@ -204,8 +218,12 @@ conserve ces décisions et leurs limites.
 
 ## Licence et références
 
-Code sous licence **MIT** (© 2026 Simon Bouhier). La
-[bibliographie](docs/REFERENCES.md) conserve les rapprochements proposés pour
+Code et documentation de Simon Bouhier sous [**CC BY-NC 4.0**](LICENSE)
+(© 2026 Simon Bouhier) : partage et adaptations autorisés avec attribution
+pour des usages non commerciaux, selon les termes de la licence.
+Les éléments tiers conservent leurs propres conditions.
+
+La [bibliographie](docs/REFERENCES.md) conserve les rapprochements proposés pour
 la Jachère. Ces sources d'inspiration ne prouvent ni une identité de mécanisme,
 ni une implémentation locale, ni un bénéfice mesuré de Lyra. Les articles ne
 sont pas redistribués ici.
