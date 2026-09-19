@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "lyra_reborn"
 version = "0.1.0.dev0"
 description = "Lyra — couche de contrôle cognitive au-dessus d'un LLM local (Ollama). Consolidation honnête de ~23 prototypes audités."
+license = {text = "CC-BY-NC-4.0"}
 requires-python = ">=3.10"
 dependencies = []          # noyau P0/P1 : stdlib pure
 
