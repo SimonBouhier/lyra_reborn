@@ -2,7 +2,7 @@
   <img src="assets/banner.svg" alt="Lyra Reborn — contrôle et mémoire pour LLM locaux ; application en construction" width="100%">
 </p>
 
-[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+[![Licence : tous droits réservés](https://img.shields.io/badge/Licence-Tous%20droits%20r%C3%A9serv%C3%A9s-lightgrey.svg)](LICENSE)
 
 <p align="center">
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-3776ab">
@@ -213,7 +213,8 @@ attendu, le résultat observé, l'environnement et un exemple reproductible
 expurgé de données personnelles.
 
 Avant de préparer une contribution, lire les [consignes du dépôt](AGENTS.md)
-et la [licence](LICENSE). Limiter chaque proposition à un objectif explicite.
+et la [licence](LICENSE) : toute contribution externe suppose l'accord écrit
+préalable de l'auteur. Limiter chaque proposition à un objectif explicite.
 Un correctif de comportement doit être accompagné d'un contrôle ciblé,
 en précisant s'il utilise un moteur factice ou réel. Les statuts d'évaluation,
 les préenregistrements et les preuves historiques doivent être préservés.
@@ -222,15 +223,11 @@ des fichiers proposés.
 
 ## Licence et références
 
-Les contenus originaux de ce dépôt sont sous licence
-**[CC BY-NC 4.0](LICENSE)** (© 2026 Simon Bouhier).
-Le partage et les adaptations sont autorisés à des fins non commerciales,
-avec attribution, lien vers la licence et indication des modifications.
-Le [résumé officiel](https://creativecommons.org/licenses/by-nc/4.0/deed.fr)
-présente ces conditions ; le texte complet figure dans [LICENSE](LICENSE).
+Les contenus originaux de ce dépôt sont © 2026 Simon Bouhier, **tous droits
+réservés** : toute reproduction, adaptation ou diffusion exige l'accord écrit
+préalable de l'auteur. Le texte figure dans [LICENSE](LICENSE).
 
-Les éléments tiers restent soumis à leurs propres licences. Les autorisations
-déjà accordées sur des versions antérieures restent valables pour ces versions.
+Les éléments tiers restent soumis à leurs propres licences.
 
 La [bibliographie](docs/REFERENCES.md) conserve les rapprochements proposés pour
 la Jachère. Ces sources d'inspiration ne prouvent ni une identité de mécanisme,
